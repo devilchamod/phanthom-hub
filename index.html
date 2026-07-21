@@ -3,503 +3,954 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHANTOM // AUTHENTICATION</title>
+    <title>NEXUS // SECURE OPERATIVE LINK</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0b0e14; }
+        ::-webkit-scrollbar-thumb { background: #222d3d; border-radius: 2px; }
+
         body {
-            background: #05050a;
-            color: #e0e6ed;
-            font-family: 'Rajdhani', sans-serif;
-            min-height: 100vh;
+            background: #0b0e14;
+            color: #d1d5db;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
             display: flex;
-            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- AUTH SCREEN --- */
+        #authScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0b0e14;
+            z-index: 5000;
+            display: flex;
             justify-content: center;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.08) 0%, transparent 60%),
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 30px 30px, 30px 30px;
-            overflow-x: hidden;
-        }
-
-        .auth-card {
-            background: rgba(12, 13, 20, 0.9);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
-            width: 100%;
-            max-width: 440px;
-            padding: 2.5rem;
-            clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 8% 100%, 0 92%);
-            backdrop-filter: blur(10px);
-            position: relative;
-            margin: 1rem;
-        }
-
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #00f3ff, #ff003c);
-        }
-
-        .brand-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .brand-header h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #00f3ff;
-            letter-spacing: 3px;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-        }
-
-        .brand-header p {
-            font-size: 0.85rem;
-            color: #7a8b9e;
-            letter-spacing: 1px;
-            margin-top: 0.3rem;
-            font-weight: 600;
-        }
-
-        /* Toggle Tabs */
-        .tab-group {
-            display: flex;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 0.6rem;
-            background: transparent;
-            border: none;
-            color: #7a8b9e;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .tab-btn.active {
-            color: #00f3ff;
-            border-bottom: 2px solid #00f3ff;
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
-        }
-
-        /* Form Inputs */
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            font-family: 'Orbitron', sans-serif;
-            color: #a0aab5;
-            margin-bottom: 0.4rem;
-            letter-spacing: 1px;
-        }
-
-        .password-wrapper {
-            position: relative;
-            display: flex;
             align-items: center;
         }
+        .auth-box {
+            width: 360px;
+            background: #111622;
+            border: 1px solid #1f293d;
+            border-radius: 8px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .auth-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.3rem;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            text-align: center;
+        }
 
-        .form-group input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(5, 5, 10, 0.8);
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            color: #fff;
-            font-family: 'Rajdhani', sans-serif;
+        /* --- APP SHELL LAYOUT --- */
+        .app-layout {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Nav Sidebar */
+        .nav-sidebar {
+            width: 240px;
+            background: #0f131d;
+            border-right: 1px solid #1a2233;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 0.4rem;
+        }
+        .nav-header {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: #64748b;
+            padding: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+        .nav-item {
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            transition: all 0.15s ease;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        /* Main Workspace Viewport */
+        .workspace-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0b0e14;
+            overflow: hidden;
+        }
+        .workspace-header {
+            height: 60px;
+            border-bottom: 1px solid #1a2233;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: #0f131d;
+        }
+        .channel-title {
+            font-weight: 600;
+            color: #f1f5f9;
             font-size: 1rem;
-            outline: none;
-            transition: all 0.2s;
         }
 
-        .password-wrapper input {
-            padding-right: 2.8rem;
+        /* Chat Core Area */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 1.5rem;
+            overflow: hidden;
+        }
+        .messages-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-right: 0.5rem;
+            margin-bottom: 1rem;
         }
 
-        .toggle-password {
+        /* Message Bubbles */
+        .message-row {
+            display: flex;
+            gap: 0.9rem;
+            position: relative;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+        .message-row:hover {
+            background: rgba(255,255,255,0.015);
+        }
+        .msg-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .msg-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            flex: 1;
+        }
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .msg-username {
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .msg-timestamp {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+        .msg-text {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        
+        /* Floating Message Action Toolbar */
+        .msg-action-toolbar {
             position: absolute;
-            right: 0.8rem;
+            top: -10px;
+            right: 15px;
+            display: none;
+            background: #111622;
+            border: 1px solid #1f293d;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .message-row:hover .msg-action-toolbar {
+            display: flex;
+        }
+        .msg-tool-btn {
             background: none;
             border: none;
-            color: #00f3ff;
+            color: #94a3b8;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .msg-tool-btn:hover {
+            background: #1e293b;
+            color: #38bdf8;
+        }
+
+        /* Reactions */
+        .reactions-box {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .reaction-chip {
+            background: #161e2e;
+            border: 1px solid #1f293d;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            color: #94a3b8;
+        }
+        .reaction-chip:hover {
+            border-color: #38bdf8;
+        }
+
+        /* Input Bar */
+        .input-bar-container {
+            display: flex;
+            flex-direction: column;
+            background: #111622;
+            border: 1px solid #1f293d;
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            position: relative;
+        }
+        .chat-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            padding: 0.4rem 0;
+        }
+        .typing-bar {
+            font-size: 0.75rem;
+            color: #38bdf8;
+            height: 1.2rem;
+            display: flex;
+            align-items: center;
+            font-style: italic;
+        }
+
+        /* Right Presence / Member Panel */
+        .right-sidebar {
+            width: 240px;
+            background: #0f131d;
+            border-left: 1px solid #1a2233;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .sidebar-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .member-row:hover { background: #161e2e; }
+        .presence-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        /* Generic Forms & Buttons */
+        .form-input {
+            width: 100%;
+            background: #0b0e14;
+            border: 1px solid #1f293d;
+            border-radius: 6px;
+            padding: 0.7rem;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .form-input:focus { border-color: #38bdf8; }
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+
+        /* Modals & Popups */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 4000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            width: 380px;
+            background: #111622;
+            border: 1px solid #1f293d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .emoji-popup {
+            position: absolute;
+            bottom: 55px;
+            left: 10px;
+            background: #111622;
+            border: 1px solid #1f293d;
+            border-radius: 6px;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            z-index: 100;
+        }
+        .emoji-opt {
+            background: #161e2e;
+            padding: 6px;
+            text-align: center;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 1.1rem;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            user-select: none;
         }
+        .emoji-opt:hover { background: #1e293b; }
 
-        .toggle-password:hover {
-            opacity: 1;
-        }
-
-        .form-group input:focus {
-            border-color: #00f3ff;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
-        }
-
-        /* Custom File Input Upload styling */
-        .file-upload-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .file-upload-wrapper input[type="file"] {
-            display: none;
-        }
-
-        .file-upload-label {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(5, 5, 10, 0.8);
-            border: 1px dashed rgba(0, 243, 255, 0.4);
-            color: #7a8b9e;
-            font-size: 0.9rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .file-upload-label:hover {
-            border-color: #00f3ff;
-            color: #00f3ff;
-            background: rgba(0, 243, 255, 0.05);
-        }
-
-        .options-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            margin-bottom: 1.5rem;
-            color: #7a8b9e;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-container input {
-            accent-color: #00f3ff;
-            width: 15px;
-            height: 15px;
-            cursor: pointer;
-        }
-
-        /* Primary Action Button */
-        .btn-submit {
-            width: 100%;
-            padding: 0.9rem;
-            background: #00f3ff;
-            color: #05050a;
-            border: none;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1rem;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.2s;
-            clip-path: polygon(0 0, 90% 0, 100% 30%, 100% 100%, 10% 100%, 0 70%);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-        }
-
-        .btn-submit:hover {
-            background: #ff003c;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
-        }
-
-        /* Status Message Box */
-        .status-box {
-            margin-top: 1rem;
-            padding: 0.6rem;
-            font-size: 0.8rem;
-            text-align: center;
-            display: none;
-            border-left: 3px solid transparent;
-            font-weight: 600;
-        }
-
-        .status-box.error {
-            display: block;
-            background: rgba(255, 0, 60, 0.1);
-            color: #ff003c;
-            border-color: #ff003c;
-        }
-
-        .status-box.success {
-            display: block;
-            background: rgba(0, 243, 255, 0.1);
-            color: #00f3ff;
-            border-color: #00f3ff;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="auth-card">
-        <div class="brand-header">
-            <h1>⚡ PHANTOM</h1>
-            <p>SECURE COMMUNICATIONS NETWORK</p>
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="authScreen">
+        <div class="auth-box">
+            <div class="auth-title">NEXUS TERMINAL</div>
+            <p style="font-size:0.85rem; color:#94a3b8; text-align:center;">Enter your unique operative alias to initialize your clearance session.</p>
+            <input type="text" id="authUsernameInput" class="form-input" placeholder="Operative Handle (e.g. jason)..." onkeydown="if(event.key==='Enter') authenticateUser()">
+            <button class="btn-primary" onclick="authenticateUser()">INITIALIZE SESSION</button>
         </div>
-
-        <div class="tab-group">
-            <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">LOGIN</button>
-            <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">REGISTER</button>
-        </div>
-
-        <!-- LOGIN FORM -->
-        <form id="loginForm" onsubmit="handleAuth(event, 'login')">
-            <div class="form-group">
-                <label for="loginUser">USERNAME / HANDLE</label>
-                <input type="text" id="loginUser" required placeholder="operative_01">
-            </div>
-            <div class="form-group">
-                <label for="loginPass">PASSPHRASE</label>
-                <div class="password-wrapper">
-                    <input type="password" id="loginPass" required placeholder="••••••••">
-                    <button type="button" class="toggle-password" onclick="togglePassVisibility('loginPass', this)">👁️</button>
-                </div>
-            </div>
-            <div class="options-row">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="rememberMeLogin" checked>
-                    <span>Remember Active Session</span>
-                </label>
-            </div>
-            <button type="submit" class="btn-submit">INITIALIZE LOGIN</button>
-        </form>
-
-        <!-- REGISTER FORM -->
-        <form id="registerForm" style="display: none;" onsubmit="handleAuth(event, 'register')">
-            <div class="form-group">
-                <label for="regUser">USERNAME</label>
-                <input type="text" id="regUser" required placeholder="cipher_ghost">
-            </div>
-            <div class="form-group">
-                <label for="regNick">DISPLAY NICKNAME</label>
-                <input type="text" id="regNick" placeholder="Ghost (Optional)">
-            </div>
-            <div class="form-group">
-                <label for="regPass">PASSPHRASE</label>
-                <div class="password-wrapper">
-                    <input type="password" id="regPass" required placeholder="••••••••">
-                    <button type="button" class="toggle-password" onclick="togglePassVisibility('regPass', this)">👁️</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="regPassConfirm">VERIFY PASSPHRASE</label>
-                <div class="password-wrapper">
-                    <input type="password" id="regPassConfirm" required placeholder="••••••••">
-                    <button type="button" class="toggle-password" onclick="togglePassVisibility('regPassConfirm', this)">👁️</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>AVATAR IMAGE (UPLOAD FROM PC)</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="regPfpFile" accept="image/*" onchange="updateFileLabel(this)">
-                    <label for="regPfpFile" class="file-upload-label" id="fileLabel">📁 SELECT AVATAR FILE...</label>
-                </div>
-            </div>
-            <div class="options-row">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="rememberMeReg" checked>
-                    <span>Remember Active Session</span>
-                </label>
-            </div>
-            <button type="submit" class="btn-submit">CREATE OPERATIVE</button>
-        </form>
-
-        <div class="status-box" id="statusBox"></div>
     </div>
 
+    <!-- MAIN APP SHELL -->
+    <div id="appShell" class="app-layout hidden">
+        
+        <!-- NAV SIDEBAR -->
+        <div class="nav-sidebar">
+            <div class="nav-header">DIRECT CONNECTIONS</div>
+            <div class="nav-item active" onclick="switchMainTab('global', this)">🌐 Global Frequency</div>
+            <div class="nav-item" onclick="switchMainTab('chats', this)">💬 Frequencies & Squads</div>
+            
+            <div class="nav-header" style="margin-top:1rem;">OPERATIVE TOOLS</div>
+            <div class="nav-item" onclick="switchMainTab('addfriend', this)">➕ Link Operative</div>
+            <div class="nav-item" onclick="switchMainTab('creategroup', this)">👥 Initialize Squad</div>
+
+            <div style="margin-top:auto;">
+                <div class="nav-item" onclick="openProfileModal(currentUser.username)">⚙️ My Profile</div>
+                <div class="nav-item" onclick="logoutSession()" style="color:#ef4444;">🔌 Disconnect</div>
+            </div>
+        </div>
+
+        <!-- WORKSPACE VIEWPORT -->
+        <div class="workspace-main">
+            <div class="workspace-header">
+                <span id="headerChannelName" class="channel-title">GLOBAL COMMAND FREQUENCY</span>
+                <span id="headerUserHandle" style="font-size:0.85rem; color:#38bdf8; font-family:'Share Tech Mono', monospace;">-</span>
+            </div>
+
+            <!-- GLOBAL CHAT VIEW -->
+            <div id="view-global" class="chat-container">
+                <div id="globalMessagesContainer" class="messages-scroll-area"></div>
+                <div id="globalTypingBar" class="typing-bar hidden"></div>
+                <div id="globalReplyBox" class="hidden" style="font-size:0.75rem; color:#38bdf8; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="globalReplyText">Replying to transmission...</span>
+                    <button onclick="clearReplyState('global')" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button>
+                </div>
+                <div class="input-bar-container">
+                    <input type="file" id="globalFileInp" style="display:none;" onchange="handleFileAttachment('global')">
+                    <div id="globalEmojiPopup" class="emoji-popup hidden"></div>
+                    <input type="text" id="globalMsgInput" class="chat-input" placeholder="Broadcast to global channel..." oninput="triggerTypingBroadcast('global')" onkeydown="if(event.key==='Enter') sendChatMessage('global')">
+                    <div style="display:flex; gap:0.5rem; margin-top:4px; align-items:center;">
+                        <button class="msg-tool-btn" onclick="document.getElementById('globalFileInp').click()">📎 Attach File</button>
+                        <button class="msg-tool-btn" onclick="toggleEmojiPicker('global')">😀 Emoji</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKSPACE CHAT VIEW (FOR DMs AND SQUADS) -->
+            <div id="view-workspace" class="chat-container hidden">
+                <div id="workspaceMessagesContainer" class="messages-scroll-area"></div>
+                <div id="workspaceTypingBar" class="typing-bar hidden"></div>
+                <div id="workspaceReplyBox" class="hidden" style="font-size:0.75rem; color:#38bdf8; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="workspaceReplyText">Replying to transmission...</span>
+                    <button onclick="clearReplyState('workspace')" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button>
+                </div>
+                <div class="input-bar-container">
+                    <input type="file" id="workspaceFileInp" style="display:none;" onchange="handleFileAttachment('workspace')">
+                    <div id="workspaceEmojiPopup" class="emoji-popup hidden"></div>
+                    <input type="text" id="workspaceMsgInput" class="chat-input" placeholder="Send secure transmission..." oninput="triggerTypingBroadcast('workspace')" onkeydown="if(event.key==='Enter') sendChatMessage('workspace')">
+                    <div style="display:flex; gap:0.5rem; margin-top:4px; align-items:center;">
+                        <button class="msg-tool-btn" onclick="document.getElementById('workspaceFileInp').click()">📎 Attach File</button>
+                        <button class="msg-tool-btn" onclick="toggleEmojiPicker('workspace')">😀 Emoji</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHATS LIST VIEW -->
+            <div id="view-chats" class="chat-container hidden" style="overflow-y:auto;">
+                <h3 style="margin-bottom:1rem; font-family:'Share Tech Mono', monospace; color:#38bdf8;">ACTIVE DIRECT FREQUENCIES & SQUADS</h3>
+                <div id="chatFrequenciesList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+            </div>
+
+            <!-- ADD FRIEND VIEW -->
+            <div id="view-addfriend" class="chat-container hidden" style="overflow-y:auto; max-width:500px;">
+                <h3 style="margin-bottom:1rem; font-family:'Share Tech Mono', monospace; color:#38bdf8;">LINK NEW OPERATIVE</h3>
+                <input type="text" id="targetFriendHandle" class="form-input" placeholder="Enter target handle..." style="margin-bottom:1rem;">
+                <button class="btn-primary" onclick="submitFriendLink()">ESTABLISH SECURE LINK</button>
+                <div id="friendResponseFeedback" style="margin-top:1rem; font-size:0.85rem; color:#38bdf8;"></div>
+            </div>
+
+            <!-- CREATE GROUP VIEW -->
+            <div id="view-creategroup" class="chat-container hidden" style="overflow-y:auto; max-width:500px;">
+                <h3 style="margin-bottom:1rem; font-family:'Share Tech Mono', monospace; color:#38bdf8;">INITIALIZE SQUAD GROUP</h3>
+                <input type="text" id="newGroupName" class="form-input" placeholder="Enter squad handle..." style="margin-bottom:1rem;">
+                <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.4rem;">SELECT LINKED OPERATIVES</label>
+                <div id="groupCheckboxesContainer" style="display:flex; flex-direction:column; gap:0.4rem; max-height:180px; overflow-y:auto; margin-bottom:1rem; background:#111622; padding:0.6rem; border-radius:6px;"></div>
+                <button class="btn-primary" onclick="buildSquadGroup()">CREATE SQUAD</button>
+            </div>
+        </div>
+
+        <!-- RIGHT MEMBER PANEL -->
+        <div class="right-sidebar">
+            <div class="sidebar-section-title">ACTIVE CLEARANCE</div>
+            <div id="rightMemberList" style="display:flex; flex-direction:column; gap:0.3rem;"></div>
+        </div>
+    </div>
+
+    <!-- AUDIO NOTIFICATION SUBROUTINE -->
+    <script>
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+    </script>
+
+    <!-- CORE LOGIC ENGINE -->
     <script>
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Auto-redirect if already logged in
-        if (localStorage.getItem('phantom_user')) {
-            window.location.href = "dashboard.html";
+        let currentUser = null;
+        const EMOJI_POOL = ['👍','❤️','🔥','🚀','💀','👀','💻','⚡'];
+        const renderedMessageIds = new Set();
+        let activeSubscription = null;
+        let activeTypingChannel = null;
+        let activeWorkspaceContext = null;
+        let fileAttachmentState = { global: null, workspace: null };
+        let replyState = { global: null, workspace: null };
+
+        // --- AUTHENTICATION ---
+        async function authenticateUser() {
+            const handle = document.getElementById('authUsernameInput').value.trim().toLowerCase();
+            if (!handle) return;
+
+            let { data } = await supabaseClient.from('users').select('*').eq('username', handle).single();
+            if (!data) {
+                const newProfile = { username: handle, nickname: handle, pfp_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${handle}` };
+                const res = await supabaseClient.from('users').insert([newProfile]).select().single();
+                data = res.data;
+            }
+
+            currentUser = data;
+            localStorage.setItem('nexus_user', JSON.stringify(currentUser));
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appShell').classList.remove('hidden');
+            document.getElementById('headerUserHandle').innerText = `@${currentUser.username.toUpperCase()}`;
+            
+            initGlobalChat();
+            loadGlobalPresencePanel();
         }
 
-        function togglePassVisibility(inputId, btn) {
+        const saved = localStorage.getItem('nexus_user');
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appShell').classList.remove('hidden');
+            document.getElementById('headerUserHandle').innerText = `@${currentUser.username.toUpperCase()}`;
+            initGlobalChat();
+            loadGlobalPresencePanel();
+        }
+
+        function logoutSession() {
+            localStorage.removeItem('nexus_user');
+            location.reload();
+        }
+
+        // --- VIEW SWITCHING ---
+        function switchMainTab(tab, el) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+            document.querySelectorAll('.chat-container').forEach(c => c.classList.add('hidden'));
+            
+            const target = document.getElementById(`view-${tab}`);
+            if (target) target.classList.remove('hidden');
+
+            if (tab === 'global') initGlobalChat();
+            if (tab === 'chats') loadChatFrequenciesList();
+            if (tab === 'creategroup') loadGroupCheckboxes();
+        }
+
+        // --- GLOBAL CHAT ENGINE ---
+        async function initGlobalChat() {
+            const container = document.getElementById('globalMessagesContainer');
+            container.innerHTML = '';
+            renderedMessageIds.clear();
+
+            await loadMessagesForChannel('general', 'globalMessagesContainer');
+            loadGlobalPresencePanel();
+            setupRealtimeSubscription('general', 'globalMessagesContainer');
+            setupTypingBroadcast('general', 'global');
+        }
+
+        async function loadMessagesForChannel(channelName, containerId) {
+            const { data } = await supabaseClient.from('messages').select('*').eq('channel', channelName).order('created_at', { ascending: true });
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            renderedMessageIds.clear();
+
+            if (data) {
+                data.forEach(m => renderMessageNode(containerId, m, channelName));
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setupRealtimeSubscription(channelName, containerId) {
+            if (activeSubscription) {
+                supabaseClient.removeChannel(activeSubscription);
+                activeSubscription = null;
+            }
+
+            activeSubscription = supabaseClient.channel(`room-${channelName}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel=eq.${channelName}` }, payload => {
+                    if (payload.eventType === 'INSERT') {
+                        if (!renderedMessageIds.has(payload.new.id)) {
+                            renderMessageNode(containerId, payload.new, channelName);
+                            if (payload.new.username !== currentUser.username) playChime();
+                        }
+                    } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
+                        loadMessagesForChannel(channelName, containerId);
+                    }
+                })
+                .subscribe();
+        }
+
+        // --- TYPING & REALTIME BROADCASTS ---
+        function setupTypingBroadcast(channelKey, context) {
+            if (activeTypingChannel) {
+                supabaseClient.removeChannel(activeTypingChannel);
+            }
+            activeTypingChannel = supabaseClient.channel('typing-room')
+                .on('broadcast', { event: 'typing' }, payload => {
+                    if (payload.payload.channel === channelKey && payload.payload.user !== currentUser.username) {
+                        showTypingIndicator(context, payload.payload.user);
+                    }
+                })
+                .subscribe();
+        }
+
+        function triggerTypingBroadcast(context) {
+            const channelKey = context === 'global' ? 'general' : (
+                activeWorkspaceContext.type === 'dm' ? `dm-${[currentUser.username, activeWorkspaceContext.target].sort().join('-')}` : `group-${activeWorkspaceContext.target.id}`
+            );
+            if (activeTypingChannel) {
+                activeTypingChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { user: currentUser.username, channel: channelKey }
+                });
+            }
+        }
+
+        let typingTimeout = {};
+        function showTypingIndicator(context, username) {
+            const bar = document.getElementById(`${context}TypingBar`);
+            if (!bar) return;
+            bar.innerText = `${username.toUpperCase()} is writing a transmission...`;
+            bar.classList.remove('hidden');
+
+            if (typingTimeout[context]) clearTimeout(typingTimeout[context]);
+            typingTimeout[context] = setTimeout(() => {
+                bar.classList.add('hidden');
+            }, 2000);
+        }
+
+        // --- SENDING MESSAGES & ATTACHMENTS ---
+        async function handleFileAttachment(context) {
+            const inputId = context === 'global' ? 'globalFileInp' : 'workspaceFileInp';
+            const file = document.getElementById(inputId).files[0];
+            if (file) {
+                const fileName = `upl-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) {
+                    fileAttachmentState[context] = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                    alert("File uploaded successfully.");
+                }
+            }
+        }
+
+        async function sendChatMessage(context) {
+            const inputId = context === 'global' ? 'globalMsgInput' : 'workspaceMsgInput';
             const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                btn.innerText = "🙈";
-            } else {
-                input.type = "password";
-                btn.innerText = "👁️";
+            const text = input.value.trim();
+            const fileUrl = fileAttachmentState[context];
+            const currentReply = replyState[context];
+
+            if (!text && !fileUrl) return;
+
+            const channelKey = context === 'global' ? 'general' : (
+                activeWorkspaceContext.type === 'dm' ? `dm-${[currentUser.username, activeWorkspaceContext.target].sort().join('-')}` : `group-${activeWorkspaceContext.target.id}`
+            );
+
+            input.value = '';
+            fileAttachmentState[context] = null;
+            clearReplyState(context);
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                pfp_url_file: fileUrl,
+                channel: channelKey,
+                reply_to: currentReply
+            }]);
+        }
+
+        // --- RENDER MESSAGE NODE ---
+        async function renderMessageNode(containerId, msg, channelKey) {
+            if (!msg || !msg.id || renderedMessageIds.has(msg.id)) return;
+            renderedMessageIds.add(msg.id);
+
+            const container = document.getElementById(containerId);
+            const row = document.createElement('div');
+            row.className = 'message-row';
+
+            const isOwner = msg.username === currentUser.username;
+            let reactionsHtml = '';
+            if (msg.reactions) {
+                for (let [emoji, count] of Object.entries(msg.reactions)) {
+                    reactionsHtml += `<span class="reaction-chip" onclick="incrementReaction(${msg.id}, '${emoji}', '${channelKey}', '${containerId}')">${emoji} ${count}</span>`;
+                }
+            }
+
+            const contextName = containerId.includes('global') ? 'global' : 'workspace';
+
+            row.innerHTML = `
+                <img src="${msg.pfp_url || 'https://via.placeholder.com/36'}" class="msg-avatar" onclick="openProfileModal('${msg.username}')">
+                <div class="msg-content-wrapper">
+                    <div class="msg-meta">
+                        <span class="msg-username" style="color:#38bdf8;" onclick="openProfileModal('${msg.username}')">${(msg.nickname || msg.username).toUpperCase()}</span>
+                        <span class="msg-timestamp">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    ${msg.reply_to ? `<div style="font-size:0.75rem; color:#64748b; border-left:2px solid #38bdf8; padding-left:4px;">Replying to prior transmission...</div>` : ''}
+                    <div class="msg-text">${escapeHtml(msg.message || '')}</div>
+                    ${msg.pfp_url_file ? `<div><a href="${msg.pfp_url_file}" target="_blank" style="color:#38bdf8; font-size:0.8rem;">📂 View Attached Asset</a></div>` : ''}
+                    <div class="reactions-box">${reactionsHtml}</div>
+                </div>
+                <div class="msg-action-toolbar">
+                    <button class="msg-tool-btn" title="Reply" onclick="setReplyState('${contextName}', ${msg.id}, '${msg.username}')">↩️</button>
+                    <button class="msg-tool-btn" title="React" onclick="incrementReaction(${msg.id}, '👍', '${channelKey}', '${containerId}')">👍</button>
+                    ${isOwner ? `
+                        <button class="msg-tool-btn" title="Edit" onclick="editMessagePrompt(${msg.id}, '${channelKey}', '${containerId}')">✏️</button>
+                        <button class="msg-tool-btn" title="Delete" onclick="deleteMessageRecord(${msg.id}, '${channelKey}', '${containerId}')">🗑️</button>
+                    ` : ''}
+                </div>
+            `;
+
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // --- REACTIONS & REPLIES ---
+        async function incrementReaction(msgId, emoji, channelKey, containerId) {
+            const { data } = await supabaseClient.from('messages').select('reactions').eq('id', msgId).single();
+            let reactions = data.reactions || {};
+            reactions[emoji] = (reactions[emoji] || 0) + 1;
+            await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
+            loadMessagesForChannel(channelKey, containerId);
+        }
+
+        function setReplyState(context, msgId, author) {
+            replyState[context] = msgId;
+            document.getElementById(`${context}ReplyText`).innerText = `Replying to @${author.toUpperCase()}`;
+            document.getElementById(`${context}ReplyBox`).classList.remove('hidden');
+        }
+
+        function clearReplyState(context) {
+            replyState[context] = null;
+            document.getElementById(`${context}ReplyBox`).classList.add('hidden');
+        }
+
+        async function editMessagePrompt(msgId, channelKey, containerId) {
+            const newText = prompt("Enter revised message transmission:");
+            if (newText) {
+                await supabaseClient.from('messages').update({ message: newText }).eq('id', msgId);
+                loadMessagesForChannel(channelKey, containerId);
             }
         }
 
-        function updateFileLabel(input) {
-            const label = document.getElementById('fileLabel');
-            if (input.files && input.files[0]) {
-                label.innerText = `📄 ${input.files[0].name}`;
-                label.style.borderColor = "#00f3ff";
-                label.style.color = "#00f3ff";
-            } else {
-                label.innerText = "📁 SELECT AVATAR FILE...";
+        async function deleteMessageRecord(msgId, channelKey, containerId) {
+            if (confirm("Permanently purge this transmission?")) {
+                await supabaseClient.from('messages').delete().eq('id', msgId);
+                loadMessagesForChannel(channelKey, containerId);
             }
         }
 
-        function switchTab(mode) {
-            const loginForm = document.getElementById('loginForm');
-            const regForm = document.getElementById('registerForm');
-            const tabLogin = document.getElementById('tabLogin');
-            const tabReg = document.getElementById('tabRegister');
-            const statusBox = document.getElementById('statusBox');
+        // --- EMOJI PICKER POPUP ---
+        function toggleEmojiPicker(context) {
+            const popup = document.getElementById(`${context}EmojiPopup`);
+            if (popup.innerHTML === '') {
+                EMOJI_POOL.forEach(emoji => {
+                    const opt = document.createElement('div');
+                    opt.className = 'emoji-opt';
+                    opt.innerText = emoji;
+                    opt.onclick = () => {
+                        document.getElementById(`${context}MsgInput`).value += emoji;
+                        popup.classList.add('hidden');
+                    };
+                    popup.appendChild(opt);
+                });
+            }
+            popup.classList.toggle('hidden');
+        }
 
-            statusBox.style.display = 'none';
+        // --- WORKSPACE & DM ROUTING ---
+        function openWorkspaceChat(type, target) {
+            switchMainTab('workspace');
+            activeWorkspaceContext = { type, target };
+            const channelKey = type === 'dm' ? `dm-${[currentUser.username, target].sort().join('-')}` : `group-${target.id}`;
+            
+            document.getElementById('headerChannelName').innerText = type === 'dm' ? `DIRECT FREQUENCY // @${target.toUpperCase()}` : `SQUAD FREQUENCY // ${target.name.toUpperCase()}`;
+            
+            loadMessagesForChannel(channelKey, 'workspaceMessagesContainer');
+            setupRealtimeSubscription(channelKey, 'workspaceMessagesContainer');
+            setupTypingBroadcast(channelKey, 'workspace');
+            loadWorkspacePresencePanel(type, target);
+        }
 
-            if (mode === 'login') {
-                loginForm.style.display = 'block';
-                regForm.style.display = 'none';
-                tabLogin.classList.add('active');
-                tabReg.classList.remove('active');
-            } else {
-                loginForm.style.display = 'none';
-                regForm.style.display = 'block';
-                tabReg.classList.add('active');
-                tabLogin.classList.remove('active');
+        // --- PRESENCE PANELS ---
+        async function loadGlobalPresencePanel() {
+            const container = document.getElementById('rightMemberList');
+            container.innerHTML = '';
+            const { data } = await supabaseClient.from('users').select('*');
+            if (data) {
+                data.forEach(u => {
+                    const row = document.createElement('div');
+                    row.className = 'member-row';
+                    row.innerHTML = `<span class="presence-dot"></span><span style="font-size:0.85rem; font-weight:600;">${(u.nickname || u.username).toUpperCase()}</span>`;
+                    row.onclick = () => openProfileModal(u.username);
+                    container.appendChild(row);
+                });
             }
         }
 
-        function showStatus(msg, isError = true) {
-            const statusBox = document.getElementById('statusBox');
-            statusBox.innerText = msg;
-            statusBox.className = `status-box ${isError ? 'error' : 'success'}`;
+        async function loadWorkspacePresencePanel(type, target) {
+            const container = document.getElementById('rightMemberList');
+            container.innerHTML = '';
+            if (type === 'group') {
+                const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', target.id);
+                if (members) {
+                    members.forEach(m => {
+                        const row = document.createElement('div');
+                        row.className = 'member-row';
+                        row.innerHTML = `<span class="presence-dot"></span><span style="font-size:0.85rem; font-weight:600;">${m.username.toUpperCase()}</span>`;
+                        row.onclick = () => openProfileModal(m.username);
+                        container.appendChild(row);
+                    });
+                }
+            } else {
+                loadGlobalPresencePanel();
+            }
         }
 
-        async function handleAuth(event, type) {
-            event.preventDefault();
+        // --- PROFILE MODAL ---
+        async function openProfileModal(username) {
+            const { data } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            if (!data) return;
 
-            if (type === 'login') {
-                const username = document.getElementById('loginUser').value.trim();
-                const password = document.getElementById('loginPass').value;
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
-                showStatus("Authenticating credentials...", false);
+            const isSelf = username === currentUser.username;
+            modal.innerHTML = `
+                <div class="modal-card">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <img src="${data.pfp_url}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+                        <div>
+                            <div style="font-weight:700; color:#38bdf8; font-size:1.1rem;">${(data.nickname || data.username).toUpperCase()}</div>
+                            <div style="font-size:0.8rem; color:#64748b;">@${data.username}</div>
+                        </div>
+                    </div>
+                    <hr style="border:0; border-top:1px solid #1f293d;">
+                    ${isSelf ? `
+                        <label style="font-size:0.75rem; color:#94a3b8;">UPDATE NICKNAME</label>
+                        <input type="text" id="modalNewNick" class="form-input" value="${data.nickname || ''}">
+                        <button class="btn-primary" onclick="updateProfileSettings()">SAVE CHANGES</button>
+                    ` : `
+                        <button class="btn-primary" onclick="openWorkspaceChat('dm', '${data.username}')">INITIALIZE DIRECT MESSAGE</button>
+                    `}
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
 
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .single();
+        async function updateProfileSettings() {
+            const nick = document.getElementById('modalNewNick').value.trim();
+            currentUser.nickname = nick || currentUser.username;
+            localStorage.setItem('nexus_user', JSON.stringify(currentUser));
+            await supabaseClient.from('users').update({ nickname: currentUser.nickname }).eq('username', currentUser.username);
+            alert("Profile settings synchronized.");
+            location.reload();
+        }
 
-                if (error || !data) {
-                    showStatus("Authentication failed. Invalid handle or passphrase.");
-                    return;
+        // --- FRIEND LINKS & GROUPS ---
+        async function submitFriendLink() {
+            const target = document.getElementById('targetFriendHandle').value.trim().toLowerCase();
+            const feedback = document.getElementById('friendResponseFeedback');
+            if (!target || target === currentUser.username) { feedback.innerText = "Invalid operative handle."; return; }
+
+            await supabaseClient.from('friends').insert([{ user_a: currentUser.username, user_b: target, status: 'accepted' }]);
+            feedback.innerText = `Secure link established with @${target.toUpperCase()}`;
+            document.getElementById('targetFriendHandle').value = '';
+        }
+
+        async function loadGroupCheckboxes() {
+            const container = document.getElementById('groupCheckboxesContainer');
+            container.innerHTML = '';
+            const { data } = await supabaseClient.from('friends').select('*').or(`user_a.eq.${currentUser.username},user_b.eq.${currentUser.username}`);
+            if (data) {
+                data.forEach(f => {
+                    const friend = f.user_a === currentUser.username ? f.user_b : f.user_a;
+                    const lbl = document.createElement('label');
+                    lbl.style.cssText = "display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; color:#cbd5e1; cursor:pointer;";
+                    lbl.innerHTML = `<input type="checkbox" class="squad-chk" value="${friend}"> @${friend.toUpperCase()}`;
+                    container.appendChild(lbl);
+                });
+            }
+        }
+
+        async function buildSquadGroup() {
+            const name = document.getElementById('newGroupName').value.trim();
+            if (!name) return;
+
+            const { data: grp } = await supabaseClient.from('groups').insert([{ name, created_by: currentUser.username }]).select().single();
+            if (grp) {
+                await supabaseClient.from('group_members').insert([{ group_id: grp.id, username: currentUser.username }]);
+                const checks = document.querySelectorAll('.squad-chk:checked');
+                for (let c of checks) {
+                    await supabaseClient.from('group_members').insert([{ group_id: grp.id, username: c.value }]);
                 }
+                openWorkspaceChat('group', { id: grp.id, name });
+            }
+        }
 
-                localStorage.setItem('phantom_user', JSON.stringify(data));
-                showStatus("Access granted. Redirecting to Command Dashboard...", false);
-                
-                setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 800);
+        async function loadChatFrequenciesList() {
+            const container = document.getElementById('chatFrequenciesList');
+            container.innerHTML = '';
 
-            } else if (type === 'register') {
-                const username = document.getElementById('regUser').value.trim();
-                const nickname = document.getElementById('regNick').value.trim() || username;
-                const password = document.getElementById('regPass').value;
-                const confirmPassword = document.getElementById('regPassConfirm').value;
-                const fileInput = document.getElementById('regPfpFile');
-
-                if (password !== confirmPassword) {
-                    showStatus("Passphrases do not match. Please verify.");
-                    return;
-                }
-
-                showStatus("Checking handle availability...", false);
-
-                const { data: existing } = await supabaseClient
-                    .from('users')
-                    .select('username')
-                    .eq('username', username)
-                    .single();
-
-                if (existing) {
-                    showStatus("Operative handle already taken.");
-                    return;
-                }
-
-                let pfp_url = 'https://boxrmxujhzzojepneliq.supabase.co/storage/v1/object/public/avatars/default.png';
-
-                if (fileInput.files && fileInput.files[0]) {
-                    showStatus("Uploading avatar file to server...", false);
-                    const file = fileInput.files[0];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${username}_${Date.now()}.${fileExt}`;
-
-                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                        .from('avatars')
-                        .upload(fileName, file);
-
-                    if (uploadError) {
-                        console.error('Upload Error:', uploadError);
-                        // Fallback placeholder if storage bucket is restricted or uninitialized
-                        pfp_url = `https://via.placeholder.com/80/0d0e17/00f3ff?text=${username.charAt(0).toUpperCase()}`;
-                    } else {
-                        const { data: urlData } = supabaseClient.storage
-                            .from('avatars')
-                            .getPublicUrl(fileName);
-                        pfp_url = urlData.publicUrl;
+            const { data: memberships } = await supabaseClient.from('group_members').select('group_id').eq('username', currentUser.username);
+            if (memberships) {
+                for (let m of memberships) {
+                    const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', m.group_id).single();
+                    if (grp) {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-primary';
+                        btn.style.textAlign = 'left';
+                        btn.style.background = '#111622';
+                        btn.style.border = '1px solid #1f293d';
+                        btn.innerHTML = `👥 SQUAD FREQUENCY: ${grp.name.toUpperCase()}`;
+                        btn.onclick = () => openWorkspaceChat('group', { id: grp.id, name: grp.name });
+                        container.appendChild(btn);
                     }
                 }
+            }
 
-                showStatus("Registering profile...", false);
-                const newUser = {
-                    username,
-                    nickname,
-                    password,
-                    pfp_url
-                };
-
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .insert([newUser])
-                    .select()
-                    .single();
-
-                if (error) {
-                    showStatus("Failed to create operative profile.");
-                    return;
-                }
-
-                localStorage.setItem('phantom_user', JSON.stringify(data));
-                showStatus("Operative profile created! Redirecting to Dashboard...", false);
-                
-                setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 800);
+            const { data: friends } = await supabaseClient.from('friends').select('*').or(`user_a.eq.${currentUser.username},user_b.eq.${currentUser.username}`);
+            if (friends) {
+                friends.forEach(f => {
+                    const friend = f.user_a === currentUser.username ? f.user_b : f.user_a;
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-primary';
+                    btn.style.textAlign = 'left';
+                    btn.style.background = '#111622';
+                    btn.style.border = '1px solid #1f293d';
+                    btn.innerHTML = `💬 DIRECT FREQUENCY: @${friend.toUpperCase()}`;
+                    btn.onclick = () => openWorkspaceChat('dm', friend);
+                    container.appendChild(btn);
+                });
             }
         }
     </script>
