@@ -308,13 +308,13 @@
             clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
         }
 
-        /* --- ADVANCED EMOJI & GIF POPUP STYLES --- */
+        /* --- MEDIA PICKER & CATEGORY STYLES --- */
         .picker-popup {
             position: absolute;
             bottom: 80px;
             left: 20px;
-            width: 330px;
-            height: 380px;
+            width: 350px;
+            height: 400px;
             background: #0d0e17;
             border: 1px solid #00f3ff;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.25);
@@ -346,6 +346,32 @@
             background: rgba(0, 243, 255, 0.15);
             color: #00f3ff;
             border-bottom: 2px solid #00f3ff;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 4px;
+            padding: 6px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+
+        .cat-pill {
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #7a8b9e;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cat-pill.active, .cat-pill:hover {
+            color: #00f3ff;
+            border-color: #00f3ff;
+            background: rgba(0, 243, 255, 0.1);
         }
 
         .picker-search-bar {
@@ -509,18 +535,23 @@
                     <button onclick="cancelReply()" style="background:none; border:none; color:#ff003c; cursor:pointer; font-weight:700;">✕</button>
                 </div>
 
-                <!-- NEW TABBED EMOJI / GIF POPUP -->
+                <!-- CATEGORIZED EMOJI & TENOR GIF POPUP -->
                 <div id="mediaPicker" class="picker-popup hidden">
                     <div class="picker-tabs">
                         <div id="tabEmojis" class="picker-tab active" onclick="switchPickerTab('emojis')">EMOJIS</div>
                         <div id="tabGifs" class="picker-tab" onclick="switchPickerTab('gifs')">GIFS</div>
                     </div>
+                    <div id="categoryPills" class="category-pills">
+                        <span class="cat-pill active" onclick="filterEmojiCategory('all', this)">ALL</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('smileys', this)">SMILEYS</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('gestures', this)">GESTURES</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('symbols', this)">SYMBOLS</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('objects', this)">OBJECTS</span>
+                    </div>
                     <div class="picker-search-bar">
                         <input type="text" id="pickerSearch" placeholder="SEARCH MATRIX..." oninput="handlePickerSearch()">
                     </div>
-                    <div class="picker-content" id="pickerContent">
-                        <!-- Content loads dynamically -->
-                    </div>
+                    <div class="picker-content" id="pickerContent"></div>
                 </div>
 
                 <form class="chat-form" id="chatForm">
@@ -547,14 +578,14 @@
         </div>
     </div>
 
-    <!-- Right-Click Context Menu -->
+    <!-- Context Menu -->
     <div id="contextMenu" class="context-menu hidden">
         <div class="context-item" id="ctxReply">↩ Reply</div>
         <div class="context-item" id="ctxEdit">✏️ Edit</div>
         <div class="context-item delete-item" id="ctxDelete">🗑️ Delete</div>
     </div>
 
-    <!-- Custom Cyberpunk Settings Modal -->
+    <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay hidden">
         <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
             <h3 style="margin-bottom:1.2rem; color:#ff003c; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / SETTINGS</h3>
@@ -573,7 +604,7 @@
         </div>
     </div>
 
-    <!-- Custom Cyberpunk Edit Modal -->
+    <!-- Edit Modal -->
     <div id="editModal" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 style="margin-bottom:1.2rem; color:#00f3ff; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / EDIT TRANSMISSION</h3>
@@ -588,7 +619,7 @@
         </div>
     </div>
 
-    <!-- Custom Cyberpunk Delete Modal -->
+    <!-- Delete Modal -->
     <div id="deleteModal" class="modal-overlay hidden">
         <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
             <h3 style="margin-bottom:1rem; color:#ff003c; font-family:'Orbitron', sans-serif;">PURGE TRANSMISSION?</h3>
@@ -634,10 +665,6 @@
         const typingBox = document.getElementById('typingBox');
         const contextMenu = document.getElementById('contextMenu');
 
-        if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission();
-        }
-
         function getUserColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -668,50 +695,69 @@
             }
         }
 
-        /* --- EMOJI & TENOR GIF INTEGRATION --- */
+        /* --- CATEGORIZED EMOJI DATA & TENOR V2 API --- */
         let activePickerTab = 'emojis';
-        const TENOR_API_KEY = "LIVDSRZULE4F"; // Public Tenor API Key
+        let selectedCategory = 'all';
 
-        const ALL_EMOJIS = [
-            { e: '😀', k: 'grinning happy smile' }, { e: '😃', k: 'smiley happy' }, { e: '😄', k: 'smile happy' }, { e: '😁', k: 'grin happy' },
-            { e: '😆', k: 'laughing lol XD' }, { e: '😅', k: 'sweat smile' }, { e: '🤣', k: 'rofl lol laugh' }, { e: '😂', k: 'joy cry laugh' },
-            { e: '🙂', k: 'slightly happy' }, { e: '🙃', k: 'upside down' }, { e: 'wink', e: '😉', k: 'wink' }, { e: '😊', k: 'blush smile' },
-            { e: '😇', k: 'halo angel' }, { e: '🥰', k: 'love hearts' }, { e: '😍', k: 'heart eyes' }, { e: '🤩', k: 'star struck' },
-            { e: '😘', k: 'kiss' }, { e: '😋', k: 'yum food' }, { e: '😛', k: 'tongue' }, { e: '😜', k: 'crazy wink' },
-            { e: '🤪', k: 'zany crazy' }, { e: '😝', k: 'squint tongue' }, { e: '🤑', k: 'money rich' }, { e: '🤗', k: 'hug' },
-            { e: '🤭', k: 'giggle hand' }, { e: '🤫', k: 'shh quiet' }, { e: '🤔', k: 'thinking think' }, { e: '🤐', k: 'zipper quiet' },
-            { e: '🤨', k: 'eyebrow suspicious' }, { e: '😐', k: 'neutral poker' }, { e: '😑', k: 'expressionless' }, { e: '😶', k: 'speechless' },
-            { e: '😏', k: 'smirk' }, { e: '😒', k: 'unamused' }, { e: '🙄', k: 'eye roll' }, { e: 'grimacing', e: '😬', k: 'grimace nervous' },
-            { e: '🤥', k: 'lying pinocchio' }, { e: '😌', k: 'relieved' }, { e: 'pensive', e: '😔', k: 'sad pensive' }, { e: 'sleepy', e: '😪', k: 'sleepy' },
-            { e: '🤤', k: 'drool' }, { e: '😴', k: 'sleeping zzz' }, { e: '😷', k: 'mask sick' }, { e: '🤒', k: 'fever thermometer' },
-            { e: '🤕', k: 'hurt bandage' }, { e: '🤢', k: 'nauseated vomit' }, { e: '🤮', k: 'barf vomit' }, { e: '🤧', k: 'sneeze' },
-            { e: '🥵', k: 'hot sweat' }, { e: '🥶', k: 'cold ice' }, { e: '🥴', k: 'drunk woozy' }, { e: '😵', k: 'dizzy dead' },
-            { e: '🤯', k: 'mind blown mindblown explode' }, { e: '🤠', k: 'cowboy' }, { e: '🥳', k: 'party celebrate' }, { e: '😎', k: 'cool glasses sunglasses' },
-            { e: '🤓', k: 'nerd glasses' }, { e: '🧐', k: 'monocle inspect' }, { e: '😕', k: 'confused' }, { e: '😟', k: 'worried' },
-            { e: '🙁', k: 'frown' }, { e: '😮', k: 'surprised open mouth' }, { e: '😯', k: 'hushed' }, { e: '😲', k: 'astonished' },
-            { e: '😳', k: 'flustered blushed' }, { e: '🥺', k: 'pleading beg eyes' }, { e: '😦', k: 'frown' }, { e: '😧', k: 'anguished' },
-            { e: '😨', k: 'fear' }, { e: '😰', k: 'anxious sweat' }, { e: '😥', k: 'sad sweat' }, { e: '😢', k: 'cry tear' },
-            { e: '😭', k: 'sob cry' }, { e: '😱', k: 'scream fear' }, { e: '😖', k: 'confounded' }, { e: '😣', k: 'persevere' },
-            { e: '😞', k: 'disappointed' }, { e: '😓', k: 'sweat sad' }, { e: '😩', k: 'weary' }, { e: '😫', k: 'tired' },
-            { e: '🥱', k: 'yawn' }, { e: '😤', k: 'triumph mad' }, { e: '😡', k: 'rage mad angry' }, { e: '😠', k: 'angry' },
-            { e: '🤬', k: 'swearing curse mad' }, { e: '😈', k: 'devil evil' }, { e: '👿', k: 'imp angry' }, { e: '💀', k: 'skull dead' },
-            { e: '☠️', k: 'skull crossbones' }, { e: '💩', k: 'poop' }, { e: '🤡', k: 'clown' }, { e: '👹', k: 'ogre monster' },
-            { e: '👺', k: 'goblin' }, { e: 'ghost', e: '👻', k: 'ghost halloween' }, { e: 'alien', e: '👽', k: 'alien space' }, { e: 'robot', e: '🤖', k: 'robot bot' },
-            { e: '👋', k: 'wave hi bye' }, { e: '🤚', k: 'backhand' }, { e: '🖐️', k: 'hand' }, { e: '✋', k: 'stop hand' },
-            { e: '🖖', k: 'vulcan spock' }, { e: '👌', k: 'ok okay' }, { e: '🤌', k: 'chef kiss pinch' }, { e: '🤏', k: 'pinch small' },
-            { e: '✌️', k: 'peace victory' }, { e: '🤞', k: 'fingers crossed luck' }, { e: '🤟', k: 'love you' }, { e: '🤘', k: 'rock metal' },
-            { e: '🤙', k: 'call me' }, { e: '👈', k: 'point left' }, { e: '👉', k: 'point right' }, { e: '👆', k: 'point up' },
-            { e: '🖕', k: 'middle finger' }, { e: '👇', k: 'point down' }, { e: '☝️', k: 'point up' }, { e: '👍', k: 'thumbs up like' },
-            { e: '👎', k: 'thumbs down dislike' }, { e: '✊', k: 'fist' }, { e: '👊', k: 'punch' }, { e: '🤛', k: 'left punch' },
-            { e: '🤜', k: 'right punch' }, { e: '👏', k: 'clap applause' }, { e: '🙌', k: 'raise hands celebrate' }, { e: '👐', k: 'open hands' },
-            { e: '🤲', k: 'cupped hands' }, { e: '🤝', k: 'handshake deal' }, { e: '🙏', k: 'pray thanks' }, { e: '✍️', k: 'write' },
-            { e: '💅', k: 'nail polish sassy' }, { e: '🤳', k: 'selfie phone' }, { e: '💪', k: 'biceps strong flex' }, { e: '🧠', k: 'brain smart' },
-            { e: '🫀', k: 'heart anatomical' }, { e: '🫁', k: 'lungs breath' }, { e: '🦷', k: 'tooth' }, { e: '🦴', k: 'bone' },
-            { e: '👀', k: 'eyes look' }, { e: '👁️', k: 'eye see' }, { e: '👅', k: 'tongue' }, { e: '👄', k: 'mouth lips' },
-            { e: '🔥', k: 'fire lit hot' }, { e: '💥', k: 'boom collision' }, { e: '✨', k: 'sparkles magic' }, { e: '🌟', k: 'glowing star' },
-            { e: '💫', k: 'dizzy star' }, { e: '💦', k: 'sweat water' }, { e: '💨', k: 'dash fast wind' }, { e: '🥊', k: 'boxing glove' },
-            { e: '🎯', k: 'target bullseye' }, { e: '⚔️', k: 'swords battle fight' }, { e: '🛡️', k: 'shield defense' }, { e: '⚡', k: 'lightning bolt zap' },
-            { e: '👑', k: 'crown king queen' }, { e: '🏆', k: 'trophy win winner' }, { e: '💎', k: 'diamond gem' }, { e: '🎮', k: 'game controller gaming' }
+        const EMOJI_DATABASE = [
+            // Smileys
+            { e: '😀', c: 'smileys', k: 'grinning happy smile' }, { e: '😃', c: 'smileys', k: 'smiley happy' }, { e: '😄', c: 'smileys', k: 'smile happy' },
+            { e: '😁', c: 'smileys', k: 'grin happy' }, { e: '😆', c: 'smileys', k: 'laughing lol xd' }, { e: '😅', c: 'smileys', k: 'sweat smile' },
+            { e: '🤣', c: 'smileys', k: 'rofl lol laugh' }, { e: '😂', c: 'smileys', k: 'joy cry laugh' }, { e: '🙂', c: 'smileys', k: 'slightly happy' },
+            { e: '🙃', c: 'smileys', k: 'upside down' }, { e: '😉', c: 'smileys', k: 'wink' }, { e: '😊', c: 'smileys', k: 'blush smile' },
+            { e: '😇', c: 'smileys', k: 'halo angel' }, { e: '🥰', c: 'smileys', k: 'love hearts' }, { e: '😍', c: 'smileys', k: 'heart eyes' },
+            { e: '🤩', c: 'smileys', k: 'star struck' }, { e: '😘', c: 'smileys', k: 'kiss' }, { e: '😋', c: 'smileys', k: 'yum food' },
+            { e: '😛', c: 'smileys', k: 'tongue' }, { e: '😜', c: 'smileys', k: 'crazy wink' }, { e: '🤪', c: 'smileys', k: 'zany crazy' },
+            { e: '😝', c: 'smileys', k: 'squint tongue' }, { e: '🤑', c: 'smileys', k: 'money rich' }, { e: '🤗', c: 'smileys', k: 'hug' },
+            { e: '🤭', c: 'smileys', k: 'giggle hand' }, { e: '🤫', c: 'smileys', k: 'shh quiet' }, { e: '🤔', c: 'smileys', k: 'thinking think' },
+            { e: '🤐', c: 'smileys', k: 'zipper quiet' }, { e: '🤨', c: 'smileys', k: 'eyebrow suspicious' }, { e: '😐', c: 'smileys', k: 'neutral poker' },
+            { e: '😑', c: 'smileys', k: 'expressionless' }, { e: '😶', c: 'smileys', k: 'speechless' }, { e: '😏', c: 'smileys', k: 'smirk' },
+            { e: '😒', c: 'smileys', k: 'unamused' }, { e: '🙄', c: 'smileys', k: 'eye roll' }, { e: '😬', c: 'smileys', k: 'grimace nervous' },
+            { e: '🤥', c: 'smileys', k: 'lying pinocchio' }, { e: '😌', c: 'smileys', k: 'relieved' }, { e: '😔', c: 'smileys', k: 'sad pensive' },
+            { e: '😪', c: 'smileys', k: 'sleepy' }, { e: '🤤', c: 'smileys', k: 'drool' }, { e: '😴', c: 'smileys', k: 'sleeping zzz' },
+            { e: '😷', c: 'smileys', k: 'mask sick' }, { e: '🤒', c: 'smileys', k: 'fever thermometer' }, { e: '🤕', c: 'smileys', k: 'hurt bandage' },
+            { e: '🤢', c: 'smileys', k: 'nauseated vomit' }, { e: '🤮', c: 'smileys', k: 'barf vomit' }, { e: '🤧', c: 'smileys', k: 'sneeze' },
+            { e: '🥵', c: 'smileys', k: 'hot sweat' }, { e: '🥶', c: 'smileys', k: 'cold ice' }, { e: '🥴', c: 'smileys', k: 'drunk woozy' },
+            { e: '😵', c: 'smileys', k: 'dizzy dead' }, { e: '🤯', c: 'smileys', k: 'mind blown explode' }, { e: '🤠', c: 'smileys', k: 'cowboy' },
+            { e: '🥳', c: 'smileys', k: 'party celebrate' }, { e: '😎', c: 'smileys', k: 'cool glasses sunglasses' }, { e: '🤓', c: 'smileys', k: 'nerd glasses' },
+            { e: '🧐', c: 'smileys', k: 'monocle inspect' }, { e: '😕', c: 'smileys', k: 'confused' }, { e: '😟', c: 'smileys', k: 'worried' },
+            { e: '🙁', c: 'smileys', k: 'frown' }, { e: '😮', c: 'smileys', k: 'surprised open mouth' }, { e: '😯', c: 'smileys', k: 'hushed' },
+            { e: '😲', c: 'smileys', k: 'astonished' }, { e: '😳', c: 'smileys', k: 'flustered blushed' }, { e: '🥺', c: 'smileys', k: 'pleading beg eyes' },
+            { e: '😭', c: 'smileys', k: 'sob cry' }, { e: '😱', c: 'smileys', k: 'scream fear' }, { e: '😖', c: 'smileys', k: 'confounded' },
+            { e: '😣', c: 'smileys', k: 'persevere' }, { e: '😞', c: 'smileys', k: 'disappointed' }, { e: '😤', c: 'smileys', k: 'triumph mad' },
+            { e: '😡', c: 'smileys', k: 'rage mad angry' }, { e: '😠', c: 'smileys', k: 'angry' }, { e: '🤬', c: 'smileys', k: 'swearing curse' },
+            { e: '😈', c: 'smileys', k: 'devil evil' }, { e: '👿', c: 'smileys', k: 'imp angry' }, { e: '💀', c: 'smileys', k: 'skull dead' },
+
+            // Gestures
+            { e: '👋', c: 'gestures', k: 'wave hi bye' }, { e: '🤚', c: 'gestures', k: 'backhand' }, { e: '🖐️', c: 'gestures', k: 'hand' },
+            { e: '✋', c: 'gestures', k: 'stop hand' }, { e: '🖖', c: 'gestures', k: 'vulcan spock' }, { e: '👌', c: 'gestures', k: 'ok okay' },
+            { e: '🤌', c: 'gestures', k: 'chef kiss pinch' }, { e: '🤏', c: 'gestures', k: 'pinch small' }, { e: '✌️', c: 'gestures', k: 'peace victory' },
+            { e: '🤞', c: 'gestures', k: 'fingers crossed luck' }, { e: '🤟', c: 'gestures', k: 'love you' }, { e: '🤘', c: 'gestures', k: 'rock metal' },
+            { e: '🤙', c: 'gestures', k: 'call me' }, { e: '👈', c: 'gestures', k: 'point left' }, { e: '👉', c: 'gestures', k: 'point right' },
+            { e: '👆', c: 'gestures', k: 'point up' }, { e: '🖕', c: 'gestures', k: 'middle finger' }, { e: '👇', c: 'gestures', k: 'point down' },
+            { e: '☝️', c: 'gestures', k: 'point up' }, { e: '👍', c: 'gestures', k: 'thumbs up like' }, { e: '👎', c: 'gestures', k: 'thumbs down dislike' },
+            { e: '✊', c: 'gestures', k: 'fist' }, { e: '👊', c: 'gestures', k: 'punch' }, { e: '🤛', c: 'gestures', k: 'left punch' },
+            { e: '🤜', c: 'gestures', k: 'right punch' }, { e: '👏', c: 'gestures', k: 'clap applause' }, { e: '🙌', c: 'gestures', k: 'raise hands celebrate' },
+            { e: '👐', c: 'gestures', k: 'open hands' }, { e: '🤲', c: 'gestures', k: 'cupped hands' }, { e: '🤝', c: 'gestures', k: 'handshake deal' },
+            { e: '🙏', c: 'gestures', k: 'pray thanks' }, { e: '✍️', c: 'gestures', k: 'write' }, { e: '💅', c: 'gestures', k: 'nail polish sassy' },
+            { e: '🤳', c: 'gestures', k: 'selfie phone' }, { e: '💪', c: 'gestures', k: 'biceps strong flex' },
+
+            // Symbols
+            { e: '❤️', c: 'symbols', k: 'red heart love' }, { e: '🧡', c: 'symbols', k: 'orange heart' }, { e: '💛', c: 'symbols', k: 'yellow heart' },
+            { e: '💚', c: 'symbols', k: 'green heart' }, { e: '💙', c: 'symbols', k: 'blue heart' }, { e: '💜', c: 'symbols', k: 'purple heart' },
+            { e: '🖤', c: 'symbols', k: 'black heart' }, { e: '🤍', c: 'symbols', k: 'white heart' }, { e: '🤎', c: 'symbols', k: 'brown heart' },
+            { e: '💔', c: 'symbols', k: 'broken heart' }, { e: '❣️', c: 'symbols', k: 'heart exclamation' }, { e: '💕', c: 'symbols', k: 'two hearts' },
+            { e: '💞', c: 'symbols', k: 'revolving hearts' }, { e: '💓', c: 'symbols', k: 'beating heart' }, { e: '💗', c: 'symbols', k: 'growing heart' },
+            { e: '💖', c: 'symbols', k: 'sparkle heart' }, { e: '💘', c: 'symbols', k: 'cupid heart arrow' }, { e: '💝', c: 'symbols', k: 'ribbon heart' },
+
+            // Objects & Gaming
+            { e: '🔥', c: 'objects', k: 'fire lit hot' }, { e: '💥', c: 'objects', k: 'boom collision' }, { e: '✨', c: 'objects', k: 'sparkles magic' },
+            { e: '🌟', c: 'objects', k: 'glowing star' }, { e: '💫', c: 'objects', k: 'dizzy star' }, { e: '💦', c: 'objects', k: 'sweat water' },
+            { e: '💨', c: 'objects', k: 'dash fast wind' }, { e: '🥊', c: 'objects', k: 'boxing glove' }, { e: '🎯', c: 'objects', k: 'target bullseye' },
+            { e: '⚔️', c: 'objects', k: 'swords battle fight' }, { e: '🛡️', c: 'objects', k: 'shield defense' }, { e: '⚡', c: 'objects', k: 'lightning bolt zap' },
+            { e: '👑', c: 'objects', k: 'crown king queen' }, { e: '🏆', c: 'objects', k: 'trophy win winner' }, { e: '💎', c: 'objects', k: 'diamond gem' },
+            { e: '🎮', c: 'objects', k: 'game controller gaming' }, { e: '🕹️', c: 'objects', k: 'joystick gaming' }, { e: '🎲', c: 'objects', k: 'dice game' },
+            { e: '👾', c: 'objects', k: 'alien monster space invader' }, { e: '🤖', c: 'objects', k: 'robot bot' }, { e: '🧠', c: 'objects', k: 'brain smart' }
         ];
 
         function toggleMediaPicker() {
@@ -728,10 +774,18 @@
             activePickerTab = tab;
             document.getElementById('tabEmojis').classList.toggle('active', tab === 'emojis');
             document.getElementById('tabGifs').classList.toggle('active', tab === 'gifs');
+            document.getElementById('categoryPills').style.display = tab === 'emojis' ? 'flex' : 'none';
             document.getElementById('pickerSearch').value = '';
 
             if (tab === 'emojis') renderEmojis();
             else loadTenorGifs();
+        }
+
+        function filterEmojiCategory(cat, el) {
+            selectedCategory = cat;
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            renderEmojis(document.getElementById('pickerSearch').value.trim().toLowerCase());
         }
 
         function handlePickerSearch() {
@@ -745,10 +799,23 @@
 
         function renderEmojis(filter = '') {
             const container = document.getElementById('pickerContent');
-            const filtered = filter ? ALL_EMOJIS.filter(item => item.k.includes(filter)) : ALL_EMOJIS;
-            
+            let items = EMOJI_DATABASE;
+
+            if (selectedCategory !== 'all') {
+                items = items.filter(item => item.c === selectedCategory);
+            }
+
+            if (filter) {
+                items = items.filter(item => item.k.includes(filter));
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = '<div style="color:#7a8b9e; text-align:center; padding:1.5rem;">NO EMOJIS FOUND</div>';
+                return;
+            }
+
             let html = '<div class="emoji-grid">';
-            filtered.forEach(item => {
+            items.forEach(item => {
                 html += `<span class="emoji-item" onclick="insertEmoji('${item.e}')">${item.e}</span>`;
             });
             html += '</div>';
@@ -765,26 +832,29 @@
             clearTimeout(gifSearchDebounce);
             gifSearchDebounce = setTimeout(async () => {
                 const container = document.getElementById('pickerContent');
-                container.innerHTML = '<div style="color:#00f3ff; text-align:center; padding:1.5rem; font-weight:700;">FETCHING GIF TRANSMISSIONS...</div>';
+                container.innerHTML = '<div style="color:#00f3ff; text-align:center; padding:1.5rem; font-weight:700;">CONNECTING TO TENOR MATRIX...</div>';
 
+                // Official Tenor Public Client Key & v2 API Endpoint
+                const apiKey = "LIVDSRZULE4F";
                 const endpoint = query 
-                    ? `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=16`
-                    : `https://g.tenor.com/v1/trending?key=${TENOR_API_KEY}&limit=16`;
+                    ? `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${apiKey}&client_key=phantom_hub&limit=16`
+                    : `https://tenor.googleapis.com/v2/featured?key=${apiKey}&client_key=phantom_hub&limit=16`;
 
                 try {
                     const res = await fetch(endpoint);
                     const data = await res.json();
+                    
                     if (data.results && data.results.length > 0) {
                         let html = '<div class="gif-grid">';
                         data.results.forEach(g => {
-                            const gifUrl = g.media[0].gif.url;
-                            const tinyUrl = g.media[0].tinygif.url;
+                            const gifUrl = g.media_formats.gif.url;
+                            const tinyUrl = g.media_formats.tinygif ? g.media_formats.tinygif.url : gifUrl;
                             html += `<img src="${tinyUrl}" class="gif-item" onclick="sendGif('${gifUrl}')" alt="gif">`;
                         });
                         html += '</div>';
                         container.innerHTML = html;
                     } else {
-                        container.innerHTML = '<div style="color:#7a8b9e; text-align:center; padding:1.5rem;">NO SIGNAL DETECTED</div>';
+                        container.innerHTML = '<div style="color:#7a8b9e; text-align:center; padding:1.5rem;">NO GIF SIGNAL FOUND</div>';
                     }
                 } catch (err) {
                     container.innerHTML = '<div style="color:#ff003c; text-align:center; padding:1.5rem;">TENOR NETWORK OFFLINE</div>';
@@ -945,7 +1015,6 @@
             document.getElementById('replyBanner').classList.add('hidden');
         }
 
-        /* --- CUSTOM DELETE MODAL LOGIC --- */
         function deleteMessage(id) {
             pendingDeleteId = id;
             document.getElementById('deleteModal').classList.remove('hidden');
@@ -965,7 +1034,6 @@
             document.getElementById(`msg-${id}`)?.remove();
         }
 
-        /* --- CUSTOM EDIT MODAL LOGIC --- */
         function editMessage(id) {
             pendingEditId = id;
             const currentText = document.getElementById(`body-${id}`).innerText;
