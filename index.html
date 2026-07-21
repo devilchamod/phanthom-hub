@@ -28,17 +28,17 @@
         ::-webkit-scrollbar-thumb { background: rgba(138, 43, 226, 0.4); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(138, 43, 226, 0.7); }
 
-        /* THE BLACK HOLE BACKGROUND EFFECT */
+        /* THE BLACK HOLE BACKGROUND EFFECT - SOFTENED GRADIENT CORE */
         .black-hole-bg {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 50vw; height: 50vw;
+            width: 48vw; height: 48vw;
             border-radius: 50%;
-            background: radial-gradient(circle, var(--event-horizon) 25%, transparent 65%);
+            background: radial-gradient(circle, rgba(5, 5, 10, 0.85) 0%, rgba(20, 10, 35, 0.4) 50%, transparent 75%);
             box-shadow: 
-                0 0 120px var(--accretion-purple),
-                0 0 300px var(--accretion-blue);
+                0 0 120px rgba(138, 43, 226, 0.4),
+                0 0 300px rgba(65, 105, 225, 0.3);
             animation: spin 25s linear infinite, warp 6s ease-in-out infinite alternate;
             z-index: -1;
             pointer-events: none;
@@ -73,14 +73,14 @@
         .text-input:focus { border-color: var(--accretion-purple); box-shadow: inset 0 0 8px rgba(138,43,226,0.3); }
 
         /* APP LAYOUT */
-        .app-container { display: flex; width: 100vw; height: 100vh; background: transparent; }
+        .app-container { position: relative; display: flex; width: 100vw; height: 100vh; background: transparent; }
         
-        .server-rail { width: 72px; background: rgba(10,10,12,0.7); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 12px; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+        .server-rail { width: 72px; background: rgba(10,10,12,0.7); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 12px; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; }
         .server-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; color: var(--text-main); font-weight: 600; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
         .server-icon:hover, .server-icon.active { border-radius: 16px; background: rgba(138,43,226,0.2); border-color: var(--accretion-purple); color: #fff; box-shadow: 0 0 15px var(--accretion-purple); }
         .server-rail-separator { width: 32px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; margin: 4px 0; }
 
-        .channels-sidebar { width: 250px; background: rgba(15,15,20,0.6); display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+        .channels-sidebar { width: 250px; background: rgba(15,15,20,0.6); display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; }
         .sidebar-search-bar { padding: 12px; }
         .sidebar-search-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 12px; color: #fff; font-size: 13px; outline: none; transition: 0.3s; }
         .sidebar-search-input:focus { border-color: var(--accretion-purple); }
@@ -90,7 +90,7 @@
         .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .sidebar-item.active { background: rgba(138,43,226,0.15); color: #fff; border-color: rgba(138,43,226,0.4); box-shadow: inset 0 0 10px rgba(138,43,226,0.2); }
 
-        .user-footer-panel { height: 60px; background: rgba(5,5,8,0.8); display: flex; align-items: center; padding: 0 12px; gap: 10px; border-top: 1px solid var(--glass-border); }
+        .user-footer-panel { height: 60px; background: rgba(5,5,8,0.85); display: flex; align-items: center; padding: 0 12px; gap: 10px; border-top: 1px solid var(--glass-border); }
         .user-footer-avatar-wrap { position: relative; width: 36px; height: 36px; cursor: pointer; }
         .user-footer-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .user-footer-avatar-wrap:hover .user-footer-avatar { border-color: var(--accretion-purple); box-shadow: 0 0 10px var(--accretion-purple); }
@@ -172,8 +172,23 @@
         .member-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
         .member-list-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateX(-5px); }
         
-        /* POPOVERS & MODALS */
-        .discord-profile-popover { position: absolute; bottom: 70px; left: 80px; width: 340px; background: rgba(10,10,15,0.95); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); overflow: hidden; font-family: 'Inter', sans-serif; color: #fff; z-index: 3000; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); }
+        /* FIXED DISCORD PROFILE POPOVER POSITIONING & ISOLATION */
+        .discord-profile-popover { 
+            position: absolute; 
+            bottom: 70px; 
+            left: 80px; 
+            width: 340px; 
+            background: rgba(15, 15, 22, 0.95); 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.85); 
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif; 
+            color: #fff; 
+            z-index: 9999; 
+            border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+        }
         .profile-banner { height: 100px; background: var(--accretion-purple); background-size: cover; background-position: center; position: relative; }
         .profile-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(10,10,15,0.9)); }
         .profile-body { padding: 0 20px 20px 20px; position: relative; margin-top: -45px; }
@@ -260,6 +275,51 @@
 
     <!-- MAIN APP INTERFACE -->
     <div id="appContainer" class="app-container hidden">
+
+        <!-- PROFILE POPOVER MOVED OUTSIDE FLEX CONTAINERS TO PREVENT BLUR GLITCH -->
+        <div id="userProfilePopover" class="discord-profile-popover hidden">
+            <div class="profile-banner" id="popoverBanner"></div>
+            <div class="profile-body">
+                <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px;">
+                    <div class="avatar-wrapper">
+                        <img id="popoverUserAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="popover-avatar">
+                        <div style="position: absolute; bottom: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #0a0a0f; background: #23a55a;" id="popoverStatusIndicator"></div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">
+                        <span id="popoverStatusText">Online</span>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <h2 id="popoverDisplayName" style="font-size: 22px; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.3);">-</h2>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                        <span id="popoverUsername">-</span> • Member
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Status</div>
+                    <select id="popoverStatusSelect" class="text-input" style="padding: 8px; font-size: 13px; border-radius: 8px;" onchange="updateUserStatus(this.value)">
+                        <option value="Online">🟢 Online</option>
+                        <option value="Idle">🌙 Idle</option>
+                        <option value="Do Not Disturb">⛔ Do Not Disturb</option>
+                        <option value="Offline">⚪ Invisible</option>
+                    </select>
+                </div>
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 16px 0;"></div>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">About Entity</div>
+                    <p id="popoverAboutMe" style="font-size:14px; color:#e0e4e8; line-height: 1.5;">Lost in the void.</p>
+                </div>
+                <div style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onclick="openAdvancedProfileCustomizer()" onmouseover="this.style.background='rgba(138,43,226,0.2)'" onmouseout="this.style.background='transparent'">
+                        <span style="width: 24px;">✏️</span> <span style="font-size:14px; font-weight:600;">Edit Parameters</span>
+                    </div>
+                    <div style="display: flex; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; color: #ed4245;" onclick="logoutSession()" onmouseover="this.style.background='rgba(237,66,69,0.15)'" onmouseout="this.style.background='transparent'">
+                        <span style="width: 24px;">🚪</span> <span style="font-size:14px; font-weight:600;">Sever Connection</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- FAR LEFT SERVER RAIL -->
         <div class="server-rail">
             <div class="server-icon active" title="Direct Messages / Home" onclick="switchChannel('home', 'Friends')">🌌</div>
@@ -271,50 +331,6 @@
 
         <!-- SIDEBAR -->
         <div class="channels-sidebar">
-            <!-- DYNAMIC PROFILE POPOVER PANEL -->
-            <div id="userProfilePopover" class="discord-profile-popover hidden">
-                <div class="profile-banner" id="popoverBanner"></div>
-                <div class="profile-body">
-                    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px;">
-                        <div class="avatar-wrapper">
-                            <img id="popoverUserAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="popover-avatar">
-                            <div style="position: absolute; bottom: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #0a0a0f; background: #23a55a;" id="popoverStatusIndicator"></div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">
-                            <span id="popoverStatusText">Online</span>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <h2 id="popoverDisplayName" style="font-size: 22px; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.3);">-</h2>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                            <span id="popoverUsername">-</span> • Member
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Status</div>
-                        <select id="popoverStatusSelect" class="text-input" style="padding: 8px; font-size: 13px; border-radius: 8px;" onchange="updateUserStatus(this.value)">
-                            <option value="Online">🟢 Online</option>
-                            <option value="Idle">🌙 Idle</option>
-                            <option value="Do Not Disturb">⛔ Do Not Disturb</option>
-                            <option value="Offline">⚪ Invisible</option>
-                        </select>
-                    </div>
-                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 16px 0;"></div>
-                    <div style="margin-bottom: 16px;">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">About Entity</div>
-                        <p id="popoverAboutMe" style="font-size:14px; color:#e0e4e8; line-height: 1.5;">Lost in the void.</p>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="display: flex; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onclick="openAdvancedProfileCustomizer()" onmouseover="this.style.background='rgba(138,43,226,0.2)'" onmouseout="this.style.background='transparent'">
-                            <span style="width: 24px;">✏️</span> <span style="font-size:14px; font-weight:600;">Edit Parameters</span>
-                        </div>
-                        <div style="display: flex; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; color: #ed4245;" onclick="logoutSession()" onmouseover="this.style.background='rgba(237,66,69,0.15)'" onmouseout="this.style.background='transparent'">
-                            <span style="width: 24px;">🚪</span> <span style="font-size:14px; font-weight:600;">Sever Connection</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="sidebar-search-bar">
                 <input type="text" class="sidebar-search-input" placeholder="Scan frequencies...">
             </div>
@@ -544,7 +560,6 @@
         const EMOJI_SET = ['✨', '🌌', '🚀', '🔥', '💀', '👀', '🪐', '👾'];
         const renderedMessageIds = new Set();
 
-        // --- NEW AUDIO NATIVE BEEP FUNCTION ---
         function playLoudBeep() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -567,7 +582,6 @@
             }
         }
 
-        // --- NEW DYNAMIC PFP COLOR FUNCTION ---
         function getUserColor(username) {
             if(!username) return '#ffffff';
             let hash = 0;
@@ -578,7 +592,6 @@
             return `hsl(${h}, 85%, 65%)`; 
         }
 
-        // --- PASSWORD VISIBILITY TOGGLE ---
         function togglePassVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -605,7 +618,6 @@
             }
         }
 
-        // --- AUTHENTICATION ---
         async function executeRegister() {
             const username = document.getElementById('regUsername').value.trim().toLowerCase();
             const nickname = document.getElementById('regNickname').value.trim();
@@ -616,19 +628,14 @@
             if (!username || !password) return alert("Fill in username and password.");
             if (password !== confirmPassword) return alert("Keys do not match!");
 
-            const { data: existingUser, error: checkError } = await supabaseClient.from('users').select('username').eq('username', username).maybeSingle();
-            if (checkError) {
-                console.error("Check existing user error:", checkError);
-            }
+            const { data: existingUser } = await supabaseClient.from('users').select('username').eq('username', username).maybeSingle();
             if (existingUser) return alert("Designation already registered.");
 
             let pfpUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${username}`;
             if (fileInput) {
                 const fileName = `avatar-${username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
-                const { data, error: uploadError } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
-                if (uploadError) {
-                    console.error("Avatar upload error:", uploadError);
-                } else if (data) {
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+                if (data) {
                     pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
                 }
             }
@@ -639,7 +646,6 @@
             }]);
 
             if (error) {
-                console.error("Registration error:", error);
                 alert("Registration failed: " + (error.message || JSON.stringify(error)));
             } else {
                 alert("Entity manifested successfully! Please transmit credentials.");
@@ -757,7 +763,6 @@
             }
         });
 
-        // --- PROFILE CUSTOMIZER ---
         function openAdvancedProfileCustomizer() {
             document.getElementById('userProfilePopover').classList.add('hidden');
             document.getElementById('customizerNicknameInput').value = currentUser.nickname || currentUser.username;
@@ -848,7 +853,6 @@
             logoutSession();
         }
 
-        // --- NAVIGATION ---
         function switchChannel(channelId, channelName, element) {
             activeChannelId = channelId;
             activeChannelName = channelName;
@@ -882,7 +886,6 @@
             }
         }
 
-        // --- SIDEBAR DATA LOADERS ---
         async function loadRightSidebarMembers() {
             const onlineList = document.getElementById('onlineMembersList');
             const offlineList = document.getElementById('offlineMembersList');
@@ -992,7 +995,6 @@
             setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
         }
 
-        // --- REALTIME & AUDIO ---
         function setupRealtimeSocket() {
             if (activeRealtimeSub) supabaseClient.removeChannel(activeRealtimeSub);
 
@@ -1015,7 +1017,6 @@
                 }).subscribe();
         }
 
-        // --- TYPING INDICATORS ---
         function setupTypingChannel() {
             if (typingBroadcastChannel) supabaseClient.removeChannel(typingBroadcastChannel);
             
@@ -1046,7 +1047,6 @@
             typingTimeout = setTimeout(() => { bar.classList.add('hidden'); }, 2000);
         }
 
-        // --- MESSAGING ACTIONS ---
         function handleMessageKeydown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
@@ -1180,7 +1180,6 @@
             popup.classList.toggle('hidden');
         }
 
-        // --- MODALS ---
         function closeModal() {
             document.getElementById('genericModalOverlay').classList.add('hidden');
         }
@@ -1247,7 +1246,6 @@
             }
         }
 
-        // --- GROUP SETTINGS PANEL ---
         async function openGroupSettingsModal() {
             if (!activeChannelId.startsWith('group_')) return;
             const groupId = activeChannelId.replace('group_', '');
