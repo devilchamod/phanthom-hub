@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Hub - Login</title>
+    <!-- Include Supabase Library ONCE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { 
+            background: #0b0c10; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #f5f5f7; 
+        }
+        .card {
+            background: #121420;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2.5rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00ffcc;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 0.85rem;
+            color: #8b92b6;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8b92b6;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            background: rgba(26, 29, 46, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: #5d65ff; }
+        .btn-submit {
+            width: 100%;
+            background: #5d65ff;
+            border: none;
+            color: #fff;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #4b52e0; }
+        .footer-link {
+            margin-top: 1.25rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #8b92b6;
+        }
+        .footer-link a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+        .msg-box {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 1rem;
+            color: #ff5555;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="brand-title">⚡ PHANTOM HUB</div>
+        <div class="subtitle">Welcome back! Please login to continue.</div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" class="form-input" placeholder="Enter your username" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnLogin">Log In</button>
+            <div class="msg-box" id="errorMsg"></div>
+        </form>
+
+        <div class="footer-link">
+            Don't have an account? 
+            <a href="createacc.html">Create account</a>
+        </div>
+    </div>
+
+    <script>
+        // SINGLE DECLARATION ONLY
+        const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('errorMsg');
+        const btnLogin = document.getElementById('btnLogin');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            btnLogin.innerText = "Logging in...";
+
+            const username = usernameInput.value.trim().toLowerCase();
+            const password = passwordInput.value.trim();
+
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .eq('password', password)
+                .maybeSingle();
+
+            if (error || !user) {
+                btnLogin.innerText = "Log In";
+                errorMsg.innerText = "Invalid username or password.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem('phantom_user', JSON.stringify({
+                username: user.username,
+                nickname: user.nickname || user.username,
+                pfp_url: user.pfp_url || 'https://via.placeholder.com/42/1a1d2e/00ffcc?text=U'
+            }));
+
+            window.location.href = "home.html";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Hub - Create Account</title>
+    <!-- Include Supabase Library ONCE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { 
+            background: #0b0c10; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #f5f5f7; 
+        }
+        .card {
+            background: #121420;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2.5rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00ffcc;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 0.85rem;
+            color: #8b92b6;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8b92b6;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            background: rgba(26, 29, 46, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: #5d65ff; }
+        input[type="file"]::file-selector-button {
+            background: #1a1d2e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #00ffcc;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        .btn-submit {
+            width: 100%;
+            background: #5d65ff;
+            border: none;
+            color: #fff;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #4b52e0; }
+        .footer-link {
+            margin-top: 1.25rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #8b92b6;
+        }
+        .footer-link a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+        .msg-box {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+        .msg-error { color: #ff5555; }
+        .msg-success { color: #00ffcc; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="brand-title">⚡ PHANTOM HUB</div>
+        <div class="subtitle">Create a new account to join the chat</div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label class="form-label" for="username">Username (Required)</label>
+                <input type="text" id="username" class="form-input" placeholder="e.g. phantom_user" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password (Required)</label>
+                <input type="password" id="password" class="form-input" placeholder="Choose a password" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="nickname">Display Nickname (Optional)</label>
+                <input type="text" id="nickname" class="form-input" placeholder="e.g. Phantom" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="pfp_file">Profile Picture (Upload Local Image)</label>
+                <input type="file" id="pfp_file" class="form-input" accept="image/*">
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">Create Account</button>
+            <div class="msg-box" id="msgBox"></div>
+        </form>
+
+        <div class="footer-link">
+            Already have an account? 
+            <a href="index.html">Log in</a>
+        </div>
+    </div>
+
+    <script>
+        // SINGLE DECLARATION ONLY (Renamed to supabaseClient to prevent any conflicts)
+        const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const signupForm = document.getElementById('signupForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const nicknameInput = document.getElementById('nickname');
+        const pfpFileInput = document.getElementById('pfp_file');
+        const msgBox = document.getElementById('msgBox');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msgBox.style.display = 'none';
+            btnSubmit.innerText = "Creating account...";
+
+            const username = usernameInput.value.trim().toLowerCase();
+            const password = passwordInput.value.trim();
+            const nickname = nicknameInput.value.trim() || username;
+            const file = pfpFileInput.files[0];
+
+            // 1. Check if username exists
+            const { data: existingUser } = await supabaseClient
+                .from('users')
+                .select('username')
+                .eq('username', username)
+                .maybeSingle();
+
+            if (existingUser) {
+                btnSubmit.innerText = "Create Account";
+                msgBox.className = 'msg-box msg-error';
+                msgBox.innerText = "Username is already taken. Try another!";
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            let pfp_url = 'https://via.placeholder.com/42/1a1d2e/00ffcc?text=' + username.charAt(0).toUpperCase();
+
+            // 2. Upload Profile Picture file if selected
+            if (file) {
+                btnSubmit.innerText = "Uploading profile picture...";
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${username}-${Date.now()}.${fileExt}`;
+
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('avatars')
+                    .upload(fileName, file);
+
+                if (uploadError) {
+                    btnSubmit.innerText = "Create Account";
+                    msgBox.className = 'msg-box msg-error';
+                    msgBox.innerText = "Image upload failed. Check if 'avatars' storage bucket exists in Supabase.";
+                    msgBox.style.display = 'block';
+                    return;
+                }
+
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+
+                pfp_url = publicUrlData.publicUrl;
+            }
+
+            // 3. Save User to DB
+            btnSubmit.innerText = "Saving user details...";
+            const { error } = await supabaseClient
+                .from('users')
+                .insert([{
+                    username: username,
+                    password: password,
+                    nickname: nickname,
+                    pfp_url: pfp_url
+                }]);
+
+            if (error) {
+                btnSubmit.innerText = "Create Account";
+                msgBox.className = 'msg-box msg-error';
+                msgBox.innerText = "Error saving user. Make sure RLS is disabled on users table.";
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            // 4. Save Session & Redirect
+            localStorage.setItem('phantom_user', JSON.stringify({
+                username: username,
+                nickname: nickname,
+                pfp_url: pfp_url
+            }));
+
+            msgBox.className = 'msg-box msg-success';
+            msgBox.innerText = "Account created successfully! Redirecting...";
+            msgBox.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.href = "home.html";
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
