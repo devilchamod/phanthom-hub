@@ -137,7 +137,7 @@
         .msg-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
         .msg-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .msg-header { display: flex; align-items: baseline; gap: 10px; }
-        .msg-username { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+        .msg-username { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; } 
         .msg-timestamp { font-size: 11px; color: var(--text-muted); }
         .msg-text { font-size: 14.5px; color: #fff; line-height: 1.5; word-break: break-word; }
         
@@ -227,14 +227,14 @@
                     <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">Upload Avatar</div>
                 </label>
             </div>
-            <input type="text" id="regUsername" class="text-input" placeholder="Username...">
-            <input type="text" id="regNickname" class="text-input" placeholder="Display Designation...">
+            <input type="text" id="regUsername" class="text-input" placeholder="Username..." onkeydown="if(event.key==='Enter') executeRegister()">
+            <input type="text" id="regNickname" class="text-input" placeholder="Display Designation..." onkeydown="if(event.key==='Enter') executeRegister()">
             <div class="password-container">
-                <input type="password" id="regPassword" class="text-input" placeholder="Password Key...">
+                <input type="password" id="regPassword" class="text-input" placeholder="Password Key..." onkeydown="if(event.key==='Enter') executeRegister()">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regPassword', this)">👁️</button>
             </div>
             <div class="password-container">
-                <input type="password" id="regConfirmPassword" class="text-input" placeholder="Confirm Key...">
+                <input type="password" id="regConfirmPassword" class="text-input" placeholder="Confirm Key..." onkeydown="if(event.key==='Enter') executeRegister()">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regConfirmPassword', this)">👁️</button>
             </div>
             <button class="btn-discord" onclick="executeRegister()">Materialize</button>
@@ -250,7 +250,7 @@
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passOld', this)">👁️</button>
             </div>
             <div class="password-container">
-                <input type="password" id="passNew" class="text-input" placeholder="New Key...">
+                <input type="password" id="passNew" class="text-input" placeholder="New Key..." onkeydown="if(event.key==='Enter') executePasswordChange()">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passNew', this)">👁️</button>
             </div>
             <button class="btn-discord" onclick="executePasswordChange()">Recalibrate</button>
@@ -544,7 +544,7 @@
         const EMOJI_SET = ['✨', '🌌', '🚀', '🔥', '💀', '👀', '🪐', '👾'];
         const renderedMessageIds = new Set();
 
-        // --- AUDIO NATIVE BEEP FUNCTION ---
+        // --- NEW AUDIO NATIVE BEEP FUNCTION ---
         function playLoudBeep() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -567,7 +567,7 @@
             }
         }
 
-        // --- DYNAMIC PFP COLOR FUNCTION ---
+        // --- NEW DYNAMIC PFP COLOR FUNCTION ---
         function getUserColor(username) {
             if(!username) return '#ffffff';
             let hash = 0;
@@ -605,7 +605,7 @@
             }
         }
 
-        // --- AUTHENTICATION (WITH PRE-FLIGHT EXISTING USER CHECK) ---
+        // --- AUTHENTICATION ---
         async function executeRegister() {
             const username = document.getElementById('regUsername').value.trim().toLowerCase();
             const nickname = document.getElementById('regNickname').value.trim();
@@ -616,15 +616,19 @@
             if (!username || !password) return alert("Fill in username and password.");
             if (password !== confirmPassword) return alert("Keys do not match!");
 
-            // Pre-flight check to prevent duplicate key conflicts
-            const { data: existingUser } = await supabaseClient.from('users').select('username').eq('username', username).maybeSingle();
+            const { data: existingUser, error: checkError } = await supabaseClient.from('users').select('username').eq('username', username).maybeSingle();
+            if (checkError) {
+                console.error("Check existing user error:", checkError);
+            }
             if (existingUser) return alert("Designation already registered.");
 
             let pfpUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${username}`;
             if (fileInput) {
                 const fileName = `avatar-${username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
-                if (data) {
+                const { data, error: uploadError } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+                if (uploadError) {
+                    console.error("Avatar upload error:", uploadError);
+                } else if (data) {
                     pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
                 }
             }
@@ -634,8 +638,10 @@
                 pfp_url: pfpUrl, status: 'Online', about_me: 'Lost in the void.', banner_color: '#8a2be2'
             }]);
 
-            if (error) alert("Registration failed.");
-            else {
+            if (error) {
+                console.error("Registration error:", error);
+                alert("Registration failed: " + (error.message || JSON.stringify(error)));
+            } else {
                 alert("Entity manifested successfully! Please transmit credentials.");
                 switchAuthView('login');
             }
