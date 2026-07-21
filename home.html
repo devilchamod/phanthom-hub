@@ -10,27 +10,10 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Custom Camouflaged Cyberpunk Scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #05050a;
-            border-left: 1px solid rgba(255, 0, 60, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #1a1d2e;
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            border-radius: 2px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ff003c;
-            box-shadow: 0 0 10px #ff003c;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #05050a; border-left: 1px solid rgba(255, 0, 60, 0.1); }
+        ::-webkit-scrollbar-thumb { background: #1a1d2e; border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff003c; box-shadow: 0 0 10px #ff003c; }
 
         body {
             background: #05050a;
@@ -46,7 +29,6 @@
             background-size: 100% 100%, 30px 30px, 30px 30px;
         }
 
-        /* Far Left Tactical Rail */
         .icon-bar {
             width: 70px;
             background: rgba(10, 10, 16, 0.95);
@@ -70,7 +52,7 @@
             font-size: 1.2rem;
             color: #7a8b9e;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
             clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 15% 100%, 0 85%);
         }
 
@@ -84,7 +66,6 @@
 
         .nav-icon.settings-btn { margin-top: auto; }
 
-        /* Tactical Sidebar */
         .sidebar {
             width: 260px;
             background: rgba(12, 13, 20, 0.85);
@@ -160,7 +141,6 @@
             width: 38px;
             height: 38px;
             object-fit: cover;
-            border: 1px solid #ff003c;
             clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
         }
 
@@ -168,7 +148,6 @@
         .user-name { font-weight: 700; color: #fff; font-size: 0.95rem; letter-spacing: 1px; }
         .btn-logout { background: none; border: none; color: #ff003c; cursor: pointer; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
 
-        /* Main Workspace */
         .main-content { flex: 1; display: flex; flex-direction: column; background: transparent; position: relative; }
         
         .chat-header {
@@ -187,39 +166,63 @@
         .view-panel { flex: 1; display: flex; flex-direction: column; height: calc(100vh - 60px); }
         .hidden { display: none !important; }
 
-        /* Messages Container */
         .messages-box { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
 
+        /* Dynamic Border Highlight per User */
         .message-card {
+            position: relative;
             display: flex;
             gap: 0.85rem;
             align-items: flex-start;
-            background: rgba(15, 16, 25, 0.6);
-            padding: 0.8rem 1rem;
-            border-left: 2px solid #00f3ff;
+            background: rgba(15, 16, 25, 0.7);
+            padding: 0.85rem 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(5px);
             clip-path: polygon(0 0, 98% 0, 100% 15%, 100% 100%, 0 100%);
+            transition: border 0.3s;
         }
 
         .msg-avatar {
             width: 38px;
             height: 38px;
             object-fit: cover;
-            border: 1px solid rgba(0, 243, 255, 0.5);
             clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
         }
 
         .msg-header { display: flex; gap: 0.6rem; align-items: baseline; }
-        .msg-author { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: #ff003c; letter-spacing: 1px; }
+        .msg-author { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; }
         .msg-time { font-size: 0.7rem; color: #5a697a; font-weight: 600; }
         .msg-body { font-size: 1rem; color: #d1dce8; margin-top: 0.2rem; word-break: break-word; font-weight: 500; }
         .msg-img { max-width: 280px; max-height: 220px; border: 1px solid #ff003c; margin-top: 0.6rem; display: block; }
 
+        .reply-preview-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 2px solid #00f3ff;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            color: #7a8b9e;
+            margin-bottom: 0.4rem;
+        }
+
+        .msg-actions {
+            display: none;
+            position: absolute;
+            right: 12px;
+            top: 10px;
+            gap: 8px;
+            background: #0d0e17;
+            padding: 4px 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .message-card:hover .msg-actions { display: flex; }
+        .act-btn { background: none; border: none; color: #00f3ff; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
+        .act-btn:hover { text-shadow: 0 0 5px #00f3ff; }
+
         .typing-indicator { font-size: 0.8rem; color: #00f3ff; padding: 0 1.5rem 0.5rem; min-height: 1.2rem; font-style: italic; font-weight: 600; }
 
-        /* Input Controls */
-        .input-box { padding: 1.2rem 1.5rem; border-top: 1px solid rgba(255, 0, 60, 0.2); background: rgba(8, 9, 14, 0.9); }
+        /* Input Bar & Controls */
+        .input-box { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 0, 60, 0.2); background: rgba(8, 9, 14, 0.9); }
         .chat-form { display: flex; gap: 0.6rem; align-items: center; }
         
         .chat-input {
@@ -232,23 +235,20 @@
             font-size: 1rem;
             font-family: 'Rajdhani', sans-serif;
             font-weight: 600;
-            transition: all 0.2s;
             clip-path: polygon(0 0, 98% 0, 100% 20%, 100% 100%, 2% 100%, 0 80%);
         }
 
         .chat-input:focus { border-color: #ff003c; box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
 
-        .file-label {
+        .file-label, .emoji-trigger {
             background: #121420;
             border: 1px solid rgba(0, 243, 255, 0.3);
             color: #00f3ff;
-            padding: 0.85rem 1.1rem;
+            padding: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
             clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
         }
-
-        .file-label:hover { background: rgba(0, 243, 255, 0.2); }
 
         .btn-send {
             background: #ff003c;
@@ -257,16 +257,35 @@
             padding: 0.85rem 1.8rem;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
-            letter-spacing: 1px;
             cursor: pointer;
-            transition: all 0.2s;
             clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
         }
 
-        .btn-send:hover { background: #e00034; box-shadow: 0 0 18px rgba(255, 0, 60, 0.8); }
+        .emoji-picker-bar {
+            display: flex;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #0d0e17;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            margin-bottom: 8px;
+            overflow-x: auto;
+        }
 
-        /* Friends & Modals */
+        .emoji-item { cursor: pointer; font-size: 1.2rem; transition: transform 0.1s; }
+        .emoji-item:hover { transform: scale(1.3); }
+
+        .reply-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 243, 255, 0.1);
+            border-left: 3px solid #00f3ff;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            color: #00f3ff;
+            margin-bottom: 8px;
+        }
+
         .friends-container { padding: 2rem; max-width: 650px; }
         .friend-card {
             background: rgba(18, 20, 32, 0.8);
@@ -291,30 +310,20 @@
         }
 
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
         }
 
         .modal-box {
-            background: #0d0e17;
-            padding: 2.2rem;
-            width: 100%;
-            max-width: 420px;
-            border: 1px solid #ff003c;
-            box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);
+            background: #0d0e17; padding: 2.2rem; width: 100%; max-width: 420px;
+            border: 1px solid #ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);
             clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
         }
     </style>
 </head>
 <body>
 
-    <!-- Tactical Nav Rail -->
     <div class="icon-bar">
         <div class="nav-icon active" onclick="switchNav('public', this)" title="Public Channels">⚔️</div>
         <div class="nav-icon" onclick="switchNav('dms', this)" title="Direct Messages">📡</div>
@@ -322,7 +331,6 @@
         <div class="nav-icon settings-btn" onclick="openSettings()" title="Settings">⚙️</div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="brand"><span>⚡</span> PHANTOM // HUB</div>
         
@@ -351,18 +359,35 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
     <div class="main-content">
-        
-        <!-- CHAT VIEW -->
         <div id="chatView" class="view-panel">
             <div class="chat-header">
                 <span id="channelHeader"># GENERAL</span>
             </div>
             <div class="messages-box" id="msgBox"></div>
             <div class="typing-indicator" id="typingBox"></div>
+
             <div class="input-box">
+                <!-- Reply Banner -->
+                <div id="replyBanner" class="reply-banner hidden">
+                    <span id="replyBannerText">Replying to...</span>
+                    <button onclick="cancelReply()" style="background:none; border:none; color:#ff003c; cursor:pointer; font-weight:700;">✕</button>
+                </div>
+
+                <!-- Cyberpunk Quick Emoji Bar -->
+                <div id="emojiPicker" class="emoji-picker-bar hidden">
+                    <span class="emoji-item" onclick="addEmoji('🔥')">🔥</span>
+                    <span class="emoji-item" onclick="addEmoji('⚔️')">⚔️</span>
+                    <span class="emoji-item" onclick="addEmoji('💀')">💀</span>
+                    <span class="emoji-item" onclick="addEmoji('⚡')">⚡</span>
+                    <span class="emoji-item" onclick="addEmoji('🎯')">🎯</span>
+                    <span class="emoji-item" onclick="addEmoji('🤖')">🤖</span>
+                    <span class="emoji-item" onclick="addEmoji('👍')">👍</span>
+                    <span class="emoji-item" onclick="addEmoji('😎')">😎</span>
+                </div>
+
                 <form class="chat-form" id="chatForm">
+                    <button type="button" class="emoji-trigger" onclick="toggleEmojiBar()">😀</button>
                     <label class="file-label" for="chatFileInput">📎</label>
                     <input type="file" id="chatFileInput" accept="image/*" style="display:none;">
                     <input type="text" id="msgInput" class="chat-input" placeholder="Transmit message..." autocomplete="off">
@@ -371,7 +396,6 @@
             </div>
         </div>
 
-        <!-- ADD FRIEND VIEW -->
         <div id="friendsView" class="view-panel hidden">
             <div class="chat-header">OPERATIVE LINK / ADD FRIENDS</div>
             <div class="friends-container">
@@ -380,24 +404,21 @@
                     <button class="btn-action" onclick="sendFriendRequest()">LINK OPERATIVE</button>
                 </div>
                 <div id="friendMsg" style="margin-top: 1rem; font-size:0.9rem; color:#00f3ff; font-weight:700;"></div>
-                
                 <div class="section-title" style="margin-top: 2rem; padding-left:0;">ESTABLISHED LINKS</div>
                 <div id="friendsList"></div>
             </div>
         </div>
-
     </div>
 
-    <!-- SETTINGS MODAL -->
     <div id="settingsModal" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 style="margin-bottom:1.2rem; color:#ff003c; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / SETTINGS</h3>
             <div style="margin-bottom:1.2rem;">
-                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700; letter-spacing:1px;">NEW HANDLE / NICKNAME</label>
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">NEW HANDLE / NICKNAME</label>
                 <input type="text" id="newNickname" class="chat-input" style="width:100%; margin-top:0.4rem;">
             </div>
             <div style="margin-bottom:1.8rem;">
-                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700; letter-spacing:1px;">AVATAR IMAGE DATA</label>
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">AVATAR IMAGE DATA</label>
                 <input type="file" id="newPfpFile" accept="image/*" class="chat-input" style="width:100%; margin-top:0.4rem;">
             </div>
             <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
@@ -415,9 +436,9 @@
         function updateProfileUI() {
             document.getElementById('myName').innerText = currentUser.nickname || currentUser.username;
             document.getElementById('myAvatar').src = currentUser.pfp_url || 'https://via.placeholder.com/42/0d0e17/ff003c?text=P';
+            document.getElementById('myAvatar').style.border = `2px solid ${getUserColor(currentUser.username)}`;
             document.getElementById('newNickname').value = currentUser.nickname || '';
         }
-        updateProfileUI();
 
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
@@ -426,6 +447,7 @@
         let currentNav = 'public';
         let currentMode = 'channel';
         let currentTarget = 'general';
+        let replyingToMessage = null;
 
         const msgBox = document.getElementById('msgBox');
         const chatForm = document.getElementById('chatForm');
@@ -434,38 +456,56 @@
         const channelHeader = document.getElementById('channelHeader');
         const typingBox = document.getElementById('typingBox');
 
-        // Request Windows Desktop Notification Permission on Start
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
         }
 
-        // Tactical Audio Beep Synthesizer (No external file required)
+        // Unique Color Generator Based on User Key
+        function getUserColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 90%, 60%)`; // Dynamic Neon Colors
+        }
+
+        updateProfileUI();
+
+        // Louder Tactical Beep Audio Synthesizer
         function playTacticalBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.type = "sine";
-                osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch A5 beep
-                gain.gain.setValueAtTime(0.08, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+                osc.type = "triangle"; // Sharper frequency
+                osc.frequency.setValueAtTime(1050, ctx.currentTime);
+                gain.gain.setValueAtTime(0.35, ctx.currentTime); // Louder volume
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
-                osc.stop(ctx.currentTime + 0.15);
-            } catch (e) {
-                console.log("Audio play blocked by browser interaction rules");
-            }
+                osc.stop(ctx.currentTime + 0.2);
+            } catch (e) {}
         }
 
-        // Windows Notification Trigger
+        // Windows Notification ONLY Triggered When AWAY
         function triggerWindowsNotification(title, body) {
-            if ("Notification" in window && Notification.permission === "granted") {
+            if (document.hidden && "Notification" in window && Notification.permission === "granted") {
                 new Notification(title, {
                     body: body,
                     icon: 'https://via.placeholder.com/64/05050a/ff003c?text=HUB'
                 });
             }
+        }
+
+        function toggleEmojiBar() {
+            document.getElementById('emojiPicker').classList.toggle('hidden');
+        }
+
+        function addEmoji(emoji) {
+            msgInput.value += emoji;
+            msgInput.focus();
         }
 
         function switchNav(nav, el) {
@@ -510,22 +550,39 @@
         }
 
         function appendMessage(m) {
+            const userColor = getUserColor(m.username);
             const name = m.nickname || m.username;
             const pfp = m.pfp_url || 'https://via.placeholder.com/42/0d0e17/ff003c?text=P';
             const time = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const div = document.createElement('div');
             div.className = 'message-card';
+            div.id = `msg-${m.id}`;
+            div.style.borderLeft = `3px solid ${userColor}`;
+
+            let replyHTML = m.reply_text ? `<div class="reply-preview-tag">↩ Replying to: ${escapeHtml(m.reply_text)}</div>` : '';
             let imgHTML = m.file_url ? `<img src="${escapeHtml(m.file_url)}" class="msg-img" alt="attachment">` : '';
 
+            let actionsHTML = `
+                <div class="msg-actions">
+                    <button class="act-btn" onclick="initiateReply('${escapeHtml(name)}', '${escapeHtml(m.message || '')}')">Reply</button>
+                    ${m.username === currentUser.username && m.id ? `
+                        <button class="act-btn" onclick="editMessage('${m.id}')">Edit</button>
+                        <button class="act-btn" style="color:#ff003c;" onclick="deleteMessage('${m.id}')">Delete</button>
+                    ` : ''}
+                </div>
+            `;
+
             div.innerHTML = `
-                <img src="${escapeHtml(pfp)}" class="msg-avatar" alt="pfp">
-                <div>
+                ${actionsHTML}
+                <img src="${escapeHtml(pfp)}" class="msg-avatar" style="border: 1px solid ${userColor};" alt="pfp">
+                <div style="flex:1;">
+                    ${replyHTML}
                     <div class="msg-header">
-                        <span class="msg-author">${escapeHtml(name)}</span>
+                        <span class="msg-author" style="color: ${userColor};">${escapeHtml(name)}</span>
                         <span class="msg-time">${time}</span>
                     </div>
-                    <div class="msg-body">${escapeHtml(m.message || '')}</div>
+                    <div class="msg-body" id="body-${m.id}">${escapeHtml(m.message || '')}</div>
                     ${imgHTML}
                 </div>
             `;
@@ -533,33 +590,66 @@
             msgBox.scrollTop = msgBox.scrollHeight;
         }
 
-        // Realtime Messages & Notifications Channel
+        function initiateReply(author, text) {
+            replyingToMessage = `${author}: ${text}`;
+            document.getElementById('replyBannerText').innerText = `Replying to: ${replyingToMessage}`;
+            document.getElementById('replyBanner').classList.remove('hidden');
+            msgInput.focus();
+        }
+
+        function cancelReply() {
+            replyingToMessage = null;
+            document.getElementById('replyBanner').classList.add('hidden');
+        }
+
+        async function deleteMessage(id) {
+            if (confirm("Delete this transmission?")) {
+                await supabaseClient.from('messages').delete().eq('id', id);
+                document.getElementById(`msg-${id}`)?.remove();
+            }
+        }
+
+        async function editMessage(id) {
+            const currentBody = document.getElementById(`body-${id}`).innerText;
+            const newText = prompt("Edit your message:", currentBody);
+            if (newText && newText !== currentBody) {
+                await supabaseClient.from('messages').update({ message: newText }).eq('id', id);
+                document.getElementById(`body-${id}`).innerText = newText;
+            }
+        }
+
+        // Realtime Messages & Updates
         supabaseClient
             .channel('public:messages')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                const newMsg = payload.new;
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+                if (payload.eventType === 'INSERT') {
+                    const newMsg = payload.new;
+                    if (newMsg.username === currentUser.username) return;
 
-                // Ignore self messages (already rendered by Optimistic UI)
-                if (newMsg.username === currentUser.username) return;
+                    let isRelevant = false;
+                    if (currentMode === "channel" && newMsg.channel === currentTarget && !newMsg.receiver) isRelevant = true;
+                    if (currentMode === "dm" && ((newMsg.username === currentUser.username && newMsg.receiver === currentTarget) || (newMsg.username === currentTarget && newMsg.receiver === currentUser.username))) isRelevant = true;
+                    
+                    if (isRelevant) appendMessage(newMsg);
 
-                let isRelevant = false;
-                if (currentMode === "channel" && newMsg.channel === currentTarget && !newMsg.receiver) isRelevant = true;
-                if (currentMode === "dm" && ((newMsg.username === currentUser.username && newMsg.receiver === currentTarget) || (newMsg.username === currentTarget && newMsg.receiver === currentUser.username))) isRelevant = true;
-                
-                if (isRelevant) {
-                    appendMessage(newMsg);
+                    // ALWAYS Beep sound on every incoming message
+                    playTacticalBeep();
+
+                    // Windows Desktop Notification ONLY when away/minimized
+                    triggerWindowsNotification(
+                        `[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`,
+                        newMsg.message || "Sent an attachment"
+                    );
+                } else if (payload.eventType === 'DELETE') {
+                    document.getElementById(`msg-${payload.old.id}`)?.remove();
+                } else if (payload.eventType === 'UPDATE') {
+                    const bodyEl = document.getElementById(`body-${payload.new.id}`);
+                    if (bodyEl) bodyEl.innerText = payload.new.message;
                 }
-
-                // Trigger Sound & Windows Desktop Notification for EVERY incoming message
-                playTacticalBeep();
-                triggerWindowsNotification(
-                    `[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`,
-                    newMsg.message || "Sent an attachment"
-                );
             })
             .subscribe();
 
-        // High-Speed Typing Indicator via Supabase Broadcast
+        // Typing Indicator Channel
         const typingChannel = supabaseClient.channel('room-typing');
         let remoteTypingTimeout = null;
 
@@ -569,9 +659,7 @@
                 if (data.username !== currentUser.username && data.target === currentTarget) {
                     typingBox.innerText = `[!] ${data.nickname.toUpperCase()} IS TRANSMITTING DATA...`;
                     clearTimeout(remoteTypingTimeout);
-                    remoteTypingTimeout = setTimeout(() => {
-                        typingBox.innerText = '';
-                    }, 2500);
+                    remoteTypingTimeout = setTimeout(() => { typingBox.innerText = ''; }, 2500);
                 }
             })
             .subscribe();
@@ -589,30 +677,31 @@
             localTypingTimer = setTimeout(() => { localTypingTimer = null; }, 1500);
         });
 
-        // Zero-Lag Optimistic Form Submit Handler
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = msgInput.value.trim();
             const file = chatFileInput.files[0];
             if (!text && !file) return;
 
-            // Clear input instantly for zero delay
+            const activeReply = replyingToMessage;
+            cancelReply();
+            document.getElementById('emojiPicker').classList.add('hidden');
+
             msgInput.value = '';
             const tempFile = file;
             chatFileInput.value = '';
 
-            // 1. Optimistic local render immediately
             const localMsg = {
                 username: currentUser.username,
                 nickname: currentUser.nickname,
                 pfp_url: currentUser.pfp_url,
                 message: text,
+                reply_text: activeReply,
                 file_url: tempFile ? URL.createObjectURL(tempFile) : null,
                 created_at: new Date().toISOString()
             };
             appendMessage(localMsg);
 
-            // 2. Upload image attachment if exists
             let file_url = null;
             if (tempFile) {
                 const fileName = `chat-${Date.now()}.${tempFile.name.split('.').pop()}`;
@@ -620,19 +709,19 @@
                 if (data) file_url = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
             }
 
-            // 3. Store to Supabase in background
             await supabaseClient.from('messages').insert([{
                 username: currentUser.username,
                 nickname: currentUser.nickname,
                 pfp_url: currentUser.pfp_url,
                 message: text,
+                reply_text: activeReply,
                 file_url: file_url,
                 channel: currentMode === "channel" ? currentTarget : "dm",
                 receiver: currentMode === "dm" ? currentTarget : null
             }]);
         });
 
-        // Online Operatives Tracker
+        // Online Presence Tracker
         const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
         presenceChannel
             .on('presence', { event: 'sync' }, () => {
@@ -645,7 +734,7 @@
                     const u = state[k][0];
                     const div = document.createElement('div');
                     div.className = 'item-btn';
-                    div.innerHTML = `<span class="status-dot online"></span> ${escapeHtml(u.nickname || k)}`;
+                    div.innerHTML = `<span class="status-dot online"></span> <span style="color:${getUserColor(k)}">${escapeHtml(u.nickname || k)}</span>`;
                     list.appendChild(div);
                 });
             })
@@ -679,7 +768,7 @@
                     const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
                     const div = document.createElement('div');
                     div.className = 'friend-card';
-                    div.innerHTML = `<span>👤 <b style="letter-spacing:1px; color:#fff;">${escapeHtml(friendUser.toUpperCase())}</b></span> <span style="color:#00f3ff; font-weight:700;">[ LINKED ]</span>`;
+                    div.innerHTML = `<span>👤 <b style="color:${getUserColor(friendUser)}">${escapeHtml(friendUser.toUpperCase())}</b></span> <span style="color:#00f3ff; font-weight:700;">[ LINKED ]</span>`;
                     list.appendChild(div);
                 });
             }
@@ -695,7 +784,7 @@
                     const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
                     const div = document.createElement('div');
                     div.className = `item-btn ${idx === 0 ? 'active' : ''}`;
-                    div.innerHTML = `📡 ${escapeHtml(friendUser.toUpperCase())}`;
+                    div.innerHTML = `📡 <span style="color:${getUserColor(friendUser)}">${escapeHtml(friendUser.toUpperCase())}</span>`;
                     div.onclick = () => switchDM(friendUser, div);
                     list.appendChild(div);
                 });
