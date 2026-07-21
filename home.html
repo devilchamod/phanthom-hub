@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Hub - Chat</title>
-    <!-- Include Supabase Library ONCE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background: #0b0c10; color: #f5f5f7; height: 100vh; display: flex; overflow: hidden; }
 
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: #121420;
             border-right: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
@@ -19,24 +18,46 @@
         }
 
         .brand {
-            padding: 1.5rem;
-            font-size: 1.25rem;
+            padding: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: #00ffcc;
             letter-spacing: 1px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .channels-list { padding: 1rem 0.5rem; flex: 1; }
-        .channel-item {
-            padding: 0.6rem 1rem;
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #5d65ff;
+            padding: 1rem 1rem 0.4rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .list-container { padding: 0 0.5rem; flex: 1; overflow-y: auto; }
+        
+        .item-btn {
+            padding: 0.55rem 0.8rem;
             border-radius: 6px;
             color: #8b92b6;
             cursor: pointer;
             margin-bottom: 0.2rem;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
         }
-        .channel-item:hover, .channel-item.active { background: rgba(93, 101, 255, 0.15); color: #00ffcc; }
+        .item-btn:hover, .item-btn.active { background: rgba(93, 101, 255, 0.15); color: #00ffcc; }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444;
+        }
+        .status-dot.online { background: #00ffcc; box-shadow: 0 0 6px #00ffcc; }
 
         .user-profile {
             padding: 1rem;
@@ -46,11 +67,10 @@
             align-items: center;
             gap: 0.75rem;
         }
-
-        .avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
         .user-info { flex: 1; overflow: hidden; }
-        .user-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
-        .btn-logout { background: none; border: none; color: #ff5555; cursor: pointer; font-size: 0.8rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; }
+        .btn-logout { background: none; border: none; color: #ff5555; cursor: pointer; font-size: 0.75rem; }
 
         .chat-area { flex: 1; display: flex; flex-direction: column; background: #0b0c10; }
         .chat-header {
@@ -58,19 +78,24 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             font-weight: 600;
             color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .messages-box { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
-        
         .message-card { display: flex; gap: 0.75rem; align-items: flex-start; }
         .msg-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
         .msg-header { display: flex; gap: 0.5rem; align-items: baseline; }
         .msg-author { font-size: 0.85rem; font-weight: 600; color: #00ffcc; }
         .msg-time { font-size: 0.7rem; color: #8b92b6; }
         .msg-body { font-size: 0.92rem; color: #d0d4e4; margin-top: 0.2rem; word-break: break-word; }
+        .msg-img { max-width: 250px; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block; border: 1px solid rgba(255,255,255,0.1); }
+
+        .typing-indicator { font-size: 0.8rem; color: #8b92b6; padding: 0 1.5rem 0.5rem; min-height: 1.2rem; font-style: italic; }
 
         .input-box { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); }
-        .chat-form { display: flex; gap: 0.5rem; }
+        .chat-form { display: flex; gap: 0.5rem; align-items: center; }
         .chat-input {
             flex: 1;
             background: #121420;
@@ -80,11 +105,21 @@
             color: #fff;
             outline: none;
         }
+        .file-label {
+            background: #1a1d2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #00ffcc;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
         .btn-send {
             background: #5d65ff;
             border: none;
             color: #fff;
-            padding: 0 1.25rem;
+            padding: 0.75rem 1.25rem;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
@@ -95,11 +130,18 @@
 
     <div class="sidebar">
         <div class="brand">⚡ PHANTOM HUB</div>
-        <div class="channels-list">
-            <div class="channel-item active" onclick="switchChannel('general', this)"># general</div>
-            <div class="channel-item" onclick="switchChannel('gaming', this)"># gaming</div>
-            <div class="channel-item" onclick="switchChannel('announcements', this)"># announcements</div>
+        
+        <div class="section-title">Channels</div>
+        <div class="list-container">
+            <div class="item-btn active" onclick="switchChannel('general', this)"># general</div>
+            <div class="item-btn" onclick="switchChannel('gaming', this)"># gaming</div>
         </div>
+
+        <div class="section-title">Users (<span id="userCount">0</span>)</div>
+        <div class="list-container" id="usersList">
+            <!-- Online users populated dynamically -->
+        </div>
+
         <div class="user-profile">
             <img id="myAvatar" class="avatar" src="" alt="pfp">
             <div class="user-info">
@@ -110,10 +152,18 @@
     </div>
 
     <div class="chat-area">
-        <div class="chat-header" id="channelHeader"># general</div>
+        <div class="chat-header">
+            <span id="channelHeader"># general</span>
+        </div>
+        
         <div class="messages-box" id="msgBox"></div>
+        
+        <div class="typing-indicator" id="typingBox"></div>
+
         <div class="input-box">
             <form class="chat-form" id="chatForm">
+                <label class="file-label" for="chatFileInput">📎</label>
+                <input type="file" id="chatFileInput" accept="image/*" style="display:none;">
                 <input type="text" id="msgInput" class="chat-input" placeholder="Message #general..." autocomplete="off">
                 <button type="submit" class="btn-send">Send</button>
             </form>
@@ -121,36 +171,59 @@
     </div>
 
     <script>
-        // 1. Check User Session
+        // Check session
         const savedUser = localStorage.getItem('phantom_user');
-        if (!savedUser) { window.location.href = "index.html"; }
+        if (!savedUser) window.location.href = "index.html";
         let currentUser = JSON.parse(savedUser);
 
         document.getElementById('myName').innerText = currentUser.nickname || currentUser.username;
         document.getElementById('myAvatar').src = currentUser.pfp_url || 'https://via.placeholder.com/42/1a1d2e/00ffcc?text=U';
 
-        // 2. SINGLE DECLARATION ONLY
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
-
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentChannel = "general";
+        // Audio notification setup (using Web Audio API synthesized tone)
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        let currentMode = "channel"; // "channel" or "dm"
+        let currentTarget = "general"; // channel name or username
+        let typingTimeout = null;
+
         const msgBox = document.getElementById('msgBox');
         const chatForm = document.getElementById('chatForm');
         const msgInput = document.getElementById('msgInput');
+        const chatFileInput = document.getElementById('chatFileInput');
         const channelHeader = document.getElementById('channelHeader');
+        const typingBox = document.getElementById('typingBox');
 
-        // Fetch Messages
+        // Load Messages
         async function loadMessages() {
             msgBox.innerHTML = '';
-            const { data } = await supabaseClient
-                .from('messages')
-                .select('*')
-                .eq('channel', currentChannel)
-                .order('created_at', { ascending: true })
-                .limit(50);
+            let query = supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
 
+            if (currentMode === "channel") {
+                query = query.eq('channel', currentTarget).is('receiver', null);
+            } else {
+                // DM between currentUser and target user
+                query = query.or(`and(username.eq.${currentUser.username},receiver.eq.${currentTarget}),and(username.eq.${currentTarget},receiver.eq.${currentUser.username})`);
+            }
+
+            const { data } = await query.limit(50);
             if (data) {
                 data.forEach(m => appendMessage(m));
                 msgBox.scrollTop = msgBox.scrollHeight;
@@ -159,11 +232,14 @@
 
         function appendMessage(m) {
             const name = m.nickname || m.username;
-            const pfp = m.pfp_url || 'https://via.placeholder.com/42/1a1d2e/8b92b6?text=OP';
+            const pfp = m.pfp_url || 'https://via.placeholder.com/42/1a1d2e/8b92b6?text=U';
             const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const div = document.createElement('div');
             div.className = 'message-card';
+            
+            let imgHTML = m.file_url ? `<img src="${escapeHtml(m.file_url)}" class="msg-img" alt="attachment">` : '';
+
             div.innerHTML = `
                 <img src="${escapeHtml(pfp)}" class="msg-avatar" alt="pfp">
                 <div>
@@ -171,48 +247,144 @@
                         <span class="msg-author">${escapeHtml(name)}</span>
                         <span class="msg-time">${time}</span>
                     </div>
-                    <div class="msg-body">${escapeHtml(m.message)}</div>
+                    <div class="msg-body">${escapeHtml(m.message || '')}</div>
+                    ${imgHTML}
                 </div>
             `;
             msgBox.appendChild(div);
             msgBox.scrollTop = msgBox.scrollHeight;
         }
 
-        // Realtime Subscriptions
+        // Realtime Subscription for Messages
         supabaseClient
             .channel('public:messages')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                if (payload.new.channel === currentChannel) {
-                    appendMessage(payload.new);
+                const newMsg = payload.new;
+                let isRelevant = false;
+
+                if (currentMode === "channel" && newMsg.channel === currentTarget && !newMsg.receiver) {
+                    isRelevant = true;
+                } else if (currentMode === "dm") {
+                    if ((newMsg.username === currentUser.username && newMsg.receiver === currentTarget) ||
+                        (newMsg.username === currentTarget && newMsg.receiver === currentUser.username)) {
+                        isRelevant = true;
+                    }
+                }
+
+                if (isRelevant) {
+                    appendMessage(newMsg);
+                    if (newMsg.username !== currentUser.username) playChime();
                 }
             })
             .subscribe();
 
-        // Send Message
+        // Send Message / Upload File
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = msgInput.value.trim();
-            if (!text) return;
+            const file = chatFileInput.files[0];
+
+            if (!text && !file) return;
 
             msgInput.value = '';
+            chatFileInput.value = '';
 
-            await supabaseClient
-                .from('messages')
-                .insert([{
-                    username: currentUser.username,
-                    nickname: currentUser.nickname,
-                    pfp_url: currentUser.pfp_url,
-                    message: text,
-                    channel: currentChannel
-                }]);
+            let file_url = null;
+
+            if (file) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `chat-${Date.now()}.${fileExt}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) {
+                    const publicData = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+                    file_url = publicData.data.publicUrl;
+                }
+            }
+
+            const payload = {
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                file_url: file_url,
+                channel: currentMode === "channel" ? currentTarget : "dm",
+                receiver: currentMode === "dm" ? currentTarget : null
+            };
+
+            await supabaseClient.from('messages').insert([payload]);
         });
 
+        // Online Presence & Typing Channels
+        const presenceChannel = supabaseClient.channel('room-presence', {
+            config: { presence: { key: currentUser.username } }
+        });
+
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                updateOnlineUsersList(state);
+            })
+            .on('broadcast', { event: 'typing' }, payload => {
+                if (payload.payload.username !== currentUser.username && payload.payload.target === currentTarget) {
+                    typingBox.innerText = `${payload.payload.name} is typing...`;
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => { typingBox.innerText = ''; }, 2000);
+                }
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({
+                        username: currentUser.username,
+                        nickname: currentUser.nickname,
+                        pfp_url: currentUser.pfp_url,
+                        online_at: new Date().toISOString()
+                    });
+                }
+            });
+
+        // Broadcast Typing Event
+        msgInput.addEventListener('input', () => {
+            presenceChannel.send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { username: currentUser.username, name: currentUser.nickname || currentUser.username, target: currentTarget }
+            });
+        });
+
+        function updateOnlineUsersList(state) {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+            const activeUsers = Object.keys(state);
+            document.getElementById('userCount').innerText = activeUsers.length;
+
+            activeUsers.forEach(username => {
+                if (username === currentUser.username) return; // Skip self in DM list
+                const userObj = state[username][0];
+                const div = document.createElement('div');
+                div.className = `item-btn ${currentMode === 'dm' && currentTarget === username ? 'active' : ''}`;
+                div.innerHTML = `<span class="status-dot online"></span> ${escapeHtml(userObj.nickname || username)}`;
+                div.onclick = () => switchDM(username, userObj.nickname, div);
+                usersList.appendChild(div);
+            });
+        }
+
         function switchChannel(channelName, el) {
-            currentChannel = channelName;
-            document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
+            currentMode = "channel";
+            currentTarget = channelName;
+            document.querySelectorAll('.item-btn').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
             channelHeader.innerText = `# ${channelName}`;
             msgInput.placeholder = `Message #${channelName}...`;
+            loadMessages();
+        }
+
+        function switchDM(username, nickname, el) {
+            currentMode = "dm";
+            currentTarget = username;
+            document.querySelectorAll('.item-btn').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            channelHeader.innerText = `@ ${nickname || username}`;
+            msgInput.placeholder = `Message @${nickname || username}...`;
             loadMessages();
         }
 
