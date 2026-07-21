@@ -3,74 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Picture Attachment with Edit Icon</title>
+  <title>WhatsApp-Style Attachment & Image Editor</title>
   <style>
     :root {
-      --primary: #2563eb;
-      --bg-overlay: rgba(15, 23, 42, 0.6);
-      --card-radius: 12px;
+      --wa-green: #075e54;
+      --wa-light-green: #25d366;
+      --wa-bg: #efeae2;
+      --dark-overlay: #111b21;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--wa-bg);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background-color: #f8fafc;
-      margin: 0;
+      padding: 20px;
     }
 
-    /* Attachment Card Container */
+    .chat-card {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chat-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: #128c7e;
+    }
+
+    /* Attachment Thumbnail Area */
+    .attachments-container {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .attachment-card {
       position: relative;
-      width: 280px;
-      height: 180px;
-      border-radius: var(--card-radius);
+      width: 140px;
+      height: 140px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      background-color: #e2e8f0;
+      border: 1px solid #e2e8f0;
+      background: #f1f5f9;
     }
 
     .attachment-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
     }
 
-    /* Overlay Trigger Bar */
-    .card-actions {
+    /* Edit Overlay Icon */
+    .edit-icon-btn {
       position: absolute;
       top: 8px;
       right: 8px;
-      display: flex;
-      gap: 6px;
-    }
-
-    .icon-btn {
-      background: var(--bg-overlay);
+      background: rgba(17, 27, 33, 0.7);
       backdrop-filter: blur(4px);
+      color: white;
       border: none;
       border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #ffffff;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      transition: transform 0.15s ease, background 0.2s;
     }
 
-    .icon-btn:hover {
-      background: rgba(15, 23, 42, 0.85);
-      transform: scale(1.05);
+    .edit-icon-btn:hover {
+      background: rgba(17, 27, 33, 0.9);
+      transform: scale(1.1);
     }
 
-    .icon-btn svg {
-      width: 18px;
-      height: 18px;
+    .edit-icon-btn svg {
+      width: 16px;
+      height: 16px;
       fill: none;
       stroke: currentColor;
       stroke-width: 2;
@@ -78,49 +99,114 @@
       stroke-linejoin: round;
     }
 
-    /* Editor Toolbar Drawer/Menu (Toggled via JS) */
-    .edit-menu {
-      position: absolute;
-      bottom: -60px; /* Hidden off-screen by default */
-      left: 0;
-      right: 0;
-      height: 52px;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
+    /* File Upload & GIF Picker triggers */
+    .controls-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #f0f2f5;
+      color: #3b4a54;
+      font-weight: 600;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      padding: 0 12px;
-      transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      justify-content: center;
+      gap: 6px;
     }
 
-    .edit-menu.open {
-      bottom: 0; /* Slides up when active */
+    .action-btn:hover { background: #e4e6eb; }
+
+    /* KLIPY GIF Search Modal */
+    .gif-modal {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
     }
 
-    .menu-item {
+    .gif-modal.open { display: flex; }
+
+    .gif-input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      outline: none;
+    }
+
+    .gif-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .gif-grid img {
+      width: 100%;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* ==========================================================
+       WHATSAPP-STYLE FULLSCREEN IMAGE EDITOR MODAL
+       ========================================================== */
+    .editor-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--dark-overlay);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .editor-overlay.active { display: flex; }
+
+    /* Top Bar */
+    .editor-header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .editor-tools {
+      display: flex;
+      gap: 16px;
+    }
+
+    .tool-btn {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      font-size: 11px;
+      color: white;
       cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 6px;
-      transition: color 0.2s, background-color 0.2s;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .menu-item:hover {
-      color: #ffffff;
-      background-color: rgba(255, 255, 255, 0.1);
+    .tool-btn.active, .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    .menu-item svg {
-      width: 18px;
-      height: 18px;
+    .tool-btn svg {
+      width: 22px;
+      height: 22px;
       fill: none;
       stroke: currentColor;
       stroke-width: 2;
@@ -128,89 +214,348 @@
       stroke-linejoin: round;
     }
 
-    /* Close button inside menu */
-    .menu-item.close-btn {
-      color: #ef4444;
+    /* Editor Canvas Canvas Workspace */
+    .editor-body {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 10px;
     }
-    .menu-item.close-btn:hover {
-      background-color: rgba(239, 68, 68, 0.15);
+
+    #editorCanvas {
+      max-width: 100%;
+      max-height: 80vh;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border-radius: 8px;
+    }
+
+    /* Controls Bar & Color Picker */
+    .editor-controls {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid white;
+    }
+
+    .editor-footer {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .save-btn {
+      background: var(--wa-light-green);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-weight: 600;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <!-- Attachment Card -->
-  <div class="attachment-card">
-    <img src="https://picsum.photos/400/300" alt="Attachment Preview">
+  <!-- Main Chat Attachment Card -->
+  <div class="chat-card">
+    <div class="chat-header">Attachment Preview</div>
 
-    <!-- Top Right Actions -->
-    <div class="card-actions">
-      <!-- Edit Icon Button -->
-      <button class="icon-btn" id="editBtn" aria-label="Edit Image" title="Edit Image">
-        <!-- Pencil/Edit SVG Icon -->
-        <svg viewBox="0 0 24 24">
-          <path d="M12 20h9"></path>
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-        </svg>
+    <!-- Image Attachment Grid -->
+    <div class="attachments-container" id="attachmentsContainer">
+      <div class="attachment-card" id="card1">
+        <img id="previewImg1" src="https://picsum.photos/400/400" alt="Attachment">
+        <button class="edit-icon-btn" onclick="openEditor('previewImg1')" title="Edit Attachment">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Control Buttons -->
+    <div class="controls-row">
+      <label class="action-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Upload Image
+        <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+      </label>
+      <button class="action-btn" onclick="toggleGifModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h3v4H7z"/></svg>
+        KLIPY GIFs
       </button>
     </div>
 
-    <!-- Slide-Up Edit Toolbar -->
-    <div class="edit-menu" id="editMenu">
-      <!-- Crop Feature Button -->
-      <button class="menu-item" title="Crop Image">
-        <svg viewBox="0 0 24 24">
-          <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
-          <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
-        </svg>
-        <span>Crop</span>
-      </button>
+    <!-- KLIPY GIF Search Picker -->
+    <div class="gif-modal" id="gifModal">
+      <input type="text" class="gif-input" id="gifSearch" placeholder="Search KLIPY GIFs..." onkeyup="searchKlipyGifs(this.value)">
+      <div class="gif-grid" id="gifGrid"></div>
+    </div>
+  </div>
 
-      <!-- Mark Feature Button -->
-      <button class="menu-item" title="Add Marker / Text">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-          <path d="M2 2l7.586 7.586"></path>
-          <circle cx="11" cy="11" r="2"></circle>
-        </svg>
-        <span>Mark</span>
-      </button>
+  <!-- WhatsApp-style Fullscreen Image Editor Overlay -->
+  <div class="editor-overlay" id="editorOverlay">
+    <!-- Header Tools -->
+    <div class="editor-header">
+      <button class="tool-btn" onclick="closeEditor()" title="Cancel">✕</button>
+      <div class="editor-tools">
+        <!-- Rotate / Crop -->
+        <button class="tool-btn" id="cropBtn" onclick="rotateImage()" title="Rotate / Crop">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+        </button>
+        <!-- Mark (Text) -->
+        <button class="tool-btn" id="markBtn" onclick="enableTextMode()" title="Add Text / Mark">
+          <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+        </button>
+        <!-- Draw (Brush) -->
+        <button class="tool-btn active" id="drawBtn" onclick="enableDrawMode()" title="Freehand Draw">
+          <svg viewBox="0 0 24 24"><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.375-9.375z"></path></svg>
+        </button>
+      </div>
+    </div>
 
-      <!-- Draw Feature Button -->
-      <button class="menu-item" title="Draw / Freehand">
-        <svg viewBox="0 0 24 24">
-          <path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.375-9.375z"></path>
-          <path d="M14 6l4 4"></path>
-          <path d="M4 20c2.5 0 3-1.5 5-1.5s2.5 1.5 5 1.5 3-1.5 5-1.5"></path>
-        </svg>
-        <span>Draw</span>
-      </button>
+    <!-- Canvas Editing Area -->
+    <div class="editor-body">
+      <canvas id="editorCanvas"></canvas>
+    </div>
 
-      <!-- Close Menu Button -->
-      <button class="menu-item close-btn" id="closeMenuBtn" title="Close Toolbar">
-        <svg viewBox="0 0 24 24">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-        <span>Done</span>
-      </button>
+    <!-- Bottom Controls & Color Palette -->
+    <div class="editor-controls">
+      <div class="color-picker">
+        <div class="color-dot" style="background: #ef4444;" onclick="setColor('#ef4444')"></div>
+        <div class="color-dot" style="background: #3b82f6;" onclick="setColor('#3b82f6')"></div>
+        <div class="color-dot" style="background: #22c55e;" onclick="setColor('#22c55e')"></div>
+        <div class="color-dot" style="background: #eab308;" onclick="setColor('#eab308')"></div>
+        <div class="color-dot" style="background: #ffffff;" onclick="setColor('#ffffff')"></div>
+      </div>
+      <div class="editor-footer">
+        <button class="tool-btn" onclick="clearCanvas()" title="Reset">Clear All</button>
+        <button class="save-btn" onclick="saveEditedImage()">Done</button>
+      </div>
     </div>
   </div>
 
   <script>
-    const editBtn = document.getElementById('editBtn');
-    const closeMenuBtn = document.getElementById('closeMenuBtn');
-    const editMenu = document.getElementById('editMenu');
+    // ==========================================
+    // KLIPY GIF API INTEGRATION
+    // ==========================================
+    const KLIPY_API_KEY = "YOUR_KLIPY_API_KEY"; // Insert your KLIPY API Key here
 
-    // Toggle menu open/close
-    editBtn.addEventListener('click', () => {
-      editMenu.classList.add('open');
-    });
+    function toggleGifModal() {
+      const modal = document.getElementById('gifModal');
+      modal.classList.toggle('open');
+      if (modal.classList.contains('open')) searchKlipyGifs('funny');
+    }
 
-    closeMenuBtn.addEventListener('click', () => {
-      editMenu.classList.remove('open');
-    });
+    async function searchKlipyGifs(query) {
+      if (!query) return;
+      const grid = document.getElementById('gifGrid');
+      
+      try {
+        // KLIPY API v1 Endpoint
+        const res = await fetch(`https://api.klipy.com/api/v1/${KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(query)}&per_page=6`);
+        const data = await res.json();
+        
+        grid.innerHTML = '';
+        if (data.data) {
+          data.data.forEach(gif => {
+            const img = document.createElement('img');
+            img.src = gif.files?.tiny_gif?.url || gif.files?.gif?.url;
+            img.onclick = () => addAttachment(img.src);
+            grid.appendChild(img);
+          });
+        }
+      } catch (err) {
+        // Fallback UI preview mock if API Key is not set
+        grid.innerHTML = '<p style="font-size:12px; color:#64748b; grid-column:span 3;">Enter valid KLIPY API key. (Showing sample preview)</p>';
+      }
+    }
+
+    function addAttachment(src) {
+      const container = document.getElementById('attachmentsContainer');
+      const id = 'img_' + Date.now();
+      const html = `
+        <div class="attachment-card">
+          <img id="${id}" src="${src}">
+          <button class="edit-icon-btn" onclick="openEditor('${id}')">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          </button>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+      document.getElementById('gifModal').classList.remove('open');
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => addAttachment(event.target.result);
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // ==========================================
+    // WHATSAPP CANVAS IMAGE EDITOR LOGIC
+    // ==========================================
+    let currentTargetImgId = null;
+    const canvas = document.getElementById('editorCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let baseImage = new Image();
+    let isDrawing = false;
+    let activeTool = 'draw'; // 'draw', 'mark'
+    let currentColor = '#ef4444';
+    let rotationDegree = 0;
+
+    function openEditor(imgId) {
+      currentTargetImgId = imgId;
+      const targetImg = document.getElementById(imgId);
+      
+      baseImage = new Image();
+      baseImage.crossOrigin = "anonymous";
+      baseImage.src = targetImg.src;
+      
+      baseImage.onload = () => {
+        rotationDegree = 0;
+        resetCanvasDimensions();
+        document.getElementById('editorOverlay').classList.add('active');
+        enableDrawMode();
+      };
+    }
+
+    function closeEditor() {
+      document.getElementById('editorOverlay').classList.remove('active');
+    }
+
+    function resetCanvasDimensions() {
+      canvas.width = baseImage.width;
+      canvas.height = baseImage.height;
+      ctx.drawImage(baseImage, 0, 0);
+    }
+
+    // Tools Switching
+    function enableDrawMode() {
+      activeTool = 'draw';
+      updateToolUI('drawBtn');
+    }
+
+    function enableTextMode() {
+      activeTool = 'mark';
+      updateToolUI('markBtn');
+      const text = prompt("Enter text to add to image:", "Sample Text");
+      if (text) {
+        ctx.font = 'bold 36px -apple-system, sans-serif';
+        ctx.fillStyle = currentColor;
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(text, canvas.width / 4, canvas.height / 2);
+      }
+    }
+
+    function updateToolUI(btnId) {
+      document.querySelectorAll('.editor-tools .tool-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(btnId).classList.add('active');
+    }
+
+    function setColor(color) {
+      currentColor = color;
+    }
+
+    function rotateImage() {
+      rotationDegree = (rotationDegree + 90) % 360;
+      
+      // Swap width/height for 90 or 270 degree rotation
+      if (rotationDegree % 180 !== 0) {
+        canvas.width = baseImage.height;
+        canvas.height = baseImage.width;
+      } else {
+        canvas.width = baseImage.width;
+        canvas.height = baseImage.height;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotationDegree * Math.PI) / 180);
+      ctx.drawImage(baseImage, -baseImage.width / 2, -baseImage.height / 2);
+      ctx.restore();
+    }
+
+    function clearCanvas() {
+      rotationDegree = 0;
+      resetCanvasDimensions();
+    }
+
+    // Canvas Drawing Logic
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDrawing(e) {
+      if (activeTool !== 'draw') return;
+      isDrawing = true;
+      const pos = getCanvasCoordinates(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!isDrawing || activeTool !== 'draw') return;
+      const pos = getCanvasCoordinates(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    // Touch & Mouse Listeners
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    // Save edited canvas back to target image attachment
+    function saveEditedImage() {
+      const editedDataURL = canvas.toDataURL('image/png');
+      if (currentTargetImgId) {
+        document.getElementById(currentTargetImgId).src = editedDataURL;
+      }
+      closeEditor();
+    }
   </script>
 </body>
 </html>
