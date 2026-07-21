@@ -44,8 +44,15 @@
             pointer-events: none;
         }
 
-        @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
-        @keyframes warp { from { transform: translate(-50%, -50%) scale(1); opacity: 0.85; } to { transform: translate(-50%, -50%) scale(1.08); opacity: 1; } }
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes warp {
+            from { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+            to { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+        }
 
         /* GLASSMORPHISM APP PANELS */
         .auth-screen-container { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
@@ -57,7 +64,7 @@
         .pass-toggle-btn { position: absolute; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; user-select: none; transition: 0.2s; }
         .pass-toggle-btn:hover { color: #fff; }
 
-        /* BUTTONS */
+        /* BUTTONS & INPUTS */
         .btn-discord { background: linear-gradient(45deg, var(--accretion-blue), var(--accretion-purple)); color: white; border: none; padding: 10px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 14px; width: 100%; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(138, 43, 226, 0.3); }
         .btn-discord:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(138, 43, 226, 0.7); }
         .btn-discord-danger { background: linear-gradient(45deg, #c9383b, #ed4245); color: white; border: none; padding: 10px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; box-shadow: 0 0 15px rgba(237, 66, 69, 0.3); }
@@ -68,12 +75,12 @@
         /* APP LAYOUT */
         .app-container { position: relative; display: flex; width: 100vw; height: 100vh; background: transparent; }
         
-        .server-rail { width: 72px; background: rgba(10,10,12,0.7); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 12px; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; }
-        .server-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; color: var(--text-main); font-weight: 600; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .server-rail { width: 72px; background: rgba(10,10,12,0.7); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 12px; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; flex-shrink: 0; }
+        .server-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; color: var(--text-main); font-weight: 600; cursor: pointer; transition: 0.3s; border: 1px solid transparent; flex-shrink: 0; }
         .server-icon:hover, .server-icon.active { border-radius: 16px; background: rgba(138,43,226,0.2); border-color: var(--accretion-purple); color: #fff; box-shadow: 0 0 15px var(--accretion-purple); }
         .server-rail-separator { width: 32px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; margin: 4px 0; }
 
-        .channels-sidebar { width: 250px; background: rgba(15,15,20,0.6); display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; }
+        .channels-sidebar { width: 250px; background: rgba(15,15,20,0.6); display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); backdrop-filter: blur(10px); z-index: 2; flex-shrink: 0; }
         .sidebar-search-bar { padding: 12px; }
         .sidebar-search-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 12px; color: #fff; font-size: 13px; outline: none; transition: 0.3s; }
         .sidebar-search-input:focus { border-color: var(--accretion-purple); }
@@ -83,7 +90,7 @@
         .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .sidebar-item.active { background: rgba(138,43,226,0.15); color: #fff; border-color: rgba(138,43,226,0.4); box-shadow: inset 0 0 10px rgba(138,43,226,0.2); }
 
-        .user-footer-panel { height: 60px; background: rgba(5,5,8,0.85); display: flex; align-items: center; padding: 0 12px; gap: 10px; border-top: 1px solid var(--glass-border); }
+        .user-footer-panel { height: 60px; background: rgba(5,5,8,0.85); display: flex; align-items: center; padding: 0 12px; gap: 10px; border-top: 1px solid var(--glass-border); flex-shrink: 0; }
         .user-footer-avatar-wrap { position: relative; width: 36px; height: 36px; cursor: pointer; }
         .user-footer-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .user-footer-avatar-wrap:hover .user-footer-avatar { border-color: var(--accretion-purple); box-shadow: 0 0 10px var(--accretion-purple); }
@@ -95,8 +102,8 @@
         .footer-action-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
         /* MAIN PANES */
-        .home-main-pane { flex: 1; display: flex; flex-direction: column; background: transparent; height: 100vh; position: relative; }
-        .home-top-nav { height: 60px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 20px; gap: 16px; background: rgba(15,15,20,0.4); backdrop-filter: blur(10px); }
+        .home-main-pane { flex: 1; display: flex; flex-direction: column; background: transparent; overflow: hidden; }
+        .home-top-nav { height: 60px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 20px; gap: 16px; background: rgba(15,15,20,0.4); backdrop-filter: blur(10px); flex-shrink: 0; }
         .nav-tab { color: var(--text-muted); font-weight: 500; font-size: 14px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; }
         .nav-tab:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .nav-tab.active { background: rgba(138,43,226,0.2); color: #fff; box-shadow: inset 0 0 8px rgba(138,43,226,0.3); }
@@ -105,7 +112,7 @@
 
         .friends-content-layout { flex: 1; display: flex; overflow: hidden; background: rgba(10,10,15,0.4); backdrop-filter: blur(10px); }
         .friends-list-section { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
-        .friends-search-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px 16px; color: #fff; font-size: 14px; outline: none; transition: 0.3s; }
+        .friends-search-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 20px; padding: 12px 16px; color: #fff; font-size: 14px; outline: none; transition: 0.3s; flex-shrink: 0; }
         .friends-search-input:focus { border-color: var(--accretion-purple); box-shadow: 0 0 15px rgba(138,43,226,0.2); }
         
         .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; border: 1px solid transparent; background: rgba(255,255,255,0.02); transition: 0.2s; margin-bottom: 8px; }
@@ -116,18 +123,18 @@
         .friend-icon-bubble { width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; cursor: pointer; color: #fff; font-size: 16px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1); }
         .friend-icon-bubble:hover { background: var(--accretion-purple); border-color: var(--accretion-purple); box-shadow: 0 0 15px var(--accretion-purple); transform: scale(1.1); }
 
-        .active-now-sidebar { width: 360px; background: rgba(5,5,8,0.5); border-left: 1px solid var(--glass-border); padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+        .active-now-sidebar { width: 360px; background: rgba(5,5,8,0.5); border-left: 1px solid var(--glass-border); padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
 
         /* CHAT CONTAINER */
         .chat-main-layout { flex: 1; display: flex; height: 100vh; overflow: hidden; background: rgba(10,10,15,0.3); backdrop-filter: blur(15px); }
         .chat-pane { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
-        .chat-header { height: 60px; border-bottom: 1px solid var(--glass-border); background: rgba(15,15,20,0.6); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-weight: 600; color: #fff; font-size: 16px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .chat-header { height: 60px; border-bottom: 1px solid var(--glass-border); background: rgba(15,15,20,0.6); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-weight: 600; color: #fff; font-size: 16px; text-shadow: 0 0 10px rgba(255,255,255,0.2); flex-shrink: 0; }
         
         .messages-container { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
         
         .message-group { display: flex; gap: 16px; position: relative; padding: 8px 12px; border-radius: 12px; transition: 0.2s; border: 1px solid transparent; }
         .message-group:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.05); }
-        .msg-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
+        .msg-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0; }
         .msg-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .msg-header { display: flex; align-items: baseline; gap: 10px; }
         .msg-username { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; } 
@@ -143,24 +150,11 @@
         .reaction-badge { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 4px 8px; font-size: 12px; display: flex; gap: 4px; cursor: pointer; color: #fff; align-items: center; transition: 0.2s; }
         .reaction-badge:hover { border-color: var(--accretion-purple); background: rgba(138,43,226,0.2); box-shadow: 0 0 10px rgba(138,43,226,0.3); transform: scale(1.05); }
 
-        /* ADVANCED MESSAGE BAR & ATTACHMENT PREVIEW */
-        .chat-input-area { padding: 0 24px 24px 24px; position: relative; display: flex; flex-direction: column; gap: 8px; }
-        
-        .attachment-preview-box {
-            background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(15,15,20,0.9)); 
-            border: 1px solid var(--glass-border); border-radius: 12px;
-            padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
-            width: fit-content; min-width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-        }
-        .attachment-file-info { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 14px; font-weight: 500; }
-        .attachment-icon { font-size: 28px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
-        .remove-attachment-btn { background: rgba(237, 66, 69, 0.2); border: none; color: #ed4245; cursor: pointer; font-size: 18px; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
-        .remove-attachment-btn:hover { background: rgba(237, 66, 69, 0.5); color: #fff; transform: scale(1.1); }
-
-        .input-wrapper { background: linear-gradient(145deg, rgba(30,30,40,0.75), rgba(15,15,20,0.75)); border-radius: 24px; padding: 12px 24px; display: flex; flex-direction: column; gap: 4px; position: relative; border: 1px solid rgba(138, 43, 226, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 5px 25px rgba(0,0,0,0.5); transition: all 0.3s ease; backdrop-filter: blur(10px); align-items: flex-end; }
+        /* ADVANCED MESSAGE BAR */
+        .chat-input-area { padding: 0 24px 24px 24px; position: relative; flex-shrink: 0; }
+        .input-wrapper { background: linear-gradient(145deg, rgba(30,30,40,0.75), rgba(15,15,20,0.75)); border-radius: 20px; padding: 12px 24px; display: flex; flex-direction: column; gap: 4px; position: relative; border: 1px solid rgba(138, 43, 226, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 5px 25px rgba(0,0,0,0.5); transition: all 0.3s ease; backdrop-filter: blur(10px); }
         .input-wrapper:focus-within { box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 30px rgba(138, 43, 226, 0.6); border-color: var(--accretion-purple); }
-        .chat-input { background: transparent; border: none; outline: none; color: #fff; font-size: 15px; font-family: inherit; resize: none; max-height: 250px; min-height: 22px; width: 100%; overflow-y: auto; line-height: 1.5; padding: 6px 0; }
+        .chat-input { background: transparent; border: none; outline: none; color: #fff; font-size: 15px; font-family: inherit; resize: none; max-height: 140px; width: 100%; overflow-y: auto; }
         
         .typing-indicator { position: absolute; top: -22px; left: 16px; font-size: 12px; color: var(--accretion-purple); font-style: italic; text-shadow: 0 0 5px rgba(138,43,226,0.5); font-weight: 600; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
@@ -173,13 +167,28 @@
         .emoji-opt:hover { background: rgba(138,43,226,0.3); transform: scale(1.2); }
 
         /* RIGHT MEMBER LIST */
-        .right-member-sidebar { width: 260px; background: rgba(5,5,8,0.6); border-left: 1px solid var(--glass-border); padding: 24px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(10px); }
+        .right-member-sidebar { width: 260px; background: rgba(5,5,8,0.6); border-left: 1px solid var(--glass-border); padding: 24px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(10px); flex-shrink: 0; }
         .member-category-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 12px; margin-bottom: 4px; }
         .member-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
         .member-list-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateX(-5px); }
         
         /* FIXED DISCORD PROFILE POPOVER */
-        .discord-profile-popover { position: absolute; bottom: 70px; left: 80px; width: 340px; background: rgba(15, 15, 22, 0.95); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); overflow: hidden; font-family: 'Inter', sans-serif; color: #fff; z-index: 9999; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .discord-profile-popover { 
+            position: absolute; 
+            bottom: 70px; 
+            left: 80px; 
+            width: 340px; 
+            background: rgba(15, 15, 22, 0.95); 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.85); 
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif; 
+            color: #fff; 
+            z-index: 9999; 
+            border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+        }
         .profile-banner { height: 100px; background: var(--accretion-purple); background-size: cover; background-position: center; position: relative; }
         .profile-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(10,10,15,0.9)); }
         .profile-body { padding: 0 20px 20px 20px; position: relative; margin-top: -45px; }
@@ -202,9 +211,10 @@
 </head>
 <body>
 
+    <!-- BLACK HOLE BACKGROUND -->
     <div class="black-hole-bg"></div>
 
-    <!-- AUTHENTICATION -->
+    <!-- AUTHENTICATION PANELS CONTAINER -->
     <div id="authScreenContainer" class="auth-screen-container">
         <!-- LOGIN VIEW -->
         <div id="loginView" class="auth-card">
@@ -266,7 +276,7 @@
     <!-- MAIN APP INTERFACE -->
     <div id="appContainer" class="app-container hidden">
 
-        <!-- PROFILE POPOVER -->
+        <!-- PROFILE POPOVER MOVED OUTSIDE FLEX CONTAINERS -->
         <div id="userProfilePopover" class="discord-profile-popover hidden">
             <div class="profile-banner" id="popoverBanner"></div>
             <div class="profile-body">
@@ -350,8 +360,7 @@
         </div>
 
         <!-- DYNAMIC MAIN PANE: HOME OR CHAT -->
-        <div id="dynamicMainContent" class="home-main-pane">
-            
+        <div id="dynamicMainContent" style="flex:1; display:flex; flex-direction:column; background:transparent; overflow:hidden;">
             <!-- HOME / FRIENDS VIEW DASHBOARD -->
             <div id="homeFriendsView" class="home-main-pane">
                 <div class="home-top-nav">
@@ -385,42 +394,27 @@
                 <div class="chat-pane">
                     <div class="chat-header">
                         <span id="activeChannelTitle">Global Expanse</span>
-                        <div style="display: flex; gap: 10px;">
-                            <button id="groupSettingsNavBtn" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; transition: 0.2s;" title="Group Settings" onclick="openGroupSettingsModal()" class="hidden">⚙️</button>
-                            <button id="purgeChatBtn" class="tool-btn" title="Purge Chat" style="color: #ed4245;" onclick="purgeCurrentChat()">🗑️ Purge</button>
-                        </div>
+                        <button id="groupSettingsNavBtn" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; transition: 0.2s;" title="Group Settings" onclick="openGroupSettingsModal()" class="hidden">⚙️</button>
                     </div>
 
                     <div class="messages-container" id="messagesScrollArea"></div>
 
                     <!-- ADVANCED MESSAGE BAR -->
                     <div class="chat-input-area">
-                        <div id="replyPreviewBox" class="hidden" style="background: rgba(138,43,226,0.2); padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #fff; border: 1px solid var(--accretion-purple); margin-bottom: 8px;">
+                        <div id="replyPreviewBox" class="hidden" style="background: rgba(138,43,226,0.2); padding: 8px 16px; border-radius: 12px 12px 0 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #fff; border: 1px solid var(--accretion-purple); border-bottom: none;">
                             <span id="replyPreviewText">Targeting transmission...</span>
-                            <button onclick="clearReplyState()" style="background:none; border:none; color:#ed4245; cursor:pointer; font-weight:bold; font-size:16px;">✕</button>
-                        </div>
-
-                        <!-- ATTACHMENT PREVIEW UI (DISCORD STYLE) -->
-                        <div id="attachmentPreviewBox" class="attachment-preview-box hidden">
-                            <div class="attachment-file-info">
-                                <div class="attachment-icon">📄</div>
-                                <div style="display:flex; flex-direction:column;">
-                                    <span id="attachmentFileName">file_name.jpg</span>
-                                    <span style="font-size: 11px; color: var(--text-muted);">Ready to transmit</span>
-                                </div>
-                            </div>
-                            <button class="remove-attachment-btn" onclick="clearAttachment()" title="Remove Attachment">✕</button>
+                            <button onclick="clearReplyState()" style="background:none; border:none; color:#ed4245; cursor:pointer; font-weight:bold;">✕</button>
                         </div>
                         
                         <div class="input-wrapper">
                             <div id="typingIndicatorBar" class="typing-indicator hidden"></div>
                             <div id="emojiPickerPopup" class="emoji-picker-popup hidden"></div>
-                            <input type="file" id="fileAttachmentInput" class="hidden" onchange="handleFileSelect(event)">
-                            <div style="display: flex; align-items: flex-end; gap: 12px; width: 100%;">
+                            <input type="file" id="fileAttachmentInput" class="hidden" onchange="uploadFileAttachment()">
+                            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
                                 <button class="input-btn" onclick="document.getElementById('fileAttachmentInput').click()" title="Attach File">➕</button>
-                                <textarea id="chatMessageInput" class="chat-input" placeholder="Transmit into the void..." rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
+                                <textarea id="chatMessageInput" class="chat-input" placeholder="Transmit into the void..." rows="1" oninput="handleTypingInput(this)" onkeydown="handleMessageKeydown(event)"></textarea>
                                 <button class="input-btn" onclick="toggleEmojiPicker()" title="Emotes">😀</button>
-                                <button id="mainSendBtn" class="input-btn" style="background: var(--accretion-purple); border:none;" title="Send" onclick="handleMessageSubmit()">
+                                <button class="input-btn" style="background: var(--accretion-purple); border:none;" title="Send" onclick="handleMessageSubmit()">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
                             </div>
@@ -439,7 +433,6 @@
         </div>
     </div>
 
-    <!-- MODALS AND CUSTOMIZERS OMITTED FOR BREVITY, REST OF UI REMAINS IDENTICAL -->
     <!-- ADVANCED PROFILE CUSTOMIZER MODAL -->
     <div id="advancedProfileCustomizerModal" class="discord-profile-customizer-modal hidden">
         <div class="customizer-card">
@@ -519,8 +512,10 @@
         </div>
         <div class="settings-content-col">
             <div style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px; position:relative;">
+                <!-- ESC BUTTON -->
                 <button onclick="closeGroupSettingsModal()" style="position:absolute; right:0; top:0; width:40px; height:40px; border-radius:50%; border:2px solid var(--text-muted); background:none; color:var(--text-muted); display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer; font-weight:bold; transition:0.2s;">✕<span style="font-size:9px; margin-top:2px;">ESC</span></button>
 
+                <!-- PROFILE TAB -->
                 <div id="settingsPaneProfile" style="display:flex; flex-direction:column; gap:24px;">
                     <div style="font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 0 10px var(--accretion-purple);">Constellation Core Parameters</div>
                     <div>
@@ -534,6 +529,7 @@
                     <button class="btn-discord" style="width: 200px;" onclick="saveGroupProfileEdits()">Lock Parameters</button>
                 </div>
 
+                <!-- MEMBERS TAB -->
                 <div id="settingsPaneMembers" class="hidden" style="display:flex; flex-direction:column; gap:24px;">
                     <div style="font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 0 10px var(--accretion-purple);">Manage Linked Entities</div>
                     <div style="display:flex; gap:12px;">
@@ -560,7 +556,7 @@
         let typingBroadcastChannel = null;
         let typingTimeout = null;
         let replyMessageId = null;
-        let pendingAttachmentFile = null;
+        let uploadedFileUrl = null;
         const EMOJI_SET = ['✨', '🌌', '🚀', '🔥', '💀', '👀', '🪐', '👾'];
         const renderedMessageIds = new Set();
 
@@ -730,7 +726,7 @@
             let hexColor = '#23a55a'; 
             if (statusVal === 'Idle') hexColor = '#fee75c';
             else if (statusVal === 'Do Not Disturb') hexColor = '#ed4245';
-            else if (statusVal === 'Offline') hexColor = '#80848e';
+            else if (statusVal === 'Offline' || statusVal === 'Invisible') hexColor = '#80848e';
 
             if (indicator) indicator.style.background = hexColor;
             if (footerDot) footerDot.style.background = hexColor;
@@ -909,25 +905,44 @@
                 targetUsers = users || [];
             }
 
-            document.getElementById('onlineMembersHeader').innerText = `Active Entities — ${targetUsers.length}`;
+            let onlineCount = 0;
+            let offlineCount = 0;
 
             targetUsers.forEach(u => {
+                const isOffline = u.status === 'Offline' || u.status === 'Invisible';
+                if (isOffline) offlineCount++;
+                else onlineCount++;
+
                 const item = document.createElement('div');
                 item.className = 'member-list-item';
+                
+                let hexColor = '#23a55a'; 
+                if (u.status === 'Idle') hexColor = '#fee75c';
+                else if (u.status === 'Do Not Disturb') hexColor = '#ed4245';
+                else if (isOffline) hexColor = '#80848e';
+
                 item.innerHTML = `
                     <div style="display:flex; align-items:center; gap:12px; overflow:hidden;">
                         <div style="position:relative; width:36px; height:36px; flex-shrink:0;">
-                            <img src="${u.pfp_url}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">
-                            <div style="position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid #050508; background:#23a55a;"></div>
+                            <img src="${u.pfp_url || 'https://via.placeholder.com/36'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">
+                            <div style="position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid #050508; background:${hexColor};"></div>
                         </div>
                         <div style="display:flex; flex-direction:column; overflow:hidden;">
-                            <span style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.nickname || u.username}</span>
+                            <span style="font-size:14px; font-weight:600; color:${isOffline ? 'var(--text-muted)' : '#fff'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.nickname || u.username}</span>
                             <span style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.about_me || 'Lost in the void.'}</span>
                         </div>
                     </div>
                 `;
-                onlineList.appendChild(item);
+                
+                if (isOffline) {
+                    offlineList.appendChild(item);
+                } else {
+                    onlineList.appendChild(item);
+                }
             });
+            
+            document.getElementById('onlineMembersHeader').innerText = `Active Entities — ${onlineCount}`;
+            document.getElementById('offlineMembersHeader').innerText = `Dormant — ${offlineCount}`;
         }
 
         async function loadSidebarChannels() {
@@ -941,7 +956,9 @@
                     const dmChannelId = ['dm', [currentUser.username, u.username].sort().join('_')].join('_');
                     const item = document.createElement('div');
                     item.className = 'sidebar-item';
-                    item.innerHTML = `<img src="${u.pfp_url}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);"> ${u.nickname || u.username}`;
+                    item.innerHTML = `<img src="${u.pfp_url || 'https://via.placeholder.com/28'}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid rgba(255,255,255,0.1);"> ${u.nickname || u.username}`;
+                    
+                    // Escaping inline names via JS closures prevents XSS issues here
                     item.onclick = () => switchChannel(dmChannelId, `@${u.nickname || u.username}`, item);
                     dmList.appendChild(item);
                 });
@@ -966,53 +983,53 @@
             const listContainer = document.getElementById('friendsDynamicList');
             listContainer.innerHTML = '';
             const { data: users } = await supabaseClient.from('users').select('*').neq('username', currentUser.username);
+            
             if (users) {
-                document.getElementById('friendsCountTitle').innerText = `Online Entities — ${users.length}`;
+                let onlineUsersCount = 0;
+                
                 users.forEach(u => {
+                    const isOffline = u.status === 'Offline' || u.status === 'Invisible';
+                    if (!isOffline) onlineUsersCount++;
+                    
+                    let hexColor = '#23a55a'; 
+                    if (u.status === 'Idle') hexColor = '#fee75c';
+                    else if (u.status === 'Do Not Disturb') hexColor = '#ed4245';
+                    else if (isOffline) hexColor = '#80848e';
+
                     const dmChannelId = ['dm', [currentUser.username, u.username].sort().join('_')].join('_');
                     const row = document.createElement('div');
                     row.className = 'friend-row';
+                    
+                    // Use standard element assignment rather than string injection to avoid single-quote breaks
                     row.innerHTML = `
                         <div class="friend-info-left">
                             <div style="position:relative; width:44px; height:44px;">
-                                <img src="${u.pfp_url}" class="friend-avatar">
-                                <div class="user-status-dot"></div>
+                                <img src="${u.pfp_url || 'https://via.placeholder.com/44'}" class="friend-avatar">
+                                <div class="user-status-dot" style="background:${hexColor};"></div>
                             </div>
                             <div style="display:flex; flex-direction:column;">
                                 <span class="friend-name">${u.nickname || u.username}</span>
                                 <span style="font-size:13px; color:var(--text-muted);">${u.status || 'Active'}</span>
                             </div>
                         </div>
-                        <div class="friend-icon-bubble" title="Message" onclick="switchChannel('${dmChannelId}', '@${u.nickname || u.username}')">💬</div>
+                        <div class="friend-icon-bubble dm-launch-btn" title="Message">💬</div>
                     `;
+                    
+                    row.querySelector('.dm-launch-btn').onclick = () => switchChannel(dmChannelId, `@${u.nickname || u.username}`);
                     listContainer.appendChild(row);
                 });
+
+                document.getElementById('friendsCountTitle').innerText = `Online Entities — ${onlineUsersCount}`;
             }
         }
 
-        /* 
-           FIX FOR VANISHING MESSAGES: 
-           This query has been heavily bulletproofed to make sure the UI does NOT get cleared 
-           if the database returns an error, preventing race-condition screen wipeouts.
-        */
         async function loadChannelMessages() {
-            const { data, error } = await supabaseClient.from('messages')
-                .select('*, users(username, nickname, pfp_url)')
-                .eq('channel_id', activeChannelId)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                console.error("Error fetching messages. Halting wipe to protect UI:", error);
-                return;
-            }
-
-            if (data) {
-                const container = document.getElementById('messagesScrollArea');
-                container.innerHTML = '';
-                renderedMessageIds.clear();
-                data.forEach(msg => renderMessageNode(msg));
-                setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
-            }
+            const container = document.getElementById('messagesScrollArea');
+            container.innerHTML = '';
+            renderedMessageIds.clear();
+            const { data } = await supabaseClient.from('messages').select('*, users(username, nickname, pfp_url)').eq('channel_id', activeChannelId).order('created_at', { ascending: true });
+            if (data) data.forEach(msg => renderMessageNode(msg));
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
         }
 
         function setupRealtimeSocket() {
@@ -1022,7 +1039,9 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel_id=eq.${activeChannelId}` }, async payload => {
                     if (payload.eventType === 'INSERT') {
                         if (!renderedMessageIds.has(payload.new.id)) {
-                            if (payload.new.sender_username !== currentUser.username) playLoudBeep();
+                            if (payload.new.sender_username !== currentUser.username) {
+                                playLoudBeep();
+                            }
 
                             const { data: sender } = await supabaseClient.from('users').select('*').eq('username', payload.new.sender_username).maybeSingle();
                             let completeMsg = payload.new;
@@ -1046,11 +1065,10 @@
                 }).subscribe();
         }
 
-        function handleTypingInput() {
-            const input = document.getElementById('chatMessageInput');
-            // Auto resize logic fixing "less responsivity"
-            input.style.height = 'auto';
-            input.style.height = Math.min(input.scrollHeight, 250) + 'px';
+        function handleTypingInput(textareaEl) {
+            // Auto expand textarea logic
+            textareaEl.style.height = 'auto';
+            textareaEl.style.height = (textareaEl.scrollHeight < 140 ? textareaEl.scrollHeight : 140) + 'px';
 
             if (typingBroadcastChannel) {
                 typingBroadcastChannel.send({
@@ -1077,43 +1095,10 @@
             }
         }
 
-        /* ATTACHMENT HANDLING LOGIC */
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                pendingAttachmentFile = file;
-                document.getElementById('attachmentFileName').innerText = file.name;
-                document.getElementById('attachmentPreviewBox').classList.remove('hidden');
-            }
-            event.target.value = ''; // Reset input to allow selecting same file again
-        }
-
-        function clearAttachment() {
-            pendingAttachmentFile = null;
-            document.getElementById('attachmentPreviewBox').classList.add('hidden');
-        }
-
         async function handleMessageSubmit() {
             const input = document.getElementById('chatMessageInput');
             const content = input.value.trim();
-            const btn = document.getElementById('mainSendBtn');
-            
-            if (!content && !pendingAttachmentFile) return;
-
-            // Optional loading state while transmitting file
-            btn.style.opacity = '0.5';
-            btn.style.pointerEvents = 'none';
-
-            let uploadedFileUrl = null;
-
-            // Handle the Discord-like attachment uploading process
-            if (pendingAttachmentFile) {
-                const fileName = `upload-${Date.now()}.${pendingAttachmentFile.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, pendingAttachmentFile);
-                if (data) {
-                    uploadedFileUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
-                }
-            }
+            if (!content && !uploadedFileUrl) return;
 
             const payload = {
                 sender_username: currentUser.username,
@@ -1123,22 +1108,23 @@
                 reply_to: replyMessageId
             };
 
-            await supabaseClient.from('messages').insert([payload]);
-            
             input.value = '';
-            input.style.height = 'auto'; // Reset size
-            clearAttachment(); // Clear preview box
+            input.style.height = 'auto'; // Reset text box height
+            uploadedFileUrl = null;
             clearReplyState();
-            
-            btn.style.opacity = '1';
-            btn.style.pointerEvents = 'auto';
+
+            await supabaseClient.from('messages').insert([payload]);
         }
 
-        /* CHAT PURGE FUNCTION */
-        async function purgeCurrentChat() {
-            if (confirm("CRITICAL WARNING: This will permanently annihilate all transmissions in this frequency. Proceed?")) {
-                await supabaseClient.from('messages').delete().eq('channel_id', activeChannelId);
-                loadChannelMessages();
+        async function uploadFileAttachment() {
+            const file = document.getElementById('fileAttachmentInput').files[0];
+            if (file) {
+                const fileName = `upload-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) {
+                    uploadedFileUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                    alert("File embedded in transmission! Press send.");
+                }
             }
         }
 
@@ -1152,7 +1138,7 @@
 
             const sender = msg.users || { username: msg.sender_username, nickname: msg.sender_username, pfp_url: 'https://via.placeholder.com/44' };
             const isOwner = msg.sender_username === currentUser.username;
-            
+            const cleanSenderName = escapeHtml(sender.nickname || sender.username);
             const nameColor = getUserColor(sender.username);
 
             let reactionsHtml = '';
@@ -1163,12 +1149,11 @@
             }
 
             row.innerHTML = `
-                <img src="${sender.pfp_url}" class="msg-avatar">
+                <img src="${sender.pfp_url || 'https://via.placeholder.com/44'}" class="msg-avatar">
                 <div class="msg-content">
                     <div class="msg-header">
-                        <span class="msg-username" style="color: ${nameColor}; text-shadow: 0 0 8px ${nameColor};">${sender.nickname || sender.username}</span>
+                        <span class="msg-username" style="color: ${nameColor}; text-shadow: 0 0 8px ${nameColor};">${cleanSenderName}</span>
                         <span class="msg-timestamp">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        ${msg.edited ? `<span style="font-size:10px; color:var(--text-muted); font-style:italic;">(edited)</span>` : ''}
                     </div>
                     ${msg.reply_to ? `<div style="font-size:12px; color:var(--text-muted); border-left:2px solid var(--accretion-purple); padding-left:8px; margin-bottom:4px; font-style:italic;">Replying to a prior transmission...</div>` : ''}
                     <div class="msg-text">${escapeHtml(msg.content || '')}</div>
@@ -1176,7 +1161,7 @@
                     <div class="reactions-wrapper">${reactionsHtml}</div>
                 </div>
                 <div class="msg-toolbar">
-                    <button class="tool-btn" title="Reply" onclick="setReplyTarget(${msg.id}, '${sender.nickname || sender.username}')">↩️</button>
+                    <button class="tool-btn reply-target-btn" title="Reply">↩️</button>
                     <button class="tool-btn" title="React 👍" onclick="incrementMessageReaction(${msg.id}, '👍')">👍</button>
                     ${isOwner ? `
                         <button class="tool-btn" title="Edit" onclick="promptEditMessage(${msg.id})">✏️</button>
@@ -1184,6 +1169,9 @@
                     ` : ''}
                 </div>
             `;
+            
+            // Attached safely using element reference
+            row.querySelector('.reply-target-btn').onclick = () => setReplyTarget(msg.id, (sender.nickname || sender.username));
 
             container.appendChild(row);
             container.scrollTop = container.scrollHeight;
@@ -1194,6 +1182,7 @@
             let reactions = data?.reactions || {};
             reactions[emoji] = (reactions[emoji] || 0) + 1;
             await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
+            loadChannelMessages();
         }
 
         function setReplyTarget(msgId, authorName) {
@@ -1211,12 +1200,14 @@
             const newText = prompt("Alter transmission content:");
             if (newText) {
                 await supabaseClient.from('messages').update({ content: newText, edited: true }).eq('id', msgId);
+                loadChannelMessages();
             }
         }
 
         async function deleteMessage(msgId) {
             if (confirm("Delete this transmission?")) {
                 await supabaseClient.from('messages').delete().eq('id', msgId);
+                loadChannelMessages();
             }
         }
 
@@ -1227,7 +1218,12 @@
                     const opt = document.createElement('div');
                     opt.className = 'emoji-opt';
                     opt.innerText = emoji;
-                    opt.onclick = () => { document.getElementById('chatMessageInput').value += emoji; handleTypingInput(); popup.classList.add('hidden'); };
+                    opt.onclick = () => { 
+                        const input = document.getElementById('chatMessageInput');
+                        input.value += emoji; 
+                        handleTypingInput(input);
+                        popup.classList.add('hidden'); 
+                    };
                     popup.appendChild(opt);
                 });
             }
@@ -1357,7 +1353,7 @@
                         row.className = 'friend-row';
                         row.innerHTML = `
                             <div class="friend-info-left">
-                                <img src="${u.pfp_url}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">
+                                <img src="${u.pfp_url || 'https://via.placeholder.com/36'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">
                                 <span class="friend-name">${u.nickname || u.username}</span>
                             </div>
                             ${u.username !== currentUser.username ? `<button class="btn-discord-danger" style="padding:6px 14px; font-size:12px;" onclick="removeGroupMember('${groupId}', '${u.username}')">Sever</button>` : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">You</span>'}
