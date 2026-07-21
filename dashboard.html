@@ -681,7 +681,7 @@
                 img.src = imgUrl;
                 img.onload = () => {
                     try {
-                        const colorThief = new Color Thief();
+                        const colorThief = new ColorThief();
                         const color = colorThief.getColor(img);
                         const hex = `#${color.map(x => x.toString(16).padStart(2, '0')).join('')}`;
                         colorCache[imgUrl] = hex;
@@ -838,7 +838,6 @@
                 activeWorkspace.type === 'dm' ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}` : `group-${activeWorkspace.target.id}`
             );
 
-            // Broadcast typing state immediately using Supabase Realtime broadcast channel
             if (window.activeTypingChannel) {
                 window.activeTypingChannel.send({
                     type: 'broadcast',
@@ -857,7 +856,6 @@
             await loadGlobalMessages();
             loadGlobalPresencePanel();
 
-            // Broadcast channel for instantaneous typing indicators without database delay
             if (window.activeTypingChannel) {
                 supabaseClient.removeChannel(window.activeTypingChannel);
             }
@@ -924,7 +922,6 @@
             const text = input.value.trim();
             if (!text && !globalFile) return;
 
-            // Direct UI append for instantaneous zero-delay send feel before server confirmation
             const tempMsg = {
                 id: 'temp-' + Date.now(),
                 username: currentUser.username,
@@ -955,7 +952,7 @@
         }
 
         // Workspace Chat Engine (DMs & Groups)
-        let activeWorkspace = null; // { type: 'dm'|'group', name: string, id?: string }
+        let activeWorkspace = null; 
         let workspaceSub = null;
         let workspaceFile = null;
         let workspaceReplyTo = null;
@@ -1033,7 +1030,6 @@
                 ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
                 : `group-${activeWorkspace.target.id}`;
 
-            // Instant local append optimization for zero perceived delay
             const tempMsg = {
                 id: 'temp-' + Date.now(),
                 username: currentUser.username,
@@ -1146,7 +1142,6 @@
             else loadWorkspaceMessages();
         }
 
-        // Right Panel Presence Management (Online / Offline Group categorization)
         async function loadGlobalPresencePanel() {
             const container = document.getElementById('rightPanelContainer');
             container.innerHTML = `<div class="card-title" style="font-size:0.8rem;">ONLINE OPERATIVES</div><div id="onlineList" style="display:flex; flex-direction:column; gap:0.4rem;"></div>`;
@@ -1314,7 +1309,7 @@
                     const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
                     const btn = document.createElement('button');
                     btn.className = 'btn-action';
-                    btn.style.textAlign.textAlign = 'left';
+                    btn.style.textAlign = 'left';
                     btn.style.background = 'rgba(18,20,32,0.8)';
                     btn.style.color = '#00f3ff';
                     btn.innerHTML = `📡 DM: ${friendUser.toUpperCase()}`;
