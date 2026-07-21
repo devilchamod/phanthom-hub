@@ -29,8 +29,10 @@
         /* APP LAYOUT */
         .app-container { display: flex; width: 100vw; height: 100vh; }
         
-        .channels-sidebar { width: 240px; background: #2b2d31; display: flex; flex-direction: column; border-right: 1px solid #1f2023; }
-        .sidebar-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-weight: 600; color: #f2f3f5; }
+        .channels-sidebar { width: 240px; background: #2b2d31; display: flex; flex-direction: column; border-right: 1px solid #1f2023; position: relative; }
+        .sidebar-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-weight: 600; color: #f2f3f5; cursor: pointer; position: relative; }
+        .sidebar-header:hover { background: #35373c; }
+        
         .sidebar-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
         .sidebar-item { padding: 8px 12px; border-radius: 4px; color: #949ba4; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .sidebar-item:hover { background: #35373c; color: #dbdee1; }
@@ -74,6 +76,44 @@
         .emoji-picker-popup { position: absolute; bottom: 60px; left: 16px; background: #2b2d31; border: 1px solid #1f2023; border-radius: 8px; padding: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10; }
         .emoji-opt { padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 18px; }
         .emoji-opt:hover { background: #35373c; }
+
+        /* DISCORD PROFILE POPOVER PANEL */
+        .discord-profile-popover {
+            position: absolute;
+            bottom: 56px;
+            left: 8px;
+            width: 324px;
+            background: #111214;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: #dbdee1;
+            z-index: 3000;
+            border: 1px solid #1f2023;
+        }
+        .profile-banner { height: 90px; background: #5865f2; background-size: cover; background-position: center; }
+        .profile-body { background: #232428; padding: 0 16px 16px 16px; position: relative; margin-top: -38px; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .profile-avatar-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
+        .avatar-wrapper { position: relative; width: 80px; height: 80px; border-radius: 50%; background: #232428; padding: 4px; }
+        .popover-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-indicator { position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #232428; }
+        .status-indicator.online { background: #23a55a; }
+        .popover-status-bubble { background: #111214; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; color: #f2f3f5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-identity { margin-bottom: 12px; }
+        .profile-display-name { font-size: 20px; font-weight: 700; color: #f2f3f5; line-height: 24px; }
+        .profile-usernames { font-size: 13px; color: #949ba4; margin-top: 2px; }
+        .profile-divider { height: 1px; background: #3f4147; margin: 12px 0; }
+        .profile-section { margin-bottom: 12px; }
+        .section-title { font-size: 12px; font-weight: 700; color: #949ba4; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+        .profile-bio-content { font-size: 14px; color: #dbdee1; line-height: 1.375rem; word-break: break-word; }
+        .profile-menu-list { background: #111214; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; padding: 6px; gap: 2px; }
+        .profile-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 4px; font-size: 14px; font-weight: 500; color: #b5bac1; cursor: pointer; transition: background 0.15s, color 0.15s; }
+        .profile-menu-item:hover { background: #5865f2; color: #ffffff; }
+        .menu-icon { font-size: 16px; width: 20px; }
+        .menu-label { flex: 1; margin-left: 8px; }
+        .menu-arrow { font-size: 16px; color: #949ba4; }
+        .profile-menu-item:hover .menu-arrow { color: #ffffff; }
 
         .hidden { display: none !important; }
         .link-text { color: #00a8fc; cursor: pointer; font-size: 13px; text-align: center; }
@@ -154,10 +194,52 @@
         
         <!-- SIDEBAR -->
         <div class="channels-sidebar">
-            <div class="sidebar-header">
-                <span id="currentLoggedUserTag" style="font-size:13px; overflow:hidden; text-overflow:ellipsis;">-</span>
-                <button onclick="logoutSession()" style="background:none; border:none; color:#f23f43; cursor:pointer; font-size:12px;">Disconnect</button>
+            
+            <!-- PROFILE POPOVER PANEL -->
+            <div id="userProfilePopover" class="discord-profile-popover hidden">
+                <div class="profile-banner"></div>
+                <div class="profile-body">
+                    <div class="profile-avatar-row">
+                        <div class="avatar-wrapper">
+                            <img id="popoverUserAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="popover-avatar">
+                            <div class="status-indicator online"></div>
+                        </div>
+                        <div id="popoverCustomStatusBadge" class="popover-status-bubble">
+                            <span id="popoverStatusText">Online</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-identity">
+                        <h2 id="popoverDisplayName" class="profile-display-name">-</h2>
+                        <div class="profile-usernames">
+                            <span id="popoverUsername">-</span> • <span class="profile-bio-tag">Member</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-divider"></div>
+
+                    <div class="profile-section">
+                        <div class="section-title">About Me</div>
+                        <p id="popoverBioText" class="profile-bio-content">Only the silence remains.</p>
+                    </div>
+
+                    <div class="profile-menu-list">
+                        <div class="profile-menu-item" onclick="logoutSession()">
+                            <span class="menu-icon" style="color:#f23f43;">🚪</span>
+                            <span class="menu-label" style="color:#f23f43;">Log Out</span>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <div class="sidebar-header" onclick="toggleProfilePopover(event)">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <img id="sidebarHeaderAvatar" src="https://via.placeholder.com/32" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+                    <span id="currentLoggedUserTag" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">-</span>
+                </div>
+                <span style="font-size: 11px; color: #949ba4;">▲</span>
+            </div>
+
             <div class="sidebar-list">
                 <div class="sidebar-item active" onclick="switchChannel('global', 'Global Room', this)">🌐 Global Room</div>
                 <div style="font-size: 12px; font-weight: 700; color: #949ba4; margin: 12px 8px 4px 8px; letter-spacing: 0.5px;">DIRECT MESSAGES</div>
@@ -273,13 +355,13 @@
             let pfpUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${username}`;
             if (fileInput) {
                 const fileName = `avatar-${username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
-                const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
                 if (data) {
                     pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
                 }
             }
 
-            const { data, error } = await supabaseClient.from('users').insert([{
+            const { error } = await supabaseClient.from('users').insert([{
                 username,
                 password_hash: password,
                 nickname: nickname || username,
@@ -298,7 +380,7 @@
             const username = document.getElementById('loginUsername').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value.trim();
 
-            const { data: user, error } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).single();
             if (!user || user.password_hash !== password) {
                 alert("Invalid username or password.");
                 return;
@@ -341,9 +423,42 @@
             document.getElementById('appContainer').classList.remove('hidden');
             document.getElementById('currentLoggedUserTag').innerText = `@${currentUser.nickname || currentUser.username}`;
             
+            if (currentUser && currentUser.pfp_url) {
+                const headerAvatar = document.getElementById('sidebarHeaderAvatar');
+                if (headerAvatar) headerAvatar.src = currentUser.pfp_url;
+            }
+            
             loadSidebarChannels();
             switchChannel('global', 'Global Room');
         }
+
+        // --- DISCORD PROFILE POPOVER CONTROLS ---
+        function toggleProfilePopover(event) {
+            event.stopPropagation();
+            const popover = document.getElementById('userProfilePopover');
+            popover.classList.toggle('hidden');
+
+            if (!popover.classList.contains('hidden')) {
+                populateProfilePopoverData();
+            }
+        }
+
+        function populateProfilePopoverData() {
+            if (!currentUser) return;
+            document.getElementById('popoverDisplayName').innerText = currentUser.nickname || currentUser.username;
+            document.getElementById('popoverUsername').innerText = `@${currentUser.username}`;
+            if (currentUser.pfp_url) {
+                document.getElementById('popoverUserAvatar').src = currentUser.pfp_url;
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            const popover = document.getElementById('userProfilePopover');
+            const header = document.querySelector('.sidebar-header');
+            if (popover && !popover.contains(e.target) && header && !header.contains(e.target)) {
+                popover.classList.add('hidden');
+            }
+        });
 
         // --- CHANNEL SWITCHING & RENDERING ---
         function switchChannel(channelId, channelName, element) {
