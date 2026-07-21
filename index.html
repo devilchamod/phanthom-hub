@@ -28,7 +28,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(138, 43, 226, 0.4); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(138, 43, 226, 0.7); }
 
-        /* THE BLACK HOLE BACKGROUND EFFECT - SOFTENED GRADIENT CORE */
+        /* THE BLACK HOLE BACKGROUND EFFECT */
         .black-hole-bg {
             position: fixed;
             top: 50%; left: 50%;
@@ -44,15 +44,8 @@
             pointer-events: none;
         }
 
-        @keyframes spin {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        @keyframes warp {
-            from { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
-            to { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
-        }
+        @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes warp { from { transform: translate(-50%, -50%) scale(1); opacity: 0.85; } to { transform: translate(-50%, -50%) scale(1.08); opacity: 1; } }
 
         /* GLASSMORPHISM APP PANELS */
         .auth-screen-container { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
@@ -150,11 +143,24 @@
         .reaction-badge { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 4px 8px; font-size: 12px; display: flex; gap: 4px; cursor: pointer; color: #fff; align-items: center; transition: 0.2s; }
         .reaction-badge:hover { border-color: var(--accretion-purple); background: rgba(138,43,226,0.2); box-shadow: 0 0 10px rgba(138,43,226,0.3); transform: scale(1.05); }
 
-        /* ADVANCED MESSAGE BAR */
-        .chat-input-area { padding: 0 24px 24px 24px; position: relative; }
-        .input-wrapper { background: linear-gradient(145deg, rgba(30,30,40,0.75), rgba(15,15,20,0.75)); border-radius: 40px; padding: 12px 24px; display: flex; flex-direction: column; gap: 4px; position: relative; border: 1px solid rgba(138, 43, 226, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 5px 25px rgba(0,0,0,0.5); transition: all 0.3s ease; backdrop-filter: blur(10px); }
+        /* ADVANCED MESSAGE BAR & ATTACHMENT PREVIEW */
+        .chat-input-area { padding: 0 24px 24px 24px; position: relative; display: flex; flex-direction: column; gap: 8px; }
+        
+        .attachment-preview-box {
+            background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(15,15,20,0.9)); 
+            border: 1px solid var(--glass-border); border-radius: 12px;
+            padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+            width: fit-content; min-width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+        .attachment-file-info { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 14px; font-weight: 500; }
+        .attachment-icon { font-size: 28px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
+        .remove-attachment-btn { background: rgba(237, 66, 69, 0.2); border: none; color: #ed4245; cursor: pointer; font-size: 18px; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .remove-attachment-btn:hover { background: rgba(237, 66, 69, 0.5); color: #fff; transform: scale(1.1); }
+
+        .input-wrapper { background: linear-gradient(145deg, rgba(30,30,40,0.75), rgba(15,15,20,0.75)); border-radius: 24px; padding: 12px 24px; display: flex; flex-direction: column; gap: 4px; position: relative; border: 1px solid rgba(138, 43, 226, 0.4); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 5px 25px rgba(0,0,0,0.5); transition: all 0.3s ease; backdrop-filter: blur(10px); align-items: flex-end; }
         .input-wrapper:focus-within { box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 30px rgba(138, 43, 226, 0.6); border-color: var(--accretion-purple); }
-        .chat-input { background: transparent; border: none; outline: none; color: #fff; font-size: 15px; font-family: inherit; resize: none; max-height: 140px; width: 100%; }
+        .chat-input { background: transparent; border: none; outline: none; color: #fff; font-size: 15px; font-family: inherit; resize: none; max-height: 250px; min-height: 22px; width: 100%; overflow-y: auto; line-height: 1.5; padding: 6px 0; }
         
         .typing-indicator { position: absolute; top: -22px; left: 16px; font-size: 12px; color: var(--accretion-purple); font-style: italic; text-shadow: 0 0 5px rgba(138,43,226,0.5); font-weight: 600; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
@@ -172,23 +178,8 @@
         .member-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
         .member-list-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateX(-5px); }
         
-        /* FIXED DISCORD PROFILE POPOVER POSITIONING & ISOLATION */
-        .discord-profile-popover { 
-            position: absolute; 
-            bottom: 70px; 
-            left: 80px; 
-            width: 340px; 
-            background: rgba(15, 15, 22, 0.95); 
-            border-radius: 16px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.85); 
-            overflow: hidden; 
-            font-family: 'Inter', sans-serif; 
-            color: #fff; 
-            z-index: 9999; 
-            border: 1px solid var(--glass-border); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-        }
+        /* FIXED DISCORD PROFILE POPOVER */
+        .discord-profile-popover { position: absolute; bottom: 70px; left: 80px; width: 340px; background: rgba(15, 15, 22, 0.95); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); overflow: hidden; font-family: 'Inter', sans-serif; color: #fff; z-index: 9999; border: 1px solid var(--glass-border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .profile-banner { height: 100px; background: var(--accretion-purple); background-size: cover; background-position: center; position: relative; }
         .profile-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(10,10,15,0.9)); }
         .profile-body { padding: 0 20px 20px 20px; position: relative; margin-top: -45px; }
@@ -211,10 +202,9 @@
 </head>
 <body>
 
-    <!-- BLACK HOLE BACKGROUND -->
     <div class="black-hole-bg"></div>
 
-    <!-- AUTHENTICATION PANELS CONTAINER -->
+    <!-- AUTHENTICATION -->
     <div id="authScreenContainer" class="auth-screen-container">
         <!-- LOGIN VIEW -->
         <div id="loginView" class="auth-card">
@@ -276,7 +266,7 @@
     <!-- MAIN APP INTERFACE -->
     <div id="appContainer" class="app-container hidden">
 
-        <!-- PROFILE POPOVER MOVED OUTSIDE FLEX CONTAINERS TO PREVENT BLUR GLITCH -->
+        <!-- PROFILE POPOVER -->
         <div id="userProfilePopover" class="discord-profile-popover hidden">
             <div class="profile-banner" id="popoverBanner"></div>
             <div class="profile-body">
@@ -361,6 +351,7 @@
 
         <!-- DYNAMIC MAIN PANE: HOME OR CHAT -->
         <div id="dynamicMainContent" class="home-main-pane">
+            
             <!-- HOME / FRIENDS VIEW DASHBOARD -->
             <div id="homeFriendsView" class="home-main-pane">
                 <div class="home-top-nav">
@@ -394,27 +385,42 @@
                 <div class="chat-pane">
                     <div class="chat-header">
                         <span id="activeChannelTitle">Global Expanse</span>
-                        <button id="groupSettingsNavBtn" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; transition: 0.2s;" title="Group Settings" onclick="openGroupSettingsModal()" class="hidden">⚙️</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="groupSettingsNavBtn" style="background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; transition: 0.2s;" title="Group Settings" onclick="openGroupSettingsModal()" class="hidden">⚙️</button>
+                            <button id="purgeChatBtn" class="tool-btn" title="Purge Chat" style="color: #ed4245;" onclick="purgeCurrentChat()">🗑️ Purge</button>
+                        </div>
                     </div>
 
                     <div class="messages-container" id="messagesScrollArea"></div>
 
                     <!-- ADVANCED MESSAGE BAR -->
                     <div class="chat-input-area">
-                        <div id="replyPreviewBox" class="hidden" style="background: rgba(138,43,226,0.2); padding: 8px 16px; border-radius: 12px 12px 0 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #fff; border: 1px solid var(--accretion-purple); border-bottom: none;">
+                        <div id="replyPreviewBox" class="hidden" style="background: rgba(138,43,226,0.2); padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #fff; border: 1px solid var(--accretion-purple); margin-bottom: 8px;">
                             <span id="replyPreviewText">Targeting transmission...</span>
-                            <button onclick="clearReplyState()" style="background:none; border:none; color:#ed4245; cursor:pointer; font-weight:bold;">✕</button>
+                            <button onclick="clearReplyState()" style="background:none; border:none; color:#ed4245; cursor:pointer; font-weight:bold; font-size:16px;">✕</button>
+                        </div>
+
+                        <!-- ATTACHMENT PREVIEW UI (DISCORD STYLE) -->
+                        <div id="attachmentPreviewBox" class="attachment-preview-box hidden">
+                            <div class="attachment-file-info">
+                                <div class="attachment-icon">📄</div>
+                                <div style="display:flex; flex-direction:column;">
+                                    <span id="attachmentFileName">file_name.jpg</span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Ready to transmit</span>
+                                </div>
+                            </div>
+                            <button class="remove-attachment-btn" onclick="clearAttachment()" title="Remove Attachment">✕</button>
                         </div>
                         
                         <div class="input-wrapper">
                             <div id="typingIndicatorBar" class="typing-indicator hidden"></div>
                             <div id="emojiPickerPopup" class="emoji-picker-popup hidden"></div>
-                            <input type="file" id="fileAttachmentInput" class="hidden" onchange="uploadFileAttachment()">
-                            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                            <input type="file" id="fileAttachmentInput" class="hidden" onchange="handleFileSelect(event)">
+                            <div style="display: flex; align-items: flex-end; gap: 12px; width: 100%;">
                                 <button class="input-btn" onclick="document.getElementById('fileAttachmentInput').click()" title="Attach File">➕</button>
                                 <textarea id="chatMessageInput" class="chat-input" placeholder="Transmit into the void..." rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
                                 <button class="input-btn" onclick="toggleEmojiPicker()" title="Emotes">😀</button>
-                                <button class="input-btn" style="background: var(--accretion-purple); border:none;" title="Send" onclick="handleMessageSubmit()">
+                                <button id="mainSendBtn" class="input-btn" style="background: var(--accretion-purple); border:none;" title="Send" onclick="handleMessageSubmit()">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
                             </div>
@@ -433,6 +439,7 @@
         </div>
     </div>
 
+    <!-- MODALS AND CUSTOMIZERS OMITTED FOR BREVITY, REST OF UI REMAINS IDENTICAL -->
     <!-- ADVANCED PROFILE CUSTOMIZER MODAL -->
     <div id="advancedProfileCustomizerModal" class="discord-profile-customizer-modal hidden">
         <div class="customizer-card">
@@ -512,10 +519,8 @@
         </div>
         <div class="settings-content-col">
             <div style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px; position:relative;">
-                <!-- ESC BUTTON -->
                 <button onclick="closeGroupSettingsModal()" style="position:absolute; right:0; top:0; width:40px; height:40px; border-radius:50%; border:2px solid var(--text-muted); background:none; color:var(--text-muted); display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer; font-weight:bold; transition:0.2s;">✕<span style="font-size:9px; margin-top:2px;">ESC</span></button>
 
-                <!-- PROFILE TAB -->
                 <div id="settingsPaneProfile" style="display:flex; flex-direction:column; gap:24px;">
                     <div style="font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 0 10px var(--accretion-purple);">Constellation Core Parameters</div>
                     <div>
@@ -529,7 +534,6 @@
                     <button class="btn-discord" style="width: 200px;" onclick="saveGroupProfileEdits()">Lock Parameters</button>
                 </div>
 
-                <!-- MEMBERS TAB -->
                 <div id="settingsPaneMembers" class="hidden" style="display:flex; flex-direction:column; gap:24px;">
                     <div style="font-size: 24px; font-weight: 700; color: #fff; text-shadow: 0 0 10px var(--accretion-purple);">Manage Linked Entities</div>
                     <div style="display:flex; gap:12px;">
@@ -556,7 +560,7 @@
         let typingBroadcastChannel = null;
         let typingTimeout = null;
         let replyMessageId = null;
-        let uploadedFileUrl = null;
+        let pendingAttachmentFile = null;
         const EMOJI_SET = ['✨', '🌌', '🚀', '🔥', '💀', '👀', '🪐', '👾'];
         const renderedMessageIds = new Set();
 
@@ -986,13 +990,29 @@
             }
         }
 
+        /* 
+           FIX FOR VANISHING MESSAGES: 
+           This query has been heavily bulletproofed to make sure the UI does NOT get cleared 
+           if the database returns an error, preventing race-condition screen wipeouts.
+        */
         async function loadChannelMessages() {
-            const container = document.getElementById('messagesScrollArea');
-            container.innerHTML = '';
-            renderedMessageIds.clear();
-            const { data } = await supabaseClient.from('messages').select('*, users(username, nickname, pfp_url)').eq('channel_id', activeChannelId).order('created_at', { ascending: true });
-            if (data) data.forEach(msg => renderMessageNode(msg));
-            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+            const { data, error } = await supabaseClient.from('messages')
+                .select('*, users(username, nickname, pfp_url)')
+                .eq('channel_id', activeChannelId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching messages. Halting wipe to protect UI:", error);
+                return;
+            }
+
+            if (data) {
+                const container = document.getElementById('messagesScrollArea');
+                container.innerHTML = '';
+                renderedMessageIds.clear();
+                data.forEach(msg => renderMessageNode(msg));
+                setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+            }
         }
 
         function setupRealtimeSocket() {
@@ -1002,9 +1022,7 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel_id=eq.${activeChannelId}` }, async payload => {
                     if (payload.eventType === 'INSERT') {
                         if (!renderedMessageIds.has(payload.new.id)) {
-                            if (payload.new.sender_username !== currentUser.username) {
-                                playLoudBeep();
-                            }
+                            if (payload.new.sender_username !== currentUser.username) playLoudBeep();
 
                             const { data: sender } = await supabaseClient.from('users').select('*').eq('username', payload.new.sender_username).maybeSingle();
                             let completeMsg = payload.new;
@@ -1029,6 +1047,11 @@
         }
 
         function handleTypingInput() {
+            const input = document.getElementById('chatMessageInput');
+            // Auto resize logic fixing "less responsivity"
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 250) + 'px';
+
             if (typingBroadcastChannel) {
                 typingBroadcastChannel.send({
                     type: 'broadcast',
@@ -1054,10 +1077,43 @@
             }
         }
 
+        /* ATTACHMENT HANDLING LOGIC */
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                pendingAttachmentFile = file;
+                document.getElementById('attachmentFileName').innerText = file.name;
+                document.getElementById('attachmentPreviewBox').classList.remove('hidden');
+            }
+            event.target.value = ''; // Reset input to allow selecting same file again
+        }
+
+        function clearAttachment() {
+            pendingAttachmentFile = null;
+            document.getElementById('attachmentPreviewBox').classList.add('hidden');
+        }
+
         async function handleMessageSubmit() {
             const input = document.getElementById('chatMessageInput');
             const content = input.value.trim();
-            if (!content && !uploadedFileUrl) return;
+            const btn = document.getElementById('mainSendBtn');
+            
+            if (!content && !pendingAttachmentFile) return;
+
+            // Optional loading state while transmitting file
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+
+            let uploadedFileUrl = null;
+
+            // Handle the Discord-like attachment uploading process
+            if (pendingAttachmentFile) {
+                const fileName = `upload-${Date.now()}.${pendingAttachmentFile.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, pendingAttachmentFile);
+                if (data) {
+                    uploadedFileUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                }
+            }
 
             const payload = {
                 sender_username: currentUser.username,
@@ -1067,22 +1123,22 @@
                 reply_to: replyMessageId
             };
 
-            input.value = '';
-            uploadedFileUrl = null;
-            clearReplyState();
-
             await supabaseClient.from('messages').insert([payload]);
+            
+            input.value = '';
+            input.style.height = 'auto'; // Reset size
+            clearAttachment(); // Clear preview box
+            clearReplyState();
+            
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
         }
 
-        async function uploadFileAttachment() {
-            const file = document.getElementById('fileAttachmentInput').files[0];
-            if (file) {
-                const fileName = `upload-${Date.now()}.${file.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
-                if (data) {
-                    uploadedFileUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
-                    alert("File embedded in transmission! Press send.");
-                }
+        /* CHAT PURGE FUNCTION */
+        async function purgeCurrentChat() {
+            if (confirm("CRITICAL WARNING: This will permanently annihilate all transmissions in this frequency. Proceed?")) {
+                await supabaseClient.from('messages').delete().eq('channel_id', activeChannelId);
+                loadChannelMessages();
             }
         }
 
@@ -1112,6 +1168,7 @@
                     <div class="msg-header">
                         <span class="msg-username" style="color: ${nameColor}; text-shadow: 0 0 8px ${nameColor};">${sender.nickname || sender.username}</span>
                         <span class="msg-timestamp">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        ${msg.edited ? `<span style="font-size:10px; color:var(--text-muted); font-style:italic;">(edited)</span>` : ''}
                     </div>
                     ${msg.reply_to ? `<div style="font-size:12px; color:var(--text-muted); border-left:2px solid var(--accretion-purple); padding-left:8px; margin-bottom:4px; font-style:italic;">Replying to a prior transmission...</div>` : ''}
                     <div class="msg-text">${escapeHtml(msg.content || '')}</div>
@@ -1137,7 +1194,6 @@
             let reactions = data?.reactions || {};
             reactions[emoji] = (reactions[emoji] || 0) + 1;
             await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
-            loadChannelMessages();
         }
 
         function setReplyTarget(msgId, authorName) {
@@ -1155,14 +1211,12 @@
             const newText = prompt("Alter transmission content:");
             if (newText) {
                 await supabaseClient.from('messages').update({ content: newText, edited: true }).eq('id', msgId);
-                loadChannelMessages();
             }
         }
 
         async function deleteMessage(msgId) {
             if (confirm("Delete this transmission?")) {
                 await supabaseClient.from('messages').delete().eq('id', msgId);
-                loadChannelMessages();
             }
         }
 
@@ -1173,7 +1227,7 @@
                     const opt = document.createElement('div');
                     opt.className = 'emoji-opt';
                     opt.innerText = emoji;
-                    opt.onclick = () => { document.getElementById('chatMessageInput').value += emoji; popup.classList.add('hidden'); };
+                    opt.onclick = () => { document.getElementById('chatMessageInput').value += emoji; handleTypingInput(); popup.classList.add('hidden'); };
                     popup.appendChild(opt);
                 });
             }
