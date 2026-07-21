@@ -234,28 +234,6 @@
             box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
         }
 
-        /* Direct Dashboard Hyperlink Box */
-        .manual-link-container {
-            margin-top: 1.5rem;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 1rem;
-        }
-
-        .manual-link-container a {
-            color: #00f3ff;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            text-decoration: none;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-        }
-
-        .manual-link-container a:hover {
-            color: #ff003c;
-            text-shadow: 0 0 8px rgba(255, 0, 60, 0.5);
-        }
-
         /* Status Message Box */
         .status-box {
             margin-top: 1rem;
@@ -357,17 +335,12 @@
             <button type="submit" class="btn-submit">CREATE OPERATIVE</button>
         </form>
 
-        <!-- MANUAL HYPERLINK TO DASHBOARD -->
-        <div class="manual-link-container">
-            <a href="dashboard.html">🔗 [ BYPASS LOGIN // OPEN DASHBOARD DIRECTLY ]</a>
-        </div>
-
         <div class="status-box" id="statusBox"></div>
     </div>
 
     <script>
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; // Ensure this is your public/anon Supabase key
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Auto-redirect if already logged in
@@ -431,34 +404,24 @@
             if (type === 'login') {
                 const username = document.getElementById('loginUser').value.trim();
                 const password = document.getElementById('loginPass').value;
-                const remember = document.getElementById('rememberMeLogin').checked;
 
-                showStatus("Verifying operative credentials...", false);
+                showStatus("Authenticating credentials...", false);
 
                 const { data, error } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('username', username)
                     .eq('password', password)
-                    .maybeSingle();
+                    .single();
 
-                if (error) {
-                    console.error("Login Query Error:", error);
-                    showStatus("Database connection error. Check console logs.");
-                    return;
-                }
-
-                if (!data) {
+                if (error || !data) {
                     showStatus("Authentication failed. Invalid handle or passphrase.");
                     return;
                 }
 
                 localStorage.setItem('phantom_user', JSON.stringify(data));
-                if (remember) {
-                    localStorage.setItem('phantom_remember', 'true');
-                }
-
                 showStatus("Access granted. Redirecting to Command Dashboard...", false);
+                
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 800);
@@ -469,7 +432,6 @@
                 const password = document.getElementById('regPass').value;
                 const confirmPassword = document.getElementById('regPassConfirm').value;
                 const fileInput = document.getElementById('regPfpFile');
-                const remember = document.getElementById('rememberMeReg').checked;
 
                 if (password !== confirmPassword) {
                     showStatus("Passphrases do not match. Please verify.");
@@ -478,22 +440,18 @@
 
                 showStatus("Checking handle availability...", false);
 
-                const { data: existing, error: existError } = await supabaseClient
+                const { data: existing } = await supabaseClient
                     .from('users')
                     .select('username')
                     .eq('username', username)
-                    .maybeSingle();
-
-                if (existError) {
-                    console.error("Availability Check Error:", existError);
-                }
+                    .single();
 
                 if (existing) {
                     showStatus("Operative handle already taken.");
                     return;
                 }
 
-                let pfp_url = 'https://via.placeholder.com/80/0d0e17/00f3ff?text=P';
+                let pfp_url = 'https://boxrmxujhzzojepneliq.supabase.co/storage/v1/object/public/avatars/default.png';
 
                 if (fileInput.files && fileInput.files[0]) {
                     showStatus("Uploading avatar file to server...", false);
@@ -501,21 +459,20 @@
                     const fileExt = file.name.split('.').pop();
                     const fileName = `${username}_${Date.now()}.${fileExt}`;
 
-                    const { error: uploadError } = await supabaseClient.storage
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
                         .from('avatars')
                         .upload(fileName, file);
 
                     if (uploadError) {
                         console.error('Upload Error:', uploadError);
-                        showStatus("Failed to upload avatar. Ensure 'avatars' storage bucket exists and is public.");
-                        return;
+                        // Fallback placeholder if storage bucket is restricted or uninitialized
+                        pfp_url = `https://via.placeholder.com/80/0d0e17/00f3ff?text=${username.charAt(0).toUpperCase()}`;
+                    } else {
+                        const { data: urlData } = supabaseClient.storage
+                            .from('avatars')
+                            .getPublicUrl(fileName);
+                        pfp_url = urlData.publicUrl;
                     }
-
-                    const { data: urlData } = supabaseClient.storage
-                        .from('avatars')
-                        .getPublicUrl(fileName);
-
-                    pfp_url = urlData.publicUrl;
                 }
 
                 showStatus("Registering profile...", false);
@@ -533,17 +490,13 @@
                     .single();
 
                 if (error) {
-                    console.error("Registration Insert Error:", error);
-                    showStatus(`Failed to create operative profile: ${error.message}`);
+                    showStatus("Failed to create operative profile.");
                     return;
                 }
 
                 localStorage.setItem('phantom_user', JSON.stringify(data));
-                if (remember) {
-                    localStorage.setItem('phantom_remember', 'true');
-                }
-
                 showStatus("Operative profile created! Redirecting to Dashboard...", false);
+                
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 800);
