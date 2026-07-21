@@ -20,6 +20,12 @@
         .auth-card { width: 440px; background: #313338; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 16px; }
         .auth-card h2 { color: #f2f3f5; font-size: 24px; text-align: center; margin-bottom: 8px; }
         
+        /* PASSWORD FIELD WRAPPER WITH SHOW/HIDE TOGGLE */
+        .password-container { position: relative; width: 100%; display: flex; align-items: center; }
+        .password-container input { padding-right: 42px; }
+        .pass-toggle-btn { position: absolute; right: 10px; background: none; border: none; color: #949ba4; cursor: pointer; font-size: 16px; user-select: none; transition: color 0.2s; }
+        .pass-toggle-btn:hover { color: #dbdee1; }
+
         /* APP LAYOUT */
         .app-container { display: flex; width: 100vw; height: 100vh; }
         
@@ -84,7 +90,10 @@
             <h2>Welcome Back!</h2>
             <p style="color: #949ba4; font-size: 14px; text-align: center;">We're so excited to see you again!</p>
             <input type="text" id="loginUsername" class="text-input" placeholder="Username...">
-            <input type="password" id="loginPassword" class="text-input" placeholder="Password..." onkeydown="if(event.key==='Enter') executeLogin()">
+            <div class="password-container">
+                <input type="password" id="loginPassword" class="text-input" placeholder="Password..." onkeydown="if(event.key==='Enter') executeLogin()">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('loginPassword', this)">👁️</button>
+            </div>
             <button class="btn-discord" onclick="executeLogin()">Log In</button>
             <div style="display:flex; justify-content:space-between; margin-top:4px;">
                 <span class="link-text" onclick="switchAuthView('register')">Need an account? Register</span>
@@ -103,7 +112,18 @@
                 </label>
             </div>
             <input type="text" id="regUsername" class="text-input" placeholder="Username...">
-            <input type="password" id="regPassword" class="text-input" placeholder="Password...">
+            <input type="text" id="regNickname" class="text-input" placeholder="Nickname (display name)...">
+            
+            <div class="password-container">
+                <input type="password" id="regPassword" class="text-input" placeholder="Password...">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regPassword', this)">👁️</button>
+            </div>
+            
+            <div class="password-container">
+                <input type="password" id="regConfirmPassword" class="text-input" placeholder="Confirm Password...">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regConfirmPassword', this)">👁️</button>
+            </div>
+
             <button class="btn-discord" onclick="executeRegister()">Continue</button>
             <span class="link-text" onclick="switchAuthView('login')">Already have an account? Log In</span>
         </div>
@@ -112,8 +132,17 @@
         <div id="changePassView" class="auth-card hidden">
             <h2>Reset Password</h2>
             <input type="text" id="passUsername" class="text-input" placeholder="Username...">
-            <input type="password" id="passOld" class="text-input" placeholder="Current Password...">
-            <input type="password" id="passNew" class="text-input" placeholder="New Password...">
+            
+            <div class="password-container">
+                <input type="password" id="passOld" class="text-input" placeholder="Current Password...">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passOld', this)">👁️</button>
+            </div>
+            
+            <div class="password-container">
+                <input type="password" id="passNew" class="text-input" placeholder="New Password...">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passNew', this)">👁️</button>
+            </div>
+
             <button class="btn-discord" onclick="executePasswordChange()">Update Password</button>
             <span class="link-text" onclick="switchAuthView('login')">Back to Log In</span>
         </div>
@@ -195,6 +224,18 @@
         const EMOJI_SET = ['👍', '❤️', '🔥', '🚀', '💀', '👀', '🎉', '💻'];
         const renderedMessageIds = new Set();
 
+        // --- PASSWORD VISIBILITY TOGGLE ---
+        function togglePassVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = '🙈';
+            } else {
+                input.type = 'password';
+                btn.innerText = '👁️';
+            }
+        }
+
         // --- AUTH NAVIGATION VIEWS ---
         function switchAuthView(viewName) {
             document.getElementById('loginView').classList.add('hidden');
@@ -214,11 +255,18 @@
         // --- AUTHENTICATION ACTIONS ---
         async function executeRegister() {
             const username = document.getElementById('regUsername').value.trim().toLowerCase();
+            const nickname = document.getElementById('regNickname').value.trim();
             const password = document.getElementById('regPassword').value.trim();
+            const confirmPassword = document.getElementById('regConfirmPassword').value.trim();
             const fileInput = document.getElementById('regAvatarFile').files[0];
 
             if (!username || !password) {
                 alert("Please fill in both username and password.");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
                 return;
             }
 
@@ -233,8 +281,8 @@
 
             const { data, error } = await supabaseClient.from('users').insert([{
                 username,
-                password_hash: password, // Simple plain string match for structural integrity; can be hashed if desired
-                nickname: username,
+                password_hash: password,
+                nickname: nickname || username,
                 pfp_url: pfpUrl
             }]).select().single();
 
@@ -291,7 +339,7 @@
         function initializeClientApp() {
             document.getElementById('authScreenContainer').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('currentLoggedUserTag').innerText = `@${currentUser.username.toUpperCase()}`;
+            document.getElementById('currentLoggedUserTag').innerText = `@${currentUser.nickname || currentUser.username}`;
             
             loadSidebarChannels();
             switchChannel('global', 'Global Room');
@@ -371,7 +419,7 @@
                 typingBroadcastChannel.send({
                     type: 'broadcast',
                     event: 'typing',
-                    payload: { user: currentUser.username }
+                    payload: { user: currentUser.nickname || currentUser.username }
                 });
             }
         }
@@ -553,7 +601,7 @@
             }
         }
 
-        // --- MODALS (DM & GROUP CREATION WITH GROUP AVATARS) ---
+        // --- MODALS (DM & GROUP CREATION) ---
         function closeModal() {
             document.getElementById('genericModalOverlay').classList.add('hidden');
         }
