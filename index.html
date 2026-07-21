@@ -23,7 +23,7 @@
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 100% 100%, 30px 30px, 30px 30px;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .auth-card {
@@ -31,11 +31,12 @@
             border: 1px solid rgba(0, 243, 255, 0.3);
             box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             padding: 2.5rem;
             clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 8% 100%, 0 92%);
             backdrop-filter: blur(10px);
             position: relative;
+            margin: 1rem;
         }
 
         .auth-card::before {
@@ -109,6 +110,12 @@
             letter-spacing: 1px;
         }
 
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
         .form-group input {
             width: 100%;
             padding: 0.8rem 1rem;
@@ -121,9 +128,63 @@
             transition: all 0.2s;
         }
 
+        .password-wrapper input {
+            padding-right: 2.8rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.8rem;
+            background: none;
+            border: none;
+            color: #00f3ff;
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            user-select: none;
+        }
+
+        .toggle-password:hover {
+            opacity: 1;
+        }
+
         .form-group input:focus {
             border-color: #00f3ff;
             box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Custom File Input Upload styling */
+        .file-upload-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(5, 5, 10, 0.8);
+            border: 1px dashed rgba(0, 243, 255, 0.4);
+            color: #7a8b9e;
+            font-size: 0.9rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-upload-label:hover {
+            border-color: #00f3ff;
+            color: #00f3ff;
+            background: rgba(0, 243, 255, 0.05);
         }
 
         .options-row {
@@ -138,12 +199,16 @@
         .checkbox-container {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
             cursor: pointer;
+            user-select: none;
         }
 
         .checkbox-container input {
             accent-color: #00f3ff;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
         }
 
         /* Primary Action Button */
@@ -169,7 +234,7 @@
             box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
         }
 
-        /* Error/Status Box */
+        /* Status Message Box */
         .status-box {
             margin-top: 1rem;
             padding: 0.6rem;
@@ -177,6 +242,7 @@
             text-align: center;
             display: none;
             border-left: 3px solid transparent;
+            font-weight: 600;
         }
 
         .status-box.error {
@@ -215,11 +281,14 @@
             </div>
             <div class="form-group">
                 <label for="loginPass">PASSPHRASE</label>
-                <input type="password" id="loginPass" required placeholder="••••••••">
+                <div class="password-wrapper">
+                    <input type="password" id="loginPass" required placeholder="••••••••">
+                    <button type="button" class="toggle-password" onclick="togglePassVisibility('loginPass', this)">👁️</button>
+                </div>
             </div>
             <div class="options-row">
                 <label class="checkbox-container">
-                    <input type="checkbox" id="rememberMe">
+                    <input type="checkbox" id="rememberMeLogin">
                     <span>Remember Active Session</span>
                 </label>
             </div>
@@ -238,11 +307,30 @@
             </div>
             <div class="form-group">
                 <label for="regPass">PASSPHRASE</label>
-                <input type="password" id="regPass" required placeholder="••••••••">
+                <div class="password-wrapper">
+                    <input type="password" id="regPass" required placeholder="••••••••">
+                    <button type="button" class="toggle-password" onclick="togglePassVisibility('regPass', this)">👁️</button>
+                </div>
             </div>
             <div class="form-group">
-                <label for="regPfp">AVATAR IMAGE URL</label>
-                <input type="url" id="regPfp" placeholder="https://domain.com/pfp.jpg (Optional)">
+                <label for="regPassConfirm">VERIFY PASSPHRASE</label>
+                <div class="password-wrapper">
+                    <input type="password" id="regPassConfirm" required placeholder="••••••••">
+                    <button type="button" class="toggle-password" onclick="togglePassVisibility('regPassConfirm', this)">👁️</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>AVATAR IMAGE (UPLOAD FROM PC)</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="regPfpFile" accept="image/*" onchange="updateFileLabel(this)">
+                    <label for="regPfpFile" class="file-upload-label" id="fileLabel">📁 SELECT AVATAR FILE...</label>
+                </div>
+            </div>
+            <div class="options-row">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="rememberMeReg">
+                    <span>Remember Active Session</span>
+                </label>
             </div>
             <button type="submit" class="btn-submit">CREATE OPERATIVE</button>
         </form>
@@ -256,9 +344,33 @@
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Redirect if already logged in
+        // Auto-redirect if session already stored
         if (localStorage.getItem('phantom_user')) {
             window.location.href = "dashboard.html";
+        }
+
+        // Toggle Password Field Visibility
+        function togglePassVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerText = "🙈";
+            } else {
+                input.type = "password";
+                btn.innerText = "👁️";
+            }
+        }
+
+        // Update display text when file is selected
+        function updateFileLabel(input) {
+            const label = document.getElementById('fileLabel');
+            if (input.files && input.files[0]) {
+                label.innerText = `📄 ${input.files[0].name}`;
+                label.style.borderColor = "#00f3ff";
+                label.style.color = "#00f3ff";
+            } else {
+                label.innerText = "📁 SELECT AVATAR FILE...";
+            }
         }
 
         function switchTab(mode) {
@@ -295,7 +407,7 @@
             if (type === 'login') {
                 const username = document.getElementById('loginUser').value.trim();
                 const password = document.getElementById('loginPass').value;
-                const remember = document.getElementById('rememberMe').checked;
+                const remember = document.getElementById('rememberMeLogin').checked;
 
                 const { data, error } = await supabaseClient
                     .from('users')
@@ -309,7 +421,6 @@
                     return;
                 }
 
-                // Save session
                 localStorage.setItem('phantom_user', JSON.stringify(data));
                 if (remember) {
                     localStorage.setItem('phantom_remember', 'true');
@@ -324,9 +435,19 @@
                 const username = document.getElementById('regUser').value.trim();
                 const nickname = document.getElementById('regNick').value.trim() || username;
                 const password = document.getElementById('regPass').value;
-                const pfp_url = document.getElementById('regPfp').value.trim();
+                const confirmPassword = document.getElementById('regPassConfirm').value;
+                const fileInput = document.getElementById('regPfpFile');
+                const remember = document.getElementById('rememberMeReg').checked;
 
-                // Check existing
+                // 1. Password Verification Check
+                if (password !== confirmPassword) {
+                    showStatus("Passphrases do not match. Please verify.");
+                    return;
+                }
+
+                showStatus("Checking availability...", false);
+
+                // 2. Check existing username
                 const { data: existing } = await supabaseClient
                     .from('users')
                     .select('username')
@@ -338,11 +459,40 @@
                     return;
                 }
 
+                let pfp_url = 'https://via.placeholder.com/80/0d0e17/00f3ff?text=P';
+
+                // 3. File Upload to Supabase Storage Bucket ('avatars')
+                if (fileInput.files && fileInput.files[0]) {
+                    showStatus("Uploading avatar file to server...", false);
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${username}_${Date.now()}.${fileExt}`;
+
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('avatars')
+                        .upload(fileName, file);
+
+                    if (uploadError) {
+                        console.error('Upload Error:', uploadError);
+                        showStatus("Failed to upload avatar. Ensure 'avatars' bucket exists and is public.");
+                        return;
+                    }
+
+                    // Get public URL of uploaded file
+                    const { data: urlData } = supabaseClient.storage
+                        .from('avatars')
+                        .getPublicUrl(fileName);
+
+                    pfp_url = urlData.publicUrl;
+                }
+
+                // 4. Register new user in database
+                showStatus("Registering profile...", false);
                 const newUser = {
                     username,
                     nickname,
                     password,
-                    pfp_url: pfp_url || 'https://via.placeholder.com/80/0d0e17/00f3ff?text=P'
+                    pfp_url
                 };
 
                 const { data, error } = await supabaseClient
@@ -358,7 +508,11 @@
 
                 // Save session & Redirect
                 localStorage.setItem('phantom_user', JSON.stringify(data));
-                showStatus("Profile initialized. Redirecting to Command Dashboard...", false);
+                if (remember) {
+                    localStorage.setItem('phantom_remember', 'true');
+                }
+
+                showStatus("Operative profile created! Redirecting to Dashboard...", false);
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 800);
