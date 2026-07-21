@@ -613,7 +613,7 @@
                 status: 'Online',
                 about_me: 'Only the silence remains.',
                 banner_color: '#5865f2'
-            }]).select().single();
+            }]).select().maybeSingle();
 
             if (error) {
                 alert("Registration failed: Username might already be taken.");
@@ -627,7 +627,7 @@
             const username = document.getElementById('loginUsername').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value.trim();
 
-            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).maybeSingle();
             if (!user || user.password_hash !== password) {
                 alert("Invalid username or password.");
                 return;
@@ -643,7 +643,7 @@
             const oldPass = document.getElementById('passOld').value.trim();
             const newPass = document.getElementById('passNew').value.trim();
 
-            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).maybeSingle();
             if (!user || user.password_hash !== oldPass) {
                 alert("Incorrect username or current password.");
                 return;
@@ -693,7 +693,7 @@
         async function populateProfilePopoverData() {
             if (!currentUser) return;
             
-            const { data: freshUser } = await supabaseClient.from('users').select('*').eq('username', currentUser.username).single();
+            const { data: freshUser } = await supabaseClient.from('users').select('*').eq('username', currentUser.username).maybeSingle();
             if (freshUser) {
                 currentUser = freshUser;
                 localStorage.setItem('chat_user', JSON.stringify(currentUser));
@@ -887,7 +887,8 @@
             if (activeChannelId.startsWith('group_')) {
                 const groupId = activeChannelId.replace('group_', '');
                 const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', groupId);
-                if (members) {
+                
+                if (members && members.length > 0) {
                     const usernames = members.map(m => m.username);
                     const { data: users } = await supabaseClient.from('users').select('*').in('username', usernames);
                     targetUsers = users || [];
@@ -978,7 +979,7 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel_id=eq.${activeChannelId}` }, async payload => {
                     if (payload.eventType === 'INSERT') {
                         if (!renderedMessageIds.has(payload.new.id)) {
-                            const { data: sender } = await supabaseClient.from('users').select('*').eq('username', payload.new.sender_username).single();
+                            const { data: sender } = await supabaseClient.from('users').select('*').eq('username', payload.new.sender_username).maybeSingle();
                             let completeMsg = payload.new;
                             completeMsg.users = sender;
                             renderMessageNode(completeMsg);
@@ -1106,8 +1107,8 @@
         }
 
         async function incrementMessageReaction(msgId, emoji) {
-            const { data } = await supabaseClient.from('messages').select('reactions').eq('id', msgId).single();
-            let reactions = data.reactions || {};
+            const { data } = await supabaseClient.from('messages').select('reactions').eq('id', msgId).maybeSingle();
+            let reactions = data?.reactions || {};
             reactions[emoji] = (reactions[emoji] || 0) + 1;
             await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
             loadChannelMessages();
@@ -1179,7 +1180,7 @@
             const { data: memberGroups } = await supabaseClient.from('group_members').select('group_id').eq('username', currentUser.username);
             if (memberGroups) {
                 for (let mg of memberGroups) {
-                    const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', mg.group_id).single();
+                    const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', mg.group_id).maybeSingle();
                     if (grp) {
                         const item = document.createElement('div');
                         item.className = 'sidebar-item';
@@ -1209,7 +1210,7 @@
         async function startDirectMessage() {
             const target = document.getElementById('targetDmUser').value.trim().toLowerCase();
             if (!target) return;
-            const { data } = await supabaseClient.from('users').select('*').eq('username', target).single();
+            const { data } = await supabaseClient.from('users').select('*').eq('username', target).maybeSingle();
             if (data) {
                 closeModal();
                 const dmId = ['dm', [currentUser.username, target].sort().join('_')].join('_');
@@ -1254,7 +1255,7 @@
                 name: groupName,
                 group_avatar_url: groupAvatarUrl,
                 created_by: currentUser.username
-            }]).select().single();
+            }]).select().maybeSingle();
 
             if (grp) {
                 await supabaseClient.from('group_members').insert([
@@ -1271,7 +1272,7 @@
             if (!activeChannelId.startsWith('group_')) return;
             const groupId = activeChannelId.replace('group_', '');
 
-            const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', groupId).single();
+            const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', groupId).maybeSingle();
             if (grp) {
                 document.getElementById('editGroupNameInput').value = grp.name || '';
                 document.getElementById('editGroupDescInput').value = grp.description || '';
@@ -1357,7 +1358,7 @@
             const usernameInput = document.getElementById('inviteMemberUsernameInput').value.trim().toLowerCase();
             if (!usernameInput) return;
 
-            const { data: user } = await supabaseClient.from('users').select('*').eq('username', usernameInput).single();
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', usernameInput).maybeSingle();
             if (!user) {
                 alert("User not found!");
                 return;
