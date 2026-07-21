@@ -234,6 +234,28 @@
             box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
         }
 
+        /* Direct Dashboard Hyperlink Box */
+        .manual-link-container {
+            margin-top: 1.5rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1rem;
+        }
+
+        .manual-link-container a {
+            color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .manual-link-container a:hover {
+            color: #ff003c;
+            text-shadow: 0 0 8px rgba(255, 0, 60, 0.5);
+        }
+
         /* Status Message Box */
         .status-box {
             margin-top: 1rem;
@@ -335,21 +357,23 @@
             <button type="submit" class="btn-submit">CREATE OPERATIVE</button>
         </form>
 
+        <!-- MANUAL HYPERLINK TO DASHBOARD -->
+        <div class="manual-link-container">
+            <a href="dashboard.html">🔗 [ BYPASS LOGIN // OPEN DASHBOARD DIRECTLY ]</a>
+        </div>
+
         <div class="status-box" id="statusBox"></div>
     </div>
 
     <script>
-        // Supabase Client Setup
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Auto-redirect if session already stored
         if (localStorage.getItem('phantom_user')) {
             window.location.href = "dashboard.html";
         }
 
-        // Toggle Password Field Visibility
         function togglePassVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === "password") {
@@ -361,7 +385,6 @@
             }
         }
 
-        // Update display text when file is selected
         function updateFileLabel(input) {
             const label = document.getElementById('fileLabel');
             if (input.files && input.files[0]) {
@@ -439,7 +462,6 @@
                 const fileInput = document.getElementById('regPfpFile');
                 const remember = document.getElementById('rememberMeReg').checked;
 
-                // 1. Password Verification Check
                 if (password !== confirmPassword) {
                     showStatus("Passphrases do not match. Please verify.");
                     return;
@@ -447,7 +469,6 @@
 
                 showStatus("Checking availability...", false);
 
-                // 2. Check existing username
                 const { data: existing } = await supabaseClient
                     .from('users')
                     .select('username')
@@ -461,7 +482,6 @@
 
                 let pfp_url = 'https://via.placeholder.com/80/0d0e17/00f3ff?text=P';
 
-                // 3. File Upload to Supabase Storage Bucket ('avatars')
                 if (fileInput.files && fileInput.files[0]) {
                     showStatus("Uploading avatar file to server...", false);
                     const file = fileInput.files[0];
@@ -478,7 +498,6 @@
                         return;
                     }
 
-                    // Get public URL of uploaded file
                     const { data: urlData } = supabaseClient.storage
                         .from('avatars')
                         .getPublicUrl(fileName);
@@ -486,7 +505,6 @@
                     pfp_url = urlData.publicUrl;
                 }
 
-                // 4. Register new user in database
                 showStatus("Registering profile...", false);
                 const newUser = {
                     username,
@@ -506,7 +524,6 @@
                     return;
                 }
 
-                // Save session & Redirect
                 localStorage.setItem('phantom_user', JSON.stringify(data));
                 if (remember) {
                     localStorage.setItem('phantom_remember', 'true');
