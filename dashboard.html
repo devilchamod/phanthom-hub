@@ -140,6 +140,35 @@
             box-shadow: 0 0 20px rgba(0,243,255,0.3);
         }
 
+        /* --- EMOJI PICKER POPUP --- */
+        .emoji-picker-popup {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            background: #0c0d14;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0,243,255,0.3);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            z-index: 2500;
+            width: 240px;
+        }
+        .emoji-option {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        .emoji-option:hover {
+            background: rgba(0,243,255,0.2);
+            border-color: #00f3ff;
+        }
+
         /* --- LAYOUT STRUCTURE --- */
         .app-layout {
             display: flex;
@@ -337,6 +366,18 @@
             color: #00f3ff;
         }
 
+        /* Typing indicator text */
+        .typing-indicator-bar {
+            font-size: 0.75rem;
+            color: #00f3ff;
+            font-style: italic;
+            height: 1.2rem;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         /* Form elements */
         .chat-input {
             width: 100%;
@@ -459,15 +500,18 @@
             <div id="view-global" class="sub-view hidden" style="display:flex; flex-direction:column; flex:1; height: calc(100vh - 100px);">
                 <div class="card" style="display:flex; flex-direction:column; flex:1; padding:1rem; overflow:hidden;">
                     <div class="card-title">🌐 GLOBAL COMMAND FREQUENCY</div>
-                    <div id="globalMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:1rem;"></div>
+                    <div id="globalMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:0.5rem;"></div>
+                    <div id="globalTypingIndicator" class="typing-indicator-bar hidden"></div>
                     <div id="globalReplyIndicator" class="hidden" style="font-size:0.75rem; color:#00f3ff; margin-bottom:0.3rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,243,255,0.05); padding:4px 8px;">
                         <span id="globalReplyText">Replying to message...</span>
                         <button onclick="cancelReply('global')" style="background:none; border:none; color:#ff003c; cursor:pointer;">✕</button>
                     </div>
-                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <div style="display:flex; gap:0.5rem; align-items:center; position:relative;">
                         <input type="file" id="globalFileInp" style="display:none;" onchange="handleFileSelected('global')">
-                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('globalFileInp').click()">📎</button>
-                        <input type="text" id="globalMsgInput" class="chat-input" placeholder="Broadcast to global frequency..." style="margin:0;" onkeydown="if(event.key==='Enter') sendGlobalMessage()">
+                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('globalFileInp').click()" title="Attach File">📎</button>
+                        <button class="btn-action" style="padding:0.7rem;" onclick="toggleEmojiPicker('global')" title="Emoji Panel">😀</button>
+                        <div id="globalEmojiPopup" class="emoji-picker-popup hidden"></div>
+                        <input type="text" id="globalMsgInput" class="chat-input" placeholder="Broadcast to global frequency..." style="margin:0;" oninput="handleTypingInput('global')" onkeydown="if(event.key==='Enter') sendGlobalMessage()">
                         <button class="btn-action" onclick="sendGlobalMessage()">TRANSMIT</button>
                     </div>
                 </div>
@@ -477,15 +521,18 @@
             <div id="view-workspace" class="sub-view hidden" style="display:flex; flex-direction:column; flex:1; height: calc(100vh - 100px);">
                 <div class="card" style="display:flex; flex-direction:column; flex:1; padding:1rem; overflow:hidden;">
                     <div class="card-title" id="workspaceHeaderTitle">ACTIVE FREQUENCY</div>
-                    <div id="workspaceMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:1rem;"></div>
+                    <div id="workspaceMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:0.5rem;"></div>
+                    <div id="workspaceTypingIndicator" class="typing-indicator-bar hidden"></div>
                     <div id="workspaceReplyIndicator" class="hidden" style="font-size:0.75rem; color:#00f3ff; margin-bottom:0.3rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,243,255,0.05); padding:4px 8px;">
                         <span id="workspaceReplyText">Replying to message...</span>
                         <button onclick="cancelReply('workspace')" style="background:none; border:none; color:#ff003c; cursor:pointer;">✕</button>
                     </div>
-                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <div style="display:flex; gap:0.5rem; align-items:center; position:relative;">
                         <input type="file" id="workspaceFileInp" style="display:none;" onchange="handleFileSelected('workspace')">
-                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('workspaceFileInp').click()">📎</button>
-                        <input type="text" id="workspaceMsgInput" class="chat-input" placeholder="Send secure transmission..." style="margin:0;" onkeydown="if(event.key==='Enter') sendWorkspaceMessage()">
+                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('workspaceFileInp').click()" title="Attach File">📎</button>
+                        <button class="btn-action" style="padding:0.7rem;" onclick="toggleEmojiPicker('workspace')" title="Emoji Panel">😀</button>
+                        <div id="workspaceEmojiPopup" class="emoji-picker-popup hidden"></div>
+                        <input type="text" id="workspaceMsgInput" class="chat-input" placeholder="Send secure transmission..." style="margin:0;" oninput="handleTypingInput('workspace')" onkeydown="if(event.key==='Enter') sendWorkspaceMessage()">
                         <button class="btn-action" onclick="sendWorkspaceMessage()">TRANSMIT</button>
                     </div>
                 </div>
@@ -570,6 +617,33 @@
         document.getElementById('welcomeName').innerText = displayName.toUpperCase();
         document.getElementById('settingsNewNick').value = currentUser.nickname || '';
 
+        // Emoji list array
+        const EMOJI_LIST = ['😀','😂','🔥','💀','🚀','💻','⚡','👍','❤️','😎','🎯','🛡️','⚠️','✨','🤖','💬','🎉','💯'];
+
+        function buildEmojiPicker(context) {
+            const popup = document.getElementById(`${context}EmojiPopup`);
+            if (popup.innerHTML !== '') return;
+            popup.innerHTML = '';
+            EMOJI_LIST.forEach(emoji => {
+                const span = document.createElement('div');
+                span.className = 'emoji-option';
+                span.innerText = emoji;
+                span.onclick = () => {
+                    const input = document.getElementById(`${context}MsgInput`);
+                    input.value += emoji;
+                    popup.classList.add('hidden');
+                    input.focus();
+                };
+                popup.appendChild(span);
+            });
+        }
+
+        function toggleEmojiPicker(context) {
+            buildEmojiPicker(context);
+            const popup = document.getElementById(`${context}EmojiPopup`);
+            popup.classList.toggle('hidden');
+        }
+
         function toggleSettingsDrawer() {
             document.getElementById('settingsDrawer').classList.toggle('open');
         }
@@ -607,7 +681,7 @@
                 img.src = imgUrl;
                 img.onload = () => {
                     try {
-                        const colorThief = new ColorThief();
+                        const colorThief = new Color Thief();
                         const color = colorThief.getColor(img);
                         const hex = `#${color.map(x => x.toString(16).padStart(2, '0')).join('')}`;
                         colorCache[imgUrl] = hex;
@@ -618,7 +692,7 @@
             });
         }
 
-        // Profile view modal (Discord style)
+        // Profile view modal with direct Add Friend option
         async function showUserProfile(username) {
             const { data } = await supabaseClient.from('users').select('*').eq('username', username).single();
             if (!data) return;
@@ -628,6 +702,7 @@
             modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
 
             const color = await getPaletteColor(data.pfp_url);
+            const isSelf = username === currentUser.username;
 
             modal.innerHTML = `
                 <div class="profile-card" style="border-color:${color}; box-shadow: 0 0 30px ${color}40;">
@@ -640,10 +715,25 @@
                     </div>
                     <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05);">
                     <div style="font-size:0.85rem; color:#8a99ad;">Clearance level active. Secure communications verified.</div>
-                    <button class="btn-action" style="background:${color}; color:#05050a;" onclick="this.closest('.profile-modal').remove()">CLOSE DOSSIER</button>
+                    
+                    <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                        ${!isSelf ? `<button class="btn-action" id="modalAddFriendBtn" style="flex:1; background:${color}; color:#05050a;" onclick="sendFriendRequestDirect('${data.username}')">ESTABLISH LINK</button>` : ''}
+                        <button class="btn-action" style="flex:1; background:rgba(255,255,255,0.1); color:#fff;" onclick="this.closest('.profile-modal').remove()">CLOSE</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        async function sendFriendRequestDirect(targetUsername) {
+            if (!targetUsername || targetUsername === currentUser.username) return;
+            await supabaseClient.from('friends').insert([{ user_a: currentUser.username, user_b: targetUsername.toLowerCase(), status: 'accepted' }]);
+            alert(`LINK ESTABLISHED WITH ${targetUsername.toUpperCase()}`);
+            const btn = document.getElementById('modalAddFriendBtn');
+            if(btn) {
+                btn.innerText = "LINKED";
+                btn.disabled = true;
+            }
         }
 
         // Custom Edit/Delete Modals
@@ -741,7 +831,23 @@
             await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
         }
 
-        // Global Chat Engine
+        // --- TYPING INDICATORS & REALTIME CHAT ENGINE ---
+        let typingTimeout = null;
+        function handleTypingInput(context) {
+            const channelName = context === 'global' ? 'general' : (
+                activeWorkspace.type === 'dm' ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}` : `group-${activeWorkspace.target.id}`
+            );
+
+            // Broadcast typing state immediately using Supabase Realtime broadcast channel
+            if (window.activeTypingChannel) {
+                window.activeTypingChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { user: currentUser.nickname || currentUser.username, channel: channelName }
+                });
+            }
+        }
+
         let globalSub = null;
         let globalFile = null;
         let globalReplyTo = null;
@@ -751,16 +857,41 @@
             await loadGlobalMessages();
             loadGlobalPresencePanel();
 
+            // Broadcast channel for instantaneous typing indicators without database delay
+            if (window.activeTypingChannel) {
+                supabaseClient.removeChannel(window.activeTypingChannel);
+            }
+            window.activeTypingChannel = supabaseClient.channel('typing-broadcast-room')
+                .on('broadcast', { event: 'typing' }, payload => {
+                    if (payload.payload.channel === 'general' && payload.payload.user !== (currentUser.nickname || currentUser.username)) {
+                        showTypingStatus('global', payload.payload.user);
+                    }
+                })
+                .subscribe();
+
             globalSub = supabaseClient.channel('global-chat-room')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: 'channel=eq.general' }, payload => {
                     if (payload.eventType === 'INSERT') {
                         appendMessageNode('global', payload.new);
                         if (payload.new.username !== currentUser.username) playLoudBeep();
-                    } else {
+                    } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
                         loadGlobalMessages();
                     }
                 })
                 .subscribe();
+        }
+
+        let typingClearTimers = {};
+        function showTypingStatus(context, username) {
+            const indicatorEl = document.getElementById(`${context}TypingIndicator`);
+            if (!indicatorEl) return;
+            indicatorEl.innerText = `${username.toUpperCase()} is typing...`;
+            indicatorEl.classList.remove('hidden');
+
+            if (typingClearTimers[context]) clearTimeout(typingClearTimers[context]);
+            typingClearTimers[context] = setTimeout(() => {
+                indicatorEl.classList.add('hidden');
+            }, 2000);
         }
 
         async function loadGlobalMessages() {
@@ -793,19 +924,34 @@
             const text = input.value.trim();
             if (!text && !globalFile) return;
 
+            // Direct UI append for instantaneous zero-delay send feel before server confirmation
+            const tempMsg = {
+                id: 'temp-' + Date.now(),
+                username: currentUser.username,
+                nickname: currentUser.nickname || currentUser.username,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                pfp_url_file: globalFile,
+                channel: 'general',
+                reply_to: globalReplyTo,
+                created_at: new Date().toISOString()
+            };
+            appendMessageNode('global', tempMsg);
+
+            input.value = '';
+            const fileToUpload = globalFile;
+            globalFile = null;
+            cancelReply('global');
+
             await supabaseClient.from('messages').insert([{
                 username: currentUser.username,
                 nickname: currentUser.nickname || currentUser.username,
                 pfp_url: currentUser.pfp_url,
                 message: text,
-                pfp_url_file: globalFile, // file attachment mapping
+                pfp_url_file: fileToUpload,
                 channel: 'general',
                 reply_to: globalReplyTo
             }]);
-
-            input.value = '';
-            globalFile = null;
-            cancelReply('global');
         }
 
         // Workspace Chat Engine (DMs & Groups)
@@ -839,16 +985,25 @@
                 ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
                 : `group-${activeWorkspace.target.id}`;
 
+            if (window.activeTypingChannel) {
+                supabaseClient.removeChannel(window.activeTypingChannel);
+            }
+            window.activeTypingChannel = supabaseClient.channel('typing-broadcast-room')
+                .on('broadcast', { event: 'typing' }, payload => {
+                    if (payload.payload.channel === channelName && payload.payload.user !== (currentUser.nickname || currentUser.username)) {
+                        showTypingStatus('workspace', payload.payload.user);
+                    }
+                })
+                .subscribe();
+
             workspaceSub = supabaseClient.channel(channelName)
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel=eq.${channelName}` }, payload => {
                     if (payload.eventType === 'INSERT') {
                         appendMessageNode('workspace', payload.new);
                         if (payload.new.username !== currentUser.username) {
-                            if (activeWorkspace.type === 'dm' || activeWorkspace.type === 'group') {
-                                playLoudBeep();
-                            }
+                            playLoudBeep();
                         }
-                    } else {
+                    } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
                         loadWorkspaceMessages();
                     }
                 })
@@ -878,19 +1033,34 @@
                 ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
                 : `group-${activeWorkspace.target.id}`;
 
-            await supabaseClient.from('messages').insert([{
+            // Instant local append optimization for zero perceived delay
+            const tempMsg = {
+                id: 'temp-' + Date.now(),
                 username: currentUser.username,
                 nickname: currentUser.nickname || currentUser.username,
                 pfp_url: currentUser.pfp_url,
                 message: text,
                 pfp_url_file: workspaceFile,
                 channel: channelName,
-                reply_to: workspaceReplyTo
-            }]);
+                reply_to: workspaceReplyTo,
+                created_at: new Date().toISOString()
+            };
+            appendMessageNode('workspace', tempMsg);
 
             input.value = '';
+            const fileToUpload = workspaceFile;
             workspaceFile = null;
             cancelReply('workspace');
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname || currentUser.username,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                pfp_url_file: fileToUpload,
+                channel: channelName,
+                reply_to: workspaceReplyTo
+            }]);
         }
 
         async function appendMessageNode(context, msg) {
@@ -1021,7 +1191,7 @@
                 let offlineCount = 0;
 
                 allUsers.forEach(u => {
-                    const isOnline = Math.random() > 0.5; // Simulated presence or connect real presence channels
+                    const isOnline = Math.random() > 0.5;
                     const row = document.createElement('div');
                     row.className = 'friend-row';
                     row.innerHTML = `<span class="status-dot ${isOnline ? 'online' : ''}"></span> <span style="font-weight:700;">${(u.nickname || u.username).toUpperCase()}</span>`;
@@ -1144,7 +1314,7 @@
                     const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
                     const btn = document.createElement('button');
                     btn.className = 'btn-action';
-                    btn.style.textAlign = 'left';
+                    btn.style.textAlign.textAlign = 'left';
                     btn.style.background = 'rgba(18,20,32,0.8)';
                     btn.style.color = '#00f3ff';
                     btn.innerHTML = `📡 DM: ${friendUser.toUpperCase()}`;
