@@ -310,7 +310,7 @@
             </div>
             <div class="options-row">
                 <label class="checkbox-container">
-                    <input type="checkbox" id="rememberMeLogin">
+                    <input type="checkbox" id="rememberMeLogin" checked>
                     <span>Remember Active Session</span>
                 </label>
             </div>
@@ -350,7 +350,7 @@
             </div>
             <div class="options-row">
                 <label class="checkbox-container">
-                    <input type="checkbox" id="rememberMeReg">
+                    <input type="checkbox" id="rememberMeReg" checked>
                     <span>Remember Active Session</span>
                 </label>
             </div>
@@ -367,9 +367,10 @@
 
     <script>
         const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; // Ensure this is your public/anon Supabase key
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Auto-redirect if already logged in
         if (localStorage.getItem('phantom_user')) {
             window.location.href = "dashboard.html";
         }
@@ -432,14 +433,22 @@
                 const password = document.getElementById('loginPass').value;
                 const remember = document.getElementById('rememberMeLogin').checked;
 
+                showStatus("Verifying operative credentials...", false);
+
                 const { data, error } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('username', username)
                     .eq('password', password)
-                    .single();
+                    .maybeSingle();
 
-                if (error || !data) {
+                if (error) {
+                    console.error("Login Query Error:", error);
+                    showStatus("Database connection error. Check console logs.");
+                    return;
+                }
+
+                if (!data) {
                     showStatus("Authentication failed. Invalid handle or passphrase.");
                     return;
                 }
@@ -467,13 +476,17 @@
                     return;
                 }
 
-                showStatus("Checking availability...", false);
+                showStatus("Checking handle availability...", false);
 
-                const { data: existing } = await supabaseClient
+                const { data: existing, error: existError } = await supabaseClient
                     .from('users')
                     .select('username')
                     .eq('username', username)
-                    .single();
+                    .maybeSingle();
+
+                if (existError) {
+                    console.error("Availability Check Error:", existError);
+                }
 
                 if (existing) {
                     showStatus("Operative handle already taken.");
@@ -488,13 +501,13 @@
                     const fileExt = file.name.split('.').pop();
                     const fileName = `${username}_${Date.now()}.${fileExt}`;
 
-                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    const { error: uploadError } = await supabaseClient.storage
                         .from('avatars')
                         .upload(fileName, file);
 
                     if (uploadError) {
                         console.error('Upload Error:', uploadError);
-                        showStatus("Failed to upload avatar. Ensure 'avatars' bucket exists and is public.");
+                        showStatus("Failed to upload avatar. Ensure 'avatars' storage bucket exists and is public.");
                         return;
                     }
 
@@ -520,7 +533,8 @@
                     .single();
 
                 if (error) {
-                    showStatus("Failed to create operative profile.");
+                    console.error("Registration Insert Error:", error);
+                    showStatus(`Failed to create operative profile: ${error.message}`);
                     return;
                 }
 
