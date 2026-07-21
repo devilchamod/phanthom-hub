@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatEngine // Complete Dashboard with Dynamic Profiles</title>
+    <title>ChatEngine // Complete Dashboard with Advanced Profile Customizer</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -169,6 +169,23 @@
         .menu-icon { font-size: 16px; width: 20px; }
         .menu-label { flex: 1; margin-left: 8px; }
 
+        /* ADVANCED DISCORD-STYLE PROFILE CUSTOMIZER MODAL */
+        .discord-profile-customizer-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 6000; display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; color: #dbdee1;
+        }
+        .customizer-card {
+            width: 920px; height: 600px; background: #313338; border-radius: 8px; display: flex; overflow: hidden; box-shadow: 0 12px 36px rgba(0,0,0,0.6); position: relative;
+        }
+        .customizer-left-panel {
+            width: 340px; background: #2b2d31; border-right: 1px solid #1f2023; padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
+        }
+        .customizer-right-preview {
+            flex: 1; background: #1e1f22; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; position: relative;
+        }
+        .preview-profile-card {
+            width: 340px; background: #111214; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 1px solid #2b2d31;
+        }
+
         /* DISCORD SETTINGS MODAL (FULL SCREEN STYLE) */
         .discord-settings-modal {
             position: fixed; inset: 0; background: #313338; z-index: 5000; display: flex; font-family: 'Inter', sans-serif; color: #dbdee1;
@@ -293,7 +310,7 @@
                         <p id="popoverAboutMe" class="profile-bio-content" style="font-size:14px; color:#dbdee1;">Only the silence remains.</p>
                     </div>
                     <div class="profile-menu-list">
-                        <div class="profile-menu-item" onclick="openEditProfileModal()">
+                        <div class="profile-menu-item" onclick="openAdvancedProfileCustomizer()">
                             <span class="menu-icon">✏️</span>
                             <span class="menu-label">Edit Profile</span>
                         </div>
@@ -397,6 +414,70 @@
                     <div id="onlineMembersList"></div>
                     <div class="member-category-header" id="offlineMembersHeader" style="margin-top: 16px;">Offline — 0</div>
                     <div id="offlineMembersList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADVANCED DISCORD-STYLE PROFILE CUSTOMIZER MODAL -->
+    <div id="advancedProfileCustomizerModal" class="discord-profile-customizer-modal hidden">
+        <div class="customizer-card">
+            <!-- LEFT EDIT CONFIG PANEL -->
+            <div class="customizer-left-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="color:#f2f3f5; font-size: 18px;">Customize Profile</h3>
+                    <button onclick="closeAdvancedProfileCustomizer()" style="background:none; border:none; color:#b5bac1; font-size:18px; cursor:pointer;">✕</button>
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:6px;">Display Nickname</label>
+                    <input type="text" id="customizerNicknameInput" class="text-input" oninput="liveUpdateProfilePreview()">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:6px;">Avatar URL or Upload</label>
+                    <input type="text" id="customizerAvatarInput" class="text-input" placeholder="https://image-url..." oninput="liveUpdateProfilePreview()">
+                    <input type="file" id="customizerAvatarFile" style="margin-top:6px; font-size:12px; color:#b5bac1;" onchange="handleCustomizerFileUpload(this, 'avatar')">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:6px;">Banner Color / Theme</label>
+                    <input type="color" id="customizerBannerColor" value="#5865f2" style="width:100%; height:36px; border:none; background:none; cursor:pointer; border-radius:4px;" onchange="liveUpdateProfilePreview()">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:6px;">About Me / Bio</label>
+                    <textarea id="customizerBioInput" class="text-input" rows="3" oninput="liveUpdateProfilePreview()"></textarea>
+                </div>
+                <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+                    <button class="btn-discord" onclick="saveAdvancedProfileChanges()">Save Changes</button>
+                    <button class="btn-discord-danger" onclick="promptDeleteAccountVerification()">Delete Account</button>
+                </div>
+            </div>
+
+            <!-- RIGHT LIVE PREVIEW PANE -->
+            <div class="customizer-right-preview">
+                <div style="position: absolute; top: 16px; left: 24px; font-size: 12px; font-weight: 700; color: #949ba4; text-transform: uppercase; letter-spacing: 0.5px;">Preview</div>
+                <div class="preview-profile-card">
+                    <div id="previewBanner" class="profile-banner" style="background-color: #5865f2;"></div>
+                    <div class="profile-body">
+                        <div class="profile-avatar-row">
+                            <div class="avatar-wrapper">
+                                <img id="previewAvatarImg" src="https://via.placeholder.com/80" class="popover-avatar">
+                                <div class="status-indicator"></div>
+                            </div>
+                            <div class="popover-status-bubble">
+                                <span id="previewStatusBubbleText">Online</span>
+                            </div>
+                        </div>
+                        <div class="profile-identity">
+                            <h2 id="previewDisplayName" class="profile-display-name">User</h2>
+                            <div class="profile-usernames">
+                                <span id="previewUsernameTag">@username</span> • <span class="profile-bio-tag">Member</span>
+                            </div>
+                        </div>
+                        <div class="profile-divider"></div>
+                        <div class="profile-section">
+                            <div class="section-title">About Me</div>
+                            <p id="previewBioText" class="profile-bio-content" style="font-size:14px; color:#dbdee1;">Only the silence remains.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -612,7 +693,6 @@
         async function populateProfilePopoverData() {
             if (!currentUser) return;
             
-            // Re-fetch latest user profile state from database
             const { data: freshUser } = await supabaseClient.from('users').select('*').eq('username', currentUser.username).single();
             if (freshUser) {
                 currentUser = freshUser;
@@ -647,73 +727,68 @@
             }
         });
 
-        // --- EDIT PROFILE MODAL ---
-        function openEditProfileModal() {
+        // --- ADVANCED DISCORD-STYLE PROFILE CUSTOMIZER MODAL ---
+        function openAdvancedProfileCustomizer() {
             document.getElementById('userProfilePopover').classList.add('hidden');
-            const card = document.getElementById('genericModalCard');
-            card.innerHTML = `
-                <h3 style="color:#f2f3f5;">Edit Your Profile</h3>
-                <div style="text-align:center;">
-                    <label style="cursor:pointer; display:inline-block;">
-                        <img id="editAvatarPreview" src="${currentUser.pfp_url || 'https://via.placeholder.com/70'}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px dashed #5865f2;">
-                        <input type="file" id="editAvatarFile" class="hidden" onchange="previewAvatar(this, 'editAvatarPreview')">
-                        <div style="font-size:11px; color:#949ba4; margin-top:4px;">Change Avatar</div>
-                    </label>
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Display Nickname</label>
-                    <input type="text" id="editNicknameInput" class="text-input" value="${currentUser.nickname || currentUser.username}">
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">About Me</label>
-                    <textarea id="editAboutMeInput" class="text-input" rows="2">${currentUser.about_me || ''}</textarea>
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Status</label>
-                    <select id="editStatusSelect" class="text-input">
-                        <option value="Online" ${currentUser.status === 'Online' ? 'selected' : ''}>Online</option>
-                        <option value="Idle" ${currentUser.status === 'Idle' ? 'selected' : ''}>Idle</option>
-                        <option value="Do Not Disturb" ${currentUser.status === 'Do Not Disturb' ? 'selected' : ''}>Do Not Disturb</option>
-                        <option value="Offline" ${currentUser.status === 'Offline' ? 'selected' : ''}>Offline</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Banner Color</label>
-                    <input type="color" id="editBannerColorInput" value="${currentUser.banner_color || '#5865f2'}" style="width:100%; height:36px; border:none; background:none; cursor:pointer; border-radius:4px;">
-                </div>
-                <button class="btn-discord" onclick="saveUserProfileEdits()">Save Profile</button>
-            `;
-            document.getElementById('genericModalOverlay').classList.remove('hidden');
+            
+            document.getElementById('customizerNicknameInput').value = currentUser.nickname || currentUser.username;
+            document.getElementById('customizerAvatarInput').value = currentUser.pfp_url || '';
+            document.getElementById('customizerBannerColor').value = currentUser.banner_color || '#5865f2';
+            document.getElementById('customizerBioInput').value = currentUser.about_me || '';
+
+            liveUpdateProfilePreview();
+            document.getElementById('advancedProfileCustomizerModal').classList.remove('hidden');
         }
 
-        async function saveUserProfileEdits() {
-            const nickname = document.getElementById('editNicknameInput').value.trim();
-            const aboutMe = document.getElementById('editAboutMeInput').value.trim();
-            const status = document.getElementById('editStatusSelect').value;
-            const bannerColor = document.getElementById('editBannerColorInput').value;
-            const fileInput = document.getElementById('editAvatarFile').files[0];
+        function closeAdvancedProfileCustomizer() {
+            document.getElementById('advancedProfileCustomizerModal').classList.add('hidden');
+        }
 
-            let pfpUrl = currentUser.pfp_url;
-            if (fileInput) {
-                const fileName = `avatar-${currentUser.username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+        function liveUpdateProfilePreview() {
+            const nickname = document.getElementById('customizerNicknameInput').value.trim() || currentUser.username;
+            const avatarUrl = document.getElementById('customizerAvatarInput').value.trim() || 'https://via.placeholder.com/80';
+            const bannerColor = document.getElementById('customizerBannerColor').value;
+            const bio = document.getElementById('customizerBioInput').value.trim() || 'Only the silence remains.';
+
+            document.getElementById('previewDisplayName').innerText = nickname;
+            document.getElementById('previewUsernameTag').innerText = `@${currentUser.username}`;
+            document.getElementById('previewAvatarImg').src = avatarUrl;
+            document.getElementById('previewBanner').style.backgroundColor = bannerColor;
+            document.getElementById('previewBioText').innerText = bio;
+        }
+
+        async function handleCustomizerFileUpload(input, type) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileName = `customizer-${type}-${currentUser.username}-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
                 if (data) {
-                    pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                    const publicUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                    if (type === 'avatar') {
+                        document.getElementById('customizerAvatarInput').value = publicUrl;
+                        liveUpdateProfilePreview();
+                    }
                 }
             }
+        }
+
+        async function saveAdvancedProfileChanges() {
+            const nickname = document.getElementById('customizerNicknameInput').value.trim();
+            const pfpUrl = document.getElementById('customizerAvatarInput').value.trim();
+            const bannerColor = document.getElementById('customizerBannerColor').value;
+            const aboutMe = document.getElementById('customizerBioInput').value.trim();
 
             const updates = {
                 nickname: nickname || currentUser.username,
-                about_me: aboutMe,
-                status: status,
+                pfp_url: pfpUrl,
                 banner_color: bannerColor,
-                pfp_url: pfpUrl
+                about_me: aboutMe
             };
 
             const { error } = await supabaseClient.from('users').update(updates).eq('username', currentUser.username);
 
             if (error) {
-                alert("Failed to update profile.");
+                alert("Failed to update profile settings.");
             } else {
                 currentUser = { ...currentUser, ...updates };
                 localStorage.setItem('chat_user', JSON.stringify(currentUser));
@@ -721,8 +796,46 @@
                 if (currentUser.pfp_url) {
                     document.getElementById('sidebarHeaderAvatar').src = currentUser.pfp_url;
                 }
-                closeModal();
-                alert("Profile updated successfully!");
+                closeAdvancedProfileCustomizer();
+                alert("Profile successfully updated!");
+            }
+        }
+
+        // --- VERIFY USER TO DELETE ACCOUNT ---
+        function promptDeleteAccountVerification() {
+            const card = document.getElementById('genericModalCard');
+            card.innerHTML = `
+                <h3 style="color:#ed4245;">Delete Account Permanently</h3>
+                <p style="font-size:13px; color:#949ba4;">This action is permanent and cannot be undone. Please enter your account password to verify deletion.</p>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Confirm Password</label>
+                    <input type="password" id="deleteAccountPassVerify" class="text-input" placeholder="Your password...">
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="btn-discord" style="background:#4e5058;" onclick="closeModal()">Cancel</button>
+                    <button class="btn-discord-danger" onclick="executeAccountDeletion()">Permanently Delete</button>
+                </div>
+            `;
+            document.getElementById('genericModalOverlay').classList.remove('hidden');
+        }
+
+        async function executeAccountDeletion() {
+            const passInput = document.getElementById('deleteAccountPassVerify').value.trim();
+            if (passInput !== currentUser.password_hash) {
+                alert("Verification failed: Password is incorrect.");
+                return;
+            }
+
+            // Remove user from database records
+            await supabaseClient.from('messages').delete().eq('sender_username', currentUser.username);
+            await supabaseClient.from('group_members').delete().eq('username', currentUser.username);
+            const { error } = await supabaseClient.from('users').delete().eq('username', currentUser.username);
+
+            if (error) {
+                alert("Error deleting account from server.");
+            } else {
+                alert("Your account has been deleted.");
+                logoutSession();
             }
         }
 
@@ -750,7 +863,6 @@
                 chatView.classList.remove('hidden');
                 document.getElementById('activeChannelTitle').innerText = channelName;
 
-                // Show settings gear button only if it's a group channel
                 if (channelId.startsWith('group_')) {
                     groupSettingsBtn.classList.remove('hidden');
                 } else {
