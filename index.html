@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatEngine // Complete Dashboard with Group Settings</title>
+    <title>ChatEngine // Complete Dashboard with Dynamic Profiles</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -268,16 +268,16 @@
 
         <!-- SIDEBAR -->
         <div class="channels-sidebar">
-            <!-- PROFILE POPOVER PANEL -->
+            <!-- DYNAMIC PROFILE POPOVER PANEL -->
             <div id="userProfilePopover" class="discord-profile-popover hidden">
-                <div class="profile-banner"></div>
+                <div class="profile-banner" id="popoverBanner" style="background-color: #5865f2;"></div>
                 <div class="profile-body">
                     <div class="profile-avatar-row">
                         <div class="avatar-wrapper">
                             <img id="popoverUserAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="popover-avatar">
-                            <div class="status-indicator"></div>
+                            <div class="status-indicator" id="popoverStatusIndicator"></div>
                         </div>
-                        <div id="popoverCustomStatusBadge" class="popover-status-bubble">
+                        <div class="popover-status-bubble">
                             <span id="popoverStatusText">Online</span>
                         </div>
                     </div>
@@ -290,9 +290,13 @@
                     <div class="profile-divider"></div>
                     <div class="profile-section">
                         <div class="section-title">About Me</div>
-                        <p class="profile-bio-content" style="font-size:14px; color:#dbdee1;">Only the silence remains.</p>
+                        <p id="popoverAboutMe" class="profile-bio-content" style="font-size:14px; color:#dbdee1;">Only the silence remains.</p>
                     </div>
                     <div class="profile-menu-list">
+                        <div class="profile-menu-item" onclick="openEditProfileModal()">
+                            <span class="menu-icon">✏️</span>
+                            <span class="menu-label">Edit Profile</span>
+                        </div>
                         <div class="profile-menu-item" onclick="logoutSession()">
                             <span class="menu-icon" style="color:#f23f43;">🚪</span>
                             <span class="menu-label" style="color:#f23f43;">Log Out</span>
@@ -524,7 +528,10 @@
                 username,
                 password_hash: password,
                 nickname: nickname || username,
-                pfp_url: pfpUrl
+                pfp_url: pfpUrl,
+                status: 'Online',
+                about_me: 'Only the silence remains.',
+                banner_color: '#5865f2'
             }]).select().single();
 
             if (error) {
@@ -602,13 +609,34 @@
             }
         }
 
-        function populateProfilePopoverData() {
+        async function populateProfilePopoverData() {
             if (!currentUser) return;
+            
+            // Re-fetch latest user profile state from database
+            const { data: freshUser } = await supabaseClient.from('users').select('*').eq('username', currentUser.username).single();
+            if (freshUser) {
+                currentUser = freshUser;
+                localStorage.setItem('chat_user', JSON.stringify(currentUser));
+            }
+
             document.getElementById('popoverDisplayName').innerText = currentUser.nickname || currentUser.username;
             document.getElementById('popoverUsername').innerText = `@${currentUser.username}`;
+            document.getElementById('popoverAboutMe').innerText = currentUser.about_me || 'Only the silence remains.';
+            document.getElementById('popoverStatusText').innerText = currentUser.status || 'Online';
+            
+            if (currentUser.banner_color) {
+                document.getElementById('popoverBanner').style.backgroundColor = currentUser.banner_color;
+            }
             if (currentUser.pfp_url) {
                 document.getElementById('popoverUserAvatar').src = currentUser.pfp_url;
             }
+
+            const indicator = document.getElementById('popoverStatusIndicator');
+            const statusVal = currentUser.status || 'Online';
+            if (statusVal === 'Idle') indicator.style.background = '#fee75c';
+            else if (statusVal === 'Do Not Disturb') indicator.style.background = '#ed4245';
+            else if (statusVal === 'Offline') indicator.style.background = '#80848e';
+            else indicator.style.background = '#23a55a';
         }
 
         window.addEventListener('click', (e) => {
@@ -618,6 +646,85 @@
                 popover.classList.add('hidden');
             }
         });
+
+        // --- EDIT PROFILE MODAL ---
+        function openEditProfileModal() {
+            document.getElementById('userProfilePopover').classList.add('hidden');
+            const card = document.getElementById('genericModalCard');
+            card.innerHTML = `
+                <h3 style="color:#f2f3f5;">Edit Your Profile</h3>
+                <div style="text-align:center;">
+                    <label style="cursor:pointer; display:inline-block;">
+                        <img id="editAvatarPreview" src="${currentUser.pfp_url || 'https://via.placeholder.com/70'}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px dashed #5865f2;">
+                        <input type="file" id="editAvatarFile" class="hidden" onchange="previewAvatar(this, 'editAvatarPreview')">
+                        <div style="font-size:11px; color:#949ba4; margin-top:4px;">Change Avatar</div>
+                    </label>
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Display Nickname</label>
+                    <input type="text" id="editNicknameInput" class="text-input" value="${currentUser.nickname || currentUser.username}">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">About Me</label>
+                    <textarea id="editAboutMeInput" class="text-input" rows="2">${currentUser.about_me || ''}</textarea>
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Status</label>
+                    <select id="editStatusSelect" class="text-input">
+                        <option value="Online" ${currentUser.status === 'Online' ? 'selected' : ''}>Online</option>
+                        <option value="Idle" ${currentUser.status === 'Idle' ? 'selected' : ''}>Idle</option>
+                        <option value="Do Not Disturb" ${currentUser.status === 'Do Not Disturb' ? 'selected' : ''}>Do Not Disturb</option>
+                        <option value="Offline" ${currentUser.status === 'Offline' ? 'selected' : ''}>Offline</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:4px;">Banner Color</label>
+                    <input type="color" id="editBannerColorInput" value="${currentUser.banner_color || '#5865f2'}" style="width:100%; height:36px; border:none; background:none; cursor:pointer; border-radius:4px;">
+                </div>
+                <button class="btn-discord" onclick="saveUserProfileEdits()">Save Profile</button>
+            `;
+            document.getElementById('genericModalOverlay').classList.remove('hidden');
+        }
+
+        async function saveUserProfileEdits() {
+            const nickname = document.getElementById('editNicknameInput').value.trim();
+            const aboutMe = document.getElementById('editAboutMeInput').value.trim();
+            const status = document.getElementById('editStatusSelect').value;
+            const bannerColor = document.getElementById('editBannerColorInput').value;
+            const fileInput = document.getElementById('editAvatarFile').files[0];
+
+            let pfpUrl = currentUser.pfp_url;
+            if (fileInput) {
+                const fileName = `avatar-${currentUser.username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+                if (data) {
+                    pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                }
+            }
+
+            const updates = {
+                nickname: nickname || currentUser.username,
+                about_me: aboutMe,
+                status: status,
+                banner_color: bannerColor,
+                pfp_url: pfpUrl
+            };
+
+            const { error } = await supabaseClient.from('users').update(updates).eq('username', currentUser.username);
+
+            if (error) {
+                alert("Failed to update profile.");
+            } else {
+                currentUser = { ...currentUser, ...updates };
+                localStorage.setItem('chat_user', JSON.stringify(currentUser));
+                document.getElementById('currentLoggedUserTag').innerText = currentUser.nickname;
+                if (currentUser.pfp_url) {
+                    document.getElementById('sidebarHeaderAvatar').src = currentUser.pfp_url;
+                }
+                closeModal();
+                alert("Profile updated successfully!");
+            }
+        }
 
         // --- CHANNEL & HOME SWITCHING ---
         function switchChannel(channelId, channelName, element) {
@@ -692,7 +799,7 @@
                         </div>
                         <div class="member-info">
                             <span class="member-username">${u.nickname || u.username}</span>
-                            <span class="member-subtext">Active on ChatEngine</span>
+                            <span class="member-subtext">${u.about_me || 'Active on ChatEngine'}</span>
                         </div>
                     </div>
                 `;
@@ -720,7 +827,7 @@
                             </div>
                             <div class="friend-meta">
                                 <span class="friend-name">${u.nickname || u.username}</span>
-                                <span class="friend-status-text">Active Now</span>
+                                <span class="friend-status-text">${u.status || 'Active Now'}</span>
                             </div>
                         </div>
                         <div class="friend-action-icons">
