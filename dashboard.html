@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PHANTOM // COMMAND DASHBOARD</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
 
@@ -117,6 +118,28 @@
             clip-path: polygon(0 0, 96% 0, 100% 4%, 100% 100%, 4% 100%, 0 96%);
         }
 
+        /* --- CUSTOM MODAL (EDIT/DELETE) --- */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .custom-modal {
+            width: 400px;
+            background: #0c0d14;
+            border: 1px solid #00f3ff;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 0 20px rgba(0,243,255,0.3);
+        }
+
         /* --- LAYOUT STRUCTURE --- */
         .app-layout {
             display: flex;
@@ -221,7 +244,7 @@
             letter-spacing: 1px;
         }
 
-        /* Right Panel: Online Friends */
+        /* Right Panel */
         .right-panel {
             width: 280px;
             background: rgba(10, 10, 16, 0.9);
@@ -229,6 +252,7 @@
             display: flex;
             flex-direction: column;
             padding: 1.2rem;
+            overflow-y: auto;
         }
 
         .friend-row {
@@ -252,7 +276,68 @@
         }
         .status-dot.online { background: #00f3ff; box-shadow: 0 0 8px #00f3ff; }
 
-        /* Form elements & Buttons */
+        /* Message item styling */
+        .message-bubble {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.7rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            transition: background 0.2s;
+        }
+        .message-bubble:hover {
+            background: rgba(0, 243, 255, 0.04);
+        }
+        .msg-top-tools {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            display: none;
+            gap: 6px;
+            background: #0c0d14;
+            border: 1px solid rgba(0,243,255,0.3);
+            padding: 2px 6px;
+        }
+        .message-bubble:hover .msg-top-tools {
+            display: flex;
+        }
+        .msg-tool-btn {
+            background: none;
+            border: none;
+            color: #00f3ff;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Context menu */
+        .context-menu {
+            position: fixed;
+            background: #0c0d14;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0,243,255,0.3);
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            padding: 4px 0;
+            min-width: 140px;
+        }
+        .context-menu-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #e0e6ed;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .context-menu-item:hover {
+            background: rgba(0,243,255,0.15);
+            color: #00f3ff;
+        }
+
+        /* Form elements */
         .chat-input {
             width: 100%;
             background: #05050a;
@@ -277,13 +362,11 @@
             clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
             transition: all 0.2s;
         }
-
         .btn-action:hover {
             background: #ff003c;
             color: #fff;
             box-shadow: 0 0 12px rgba(255, 0, 60, 0.5);
         }
-
         .btn-danger {
             background: rgba(255, 0, 60, 0.15);
             border: 1px solid #ff003c;
@@ -293,12 +376,7 @@
             font-weight: 700;
             cursor: pointer;
         }
-
-        .btn-danger:hover {
-            background: #ff003c;
-            color: #fff;
-        }
-
+        .btn-danger:hover { background: #ff003c; color: #fff; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -316,7 +394,6 @@
             <button class="drawer-cat-btn" onclick="switchDrawerCat('security', this)">SECURITY</button>
         </div>
         <div class="drawer-content">
-            <!-- Profile Category -->
             <div id="cat-profile" class="drawer-section active">
                 <div class="card-title">OPERATIVE DOSSIER</div>
                 <div style="margin-bottom:1rem;">
@@ -328,22 +405,16 @@
                     <input type="file" id="settingsPfpFile" accept="image/*" class="chat-input" style="padding:0.4rem;">
                 </div>
                 <button class="btn-action" style="width:100%; margin-bottom:1.5rem;" onclick="saveProfileChanges()">SAVE OVERRIDE</button>
-
                 <div class="card-title" style="color:#ff003c;">DANGER ZONE</div>
-                <p style="font-size:0.8rem; color:#7a8b9e; margin-bottom:0.8rem;">Permanently remove your operative profile and data logs from the database.</p>
                 <button class="btn-danger" style="width:100%;" onclick="deleteAccount()">PURGE ACCOUNT</button>
             </div>
-
-            <!-- Audio Category -->
             <div id="cat-audio" class="drawer-section">
                 <div class="card-title">AUDIO SUBROUTINES</div>
-                <p style="font-size:0.85rem; color:#8a99ad; margin-bottom:1rem;">Tactical interface audio feedback is currently online.</p>
+                <p style="font-size:0.85rem; color:#8a99ad;">Tactical interface audio feedback active.</p>
             </div>
-
-            <!-- Security Category -->
             <div id="cat-security" class="drawer-section">
                 <div class="card-title">ENCRYPTION CLEARANCE</div>
-                <p style="font-size:0.85rem; color:#8a99ad;">Level 4 Operative Access token active via Supabase secure sockets.</p>
+                <p style="font-size:0.85rem; color:#8a99ad;">Level 4 Operative Access token active.</p>
             </div>
         </div>
     </div>
@@ -363,7 +434,6 @@
             <div class="nav-item" onclick="switchMainTab('friends', this)"><span>⚡</span> FRIENDS LIST</div>
             <div class="nav-item" onclick="switchMainTab('addfriend', this)"><span>➕</span> ADD FRIEND</div>
             <div class="nav-item" onclick="switchMainTab('creategroup', this)"><span>👥</span> CREATE GROUP</div>
-            <div class="nav-item" onclick="switchMainTab('tracker', this)"><span>📍</span> TRACKER (SOON)</div>
             
             <div style="margin-top:auto;">
                 <div class="nav-item" onclick="logout()" style="color:#ff003c; border-color:rgba(255,0,60,0.3);"><span>🔌</span> DISCONNECT</div>
@@ -372,25 +442,16 @@
 
         <!-- MIDDLE CONTENT AREA -->
         <div class="main-dashboard" id="mainContentView">
-            
             <div class="dashboard-header">
-                <span>OPERATIVE COMMAND CENTER</span>
+                <span id="workspaceTitle">OPERATIVE COMMAND CENTER</span>
                 <span id="headerUsername" style="color:#00f3ff; font-size:1rem;">-</span>
             </div>
 
-            <!-- DASHBOARD HOME VIEW -->
+            <!-- DASHBOARD HOME -->
             <div id="view-dashboard" class="sub-view">
-                <div class="card" style="margin-bottom:1.5rem; background:linear-gradient(135deg, rgba(12,13,20,0.9), rgba(5,5,10,0.95)); border-color:#ff003c;">
+                <div class="card" style="margin-bottom:1.5rem; border-color:#ff003c;">
                     <div style="font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:900; color:#fff;">WELCOME BACK, <span id="welcomeName" style="color:#ff003c;">OPERATIVE</span></div>
-                    <p style="color:#7a8b9e; font-weight:600; margin-top:0.4rem;">Select Global Chat or an active frequency module from the left panel.</p>
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr; gap:1.5rem;">
-                    <div class="card">
-                        <div class="card-title">SYSTEM STATUS</div>
-                        <p style="font-size:0.9rem; color:#8a99ad;">Database Node: <span style="color:#00f3ff;">CONNECTED</span></p>
-                        <p style="font-size:0.9rem; color:#8a99ad; margin-top:0.4rem;">Active Sockets: <span style="color:#00f3ff;" id="activeCount">1</span></p>
-                    </div>
+                    <p style="color:#7a8b9e; font-weight:600; margin-top:0.4rem;">Select Global Chat, a Direct Frequency, or a Squad module.</p>
                 </div>
             </div>
 
@@ -399,12 +460,33 @@
                 <div class="card" style="display:flex; flex-direction:column; flex:1; padding:1rem; overflow:hidden;">
                     <div class="card-title">🌐 GLOBAL COMMAND FREQUENCY</div>
                     <div id="globalMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:1rem;"></div>
-                    <div id="globalReplyIndicator" style="font-size:0.75rem; color:#00f3ff; margin-bottom:0.3rem;" class="hidden"></div>
+                    <div id="globalReplyIndicator" class="hidden" style="font-size:0.75rem; color:#00f3ff; margin-bottom:0.3rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,243,255,0.05); padding:4px 8px;">
+                        <span id="globalReplyText">Replying to message...</span>
+                        <button onclick="cancelReply('global')" style="background:none; border:none; color:#ff003c; cursor:pointer;">✕</button>
+                    </div>
                     <div style="display:flex; gap:0.5rem; align-items:center;">
                         <input type="file" id="globalFileInp" style="display:none;" onchange="handleFileSelected('global')">
-                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('globalFileInp').click()" title="Attach File">📎</button>
+                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('globalFileInp').click()">📎</button>
                         <input type="text" id="globalMsgInput" class="chat-input" placeholder="Broadcast to global frequency..." style="margin:0;" onkeydown="if(event.key==='Enter') sendGlobalMessage()">
                         <button class="btn-action" onclick="sendGlobalMessage()">TRANSMIT</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHAT WORKSPACE VIEW (FOR DMs AND GROUPS) -->
+            <div id="view-workspace" class="sub-view hidden" style="display:flex; flex-direction:column; flex:1; height: calc(100vh - 100px);">
+                <div class="card" style="display:flex; flex-direction:column; flex:1; padding:1rem; overflow:hidden;">
+                    <div class="card-title" id="workspaceHeaderTitle">ACTIVE FREQUENCY</div>
+                    <div id="workspaceMessagesContainer" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.5rem; margin-bottom:1rem;"></div>
+                    <div id="workspaceReplyIndicator" class="hidden" style="font-size:0.75rem; color:#00f3ff; margin-bottom:0.3rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,243,255,0.05); padding:4px 8px;">
+                        <span id="workspaceReplyText">Replying to message...</span>
+                        <button onclick="cancelReply('workspace')" style="background:none; border:none; color:#ff003c; cursor:pointer;">✕</button>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="file" id="workspaceFileInp" style="display:none;" onchange="handleFileSelected('workspace')">
+                        <button class="btn-action" style="padding:0.7rem;" onclick="document.getElementById('workspaceFileInp').click()">📎</button>
+                        <input type="text" id="workspaceMsgInput" class="chat-input" placeholder="Send secure transmission..." style="margin:0;" onkeydown="if(event.key==='Enter') sendWorkspaceMessage()">
+                        <button class="btn-action" onclick="sendWorkspaceMessage()">TRANSMIT</button>
                     </div>
                 </div>
             </div>
@@ -413,7 +495,6 @@
             <div id="view-addfriend" class="sub-view hidden">
                 <div class="card">
                     <div class="card-title">LINK NEW OPERATIVE</div>
-                    <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">OPERATIVE HANDLE</label>
                     <input type="text" id="friendInput" class="chat-input" placeholder="Enter username...">
                     <button class="btn-action" onclick="sendFriendRequest()">ESTABLISH LINK</button>
                     <div id="friendMsg" style="margin-top:1rem; font-weight:700; color:#00f3ff;"></div>
@@ -424,15 +505,12 @@
             <div id="view-creategroup" class="sub-view hidden">
                 <div class="card">
                     <div class="card-title">INITIALIZE ENCRYPTED GROUP SQUAD</div>
-                    <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">GROUP SQUAD NAME</label>
                     <input type="text" id="groupNameInput" class="chat-input" placeholder="Enter squad handle...">
-                    <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">GROUP AVATAR OVERRIDE</label>
+                    <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">GROUP AVATAR (FROM PC)</label>
                     <input type="file" id="groupAvatarFile" accept="image/*" class="chat-input" style="padding:0.4rem;">
-                    
                     <div class="card-title" style="margin-top:1rem;">ADD FRIENDS TO SQUAD</div>
                     <div id="groupMembersSelector" style="max-height:150px; overflow-y:auto; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.4rem;"></div>
-
-                    <button class="btn-action" onclick="createGroupAndRedirect()">CREATE & ENTER SQUAD</button>
+                    <button class="btn-action" onclick="createGroupAndRedirect()">CREATE SQUAD</button>
                 </div>
             </div>
 
@@ -444,33 +522,22 @@
                 </div>
             </div>
 
-            <!-- CHATS VIEW -->
+            <!-- CHATS LIST VIEW -->
             <div id="view-chats" class="sub-view hidden">
                 <div class="card">
-                    <div class="card-title">DIRECT FREQUENCIES & GROUPS</div>
+                    <div class="card-title">DIRECT FREQUENCIES & SQUADS</div>
                     <div id="chatLinksList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
                 </div>
             </div>
-
-            <!-- TRACKER VIEW -->
-            <div id="view-tracker" class="sub-view hidden">
-                <div class="card">
-                    <div class="card-title">TACTICAL TRACKER MODULE</div>
-                    <p style="color:#7a8b9e; font-weight:600;">Module under construction for future telemetry deployment.</p>
-                </div>
-            </div>
-
         </div>
 
-        <!-- RIGHT PANEL: ONLINE / OFFLINE OPERATIVES -->
+        <!-- RIGHT PANEL -->
         <div class="right-panel">
-            <div id="rightPanelHeader" class="card-title" style="font-size:0.8rem;">ONLINE OPERATIVES</div>
-            <div id="onlineFriendsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;"></div>
+            <div id="rightPanelContainer" style="display:flex; flex-direction:column; gap:1rem; height:100%;"></div>
         </div>
-
     </div>
 
-    <!-- AUDIO BEEP NOTIFICATION GENERATOR -->
+    <!-- AUDIO BEEP NOTIFICATION -->
     <script>
         function playLoudBeep() {
             try {
@@ -478,8 +545,8 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
-                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
@@ -498,7 +565,6 @@
         const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // UI Setup
         const displayName = currentUser.nickname || currentUser.username;
         document.getElementById('headerUsername').innerText = displayName.toUpperCase();
         document.getElementById('welcomeName').innerText = displayName.toUpperCase();
@@ -527,21 +593,461 @@
             if (tabName === 'chats') loadChatFrequencies();
             if (tabName === 'creategroup') loadGroupMemberSelectors();
             if (tabName === 'global') initGlobalChat();
+            if (tabName === 'dashboard') loadGlobalPresencePanel();
         }
 
-        // Redirect chat actions directly to home.html smoothly
-        function openChat(targetType, targetName) {
-            sessionStorage.setItem('phantom_chat_target', JSON.stringify({ type: targetType, name: targetName }));
-            window.location.href = "home.html";
+        // Color Thief palette caching for pfp highlights
+        const colorCache = {};
+        async function getPaletteColor(imgUrl) {
+            if (!imgUrl) return '#00f3ff';
+            if (colorCache[imgUrl]) return colorCache[imgUrl];
+            return new Promise(resolve => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = imgUrl;
+                img.onload = () => {
+                    try {
+                        const colorThief = new ColorThief();
+                        const color = colorThief.getColor(img);
+                        const hex = `#${color.map(x => x.toString(16).padStart(2, '0')).join('')}`;
+                        colorCache[imgUrl] = hex;
+                        resolve(hex);
+                    } catch(e) { resolve('#00f3ff'); }
+                };
+                img.onerror = () => resolve('#00f3ff');
+            });
+        }
+
+        // Profile view modal (Discord style)
+        async function showUserProfile(username) {
+            const { data } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            if (!data) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'profile-modal';
+            modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+
+            const color = await getPaletteColor(data.pfp_url);
+
+            modal.innerHTML = `
+                <div class="profile-card" style="border-color:${color}; box-shadow: 0 0 30px ${color}40;">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <img src="${data.pfp_url || 'https://via.placeholder.com/80'}" style="width:70px; height:70px; object-fit:cover; border:2px solid ${color};">
+                        <div>
+                            <div style="font-family:'Orbitron',sans-serif; font-weight:900; font-size:1.1rem; color:${color};">${(data.nickname || data.username).toUpperCase()}</div>
+                            <div style="font-size:0.8rem; color:#7a8b9e;">@${data.username}</div>
+                        </div>
+                    </div>
+                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size:0.85rem; color:#8a99ad;">Clearance level active. Secure communications verified.</div>
+                    <button class="btn-action" style="background:${color}; color:#05050a;" onclick="this.closest('.profile-modal').remove()">CLOSE DOSSIER</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Custom Edit/Delete Modals
+        function openCustomEditModal(msgId, currentText, callback) {
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-modal-overlay';
+            overlay.innerHTML = `
+                <div class="custom-modal">
+                    <div class="card-title">EDIT TRANSMISSION</div>
+                    <input type="text" id="editModalInput" class="chat-input" value="${currentText}" style="margin:0;">
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                        <button class="btn-action" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="this.closest('.custom-modal-overlay').remove()">CANCEL</button>
+                        <button class="btn-action" id="confirmEditBtn">UPDATE</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            document.getElementById('confirmEditBtn').onclick = () => {
+                const val = document.getElementById('editModalInput').value.trim();
+                overlay.remove();
+                callback(val);
+            };
+        }
+
+        function openCustomDeleteModal(callback) {
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-modal-overlay';
+            overlay.innerHTML = `
+                <div class="custom-modal" style="border-color:#ff003c;">
+                    <div class="card-title" style="color:#ff003c;">PURGE TRANSMISSION</div>
+                    <p style="font-size:0.9rem; color:#8a99ad;">Are you sure you want to permanently erase this message log?</p>
+                    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                        <button class="btn-action" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="this.closest('.custom-modal-overlay').remove()">CANCEL</button>
+                        <button class="btn-danger" id="confirmDeleteBtn">PURGE</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            document.getElementById('confirmDeleteBtn').onclick = () => {
+                overlay.remove();
+                callback();
+            };
+        }
+
+        // Context menu handler
+        window.addEventListener('click', () => {
+            const existing = document.getElementById('globalContextMenu');
+            if (existing) existing.remove();
+        });
+
+        function showContextMenu(e, msg, isOwner, updateCallback, deleteCallback, replyCallback) {
+            e.preventDefault();
+            const existing = document.getElementById('globalContextMenu');
+            if (existing) existing.remove();
+
+            const menu = document.createElement('div');
+            menu.id = 'globalContextMenu';
+            menu.className = 'context-menu';
+            menu.style.top = `${e.clientY}px`;
+            menu.style.left = `${e.clientX}px`;
+
+            menu.innerHTML = `
+                <div class="context-menu-item" id="ctxReply">↩️ Reply</div>
+                <div class="context-menu-item" id="ctxReact">😀 Add Reaction</div>
+                ${isOwner ? `
+                    <div class="context-menu-item" id="ctxEdit">✏️ Edit</div>
+                    <div class="context-menu-item" id="ctxDelete" style="color:#ff003c;">🗑️ Delete</div>
+                ` : ''}
+            `;
+
+            document.body.appendChild(menu);
+
+            document.getElementById('ctxReply').onclick = () => { menu.remove(); replyCallback(); };
+            document.getElementById('ctxReact').onclick = () => { 
+                menu.remove(); 
+                const emoji = prompt("Enter emoji reaction:", "👍");
+                if (emoji) addEmojiReaction(msg.id, emoji);
+            };
+            if (isOwner) {
+                document.getElementById('ctxEdit').onclick = () => {
+                    menu.remove();
+                    openCustomEditModal(msg.id, msg.message, (newText) => updateCallback(newText));
+                };
+                document.getElementById('ctxDelete').onclick = () => {
+                    menu.remove();
+                    openCustomDeleteModal(() => deleteCallback());
+                };
+            }
+        }
+
+        async function addEmojiReaction(msgId, emoji) {
+            const { data } = await supabaseClient.from('messages').select('reactions').eq('id', msgId).single();
+            let reactions = data.reactions || {};
+            reactions[emoji] = (reactions[emoji] || 0) + 1;
+            await supabaseClient.from('messages').update({ reactions }).eq('id', msgId);
+        }
+
+        // Global Chat Engine
+        let globalSub = null;
+        let globalFile = null;
+        let globalReplyTo = null;
+
+        async function initGlobalChat() {
+            if (globalSub) return;
+            await loadGlobalMessages();
+            loadGlobalPresencePanel();
+
+            globalSub = supabaseClient.channel('global-chat-room')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: 'channel=eq.general' }, payload => {
+                    if (payload.eventType === 'INSERT') {
+                        appendMessageNode('global', payload.new);
+                        if (payload.new.username !== currentUser.username) playLoudBeep();
+                    } else {
+                        loadGlobalMessages();
+                    }
+                })
+                .subscribe();
+        }
+
+        async function loadGlobalMessages() {
+            const { data } = await supabaseClient.from('messages').select('*').eq('channel', 'general').order('created_at', { ascending: true });
+            const container = document.getElementById('globalMessagesContainer');
+            container.innerHTML = '';
+            if (data) {
+                data.forEach(m => appendMessageNode('global', m));
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function handleFileSelected(type) {
+            const inp = document.getElementById(`${type === 'global' ? 'global' : 'workspace'}FileInp`);
+            const file = inp.files[0];
+            if (file) {
+                const fileName = `upload-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) {
+                    const url = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                    if (type === 'global') globalFile = url;
+                    else workspaceFile = url;
+                    alert("File attached successfully.");
+                }
+            }
+        }
+
+        async function sendGlobalMessage() {
+            const input = document.getElementById('globalMsgInput');
+            const text = input.value.trim();
+            if (!text && !globalFile) return;
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname || currentUser.username,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                pfp_url_file: globalFile, // file attachment mapping
+                channel: 'general',
+                reply_to: globalReplyTo
+            }]);
+
+            input.value = '';
+            globalFile = null;
+            cancelReply('global');
+        }
+
+        // Workspace Chat Engine (DMs & Groups)
+        let activeWorkspace = null; // { type: 'dm'|'group', name: string, id?: string }
+        let workspaceSub = null;
+        let workspaceFile = null;
+        let workspaceReplyTo = null;
+
+        function openChat(type, target) {
+            switchMainTab('workspace');
+            activeWorkspace = { type, target };
+            const titleEl = document.getElementById('workspaceHeaderTitle');
+            
+            if (type === 'dm') {
+                titleEl.innerText = `📡 SECURE DM: ${target.toUpperCase()}`;
+            } else {
+                titleEl.innerText = `👥 SQUAD FREQUENCY: ${target.name.toUpperCase()}`;
+            }
+            initWorkspaceChat();
+        }
+
+        async function initWorkspaceChat() {
+            if (workspaceSub) {
+                supabaseClient.removeChannel(workspaceSub);
+                workspaceSub = null;
+            }
+            await loadWorkspaceMessages();
+            loadWorkspacePresencePanel();
+
+            const channelName = activeWorkspace.type === 'dm' 
+                ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
+                : `group-${activeWorkspace.target.id}`;
+
+            workspaceSub = supabaseClient.channel(channelName)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel=eq.${channelName}` }, payload => {
+                    if (payload.eventType === 'INSERT') {
+                        appendMessageNode('workspace', payload.new);
+                        if (payload.new.username !== currentUser.username) {
+                            if (activeWorkspace.type === 'dm' || activeWorkspace.type === 'group') {
+                                playLoudBeep();
+                            }
+                        }
+                    } else {
+                        loadWorkspaceMessages();
+                    }
+                })
+                .subscribe();
+        }
+
+        async function loadWorkspaceMessages() {
+            const channelName = activeWorkspace.type === 'dm' 
+                ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
+                : `group-${activeWorkspace.target.id}`;
+
+            const { data } = await supabaseClient.from('messages').select('*').eq('channel', channelName).order('created_at', { ascending: true });
+            const container = document.getElementById('workspaceMessagesContainer');
+            container.innerHTML = '';
+            if (data) {
+                data.forEach(m => appendMessageNode('workspace', m));
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendWorkspaceMessage() {
+            const input = document.getElementById('workspaceMsgInput');
+            const text = input.value.trim();
+            if (!text && !workspaceFile) return;
+
+            const channelName = activeWorkspace.type === 'dm' 
+                ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
+                : `group-${activeWorkspace.target.id}`;
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname || currentUser.username,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                pfp_url_file: workspaceFile,
+                channel: channelName,
+                reply_to: workspaceReplyTo
+            }]);
+
+            input.value = '';
+            workspaceFile = null;
+            cancelReply('workspace');
+        }
+
+        async function appendMessageNode(context, msg) {
+            const container = document.getElementById(context === 'global' ? 'globalMessagesContainer' : 'workspaceMessagesContainer');
+            const div = document.createElement('div');
+            div.className = 'message-bubble';
+
+            const color = await getPaletteColor(msg.pfp_url);
+            div.style.borderColor = `${color}40`;
+
+            const isOwner = msg.username === currentUser.username;
+
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <img src="${msg.pfp_url || 'https://via.placeholder.com/30'}" style="width:24px; height:24px; object-fit:cover; border:1px solid ${color}; cursor:pointer;" onclick="showUserProfile('${msg.username}')">
+                    <span style="font-size:0.75rem; color:${color}; font-weight:700; cursor:pointer;" onclick="showUserProfile('${msg.username}')">${(msg.nickname || msg.username).toUpperCase()}</span>
+                </div>
+                ${msg.reply_to ? `<div style="font-size:0.75rem; color:#7a8b9e; border-left:2px solid ${color}; padding-left:4px;">Replying to transmission...</div>` : ''}
+                <div style="font-size:0.95rem; color:#e0e6ed; padding-left: 2rem;">${msg.message || ''}</div>
+                ${msg.pfp_url_file ? `<div style="padding-left: 2rem;"><a href="${msg.pfp_url_file}" target="_blank" style="color:${color}; font-size:0.8rem;">📂 View Attachment</a></div>` : ''}
+                
+                <div class="msg-top-tools">
+                    <button class="msg-tool-btn" title="Reply" onclick="setReply('${context}', ${msg.id}, '${msg.nickname || msg.username}')">↩️</button>
+                    ${isOwner ? `
+                        <button class="msg-tool-btn" title="Edit" onclick="promptEdit('${context}', ${msg.id}, '${msg.message}')">✏️</button>
+                        <button class="msg-tool-btn" title="Delete" onclick="promptDelete('${context}', ${msg.id})">🗑️</button>
+                    ` : ''}
+                </div>
+            `;
+
+            div.oncontextmenu = (e) => {
+                showContextMenu(e, msg, isOwner, 
+                    (newText) => updateMessage(msg.id, newText, context),
+                    () => deleteMessage(msg.id, context),
+                    () => setReply(context, msg.id, msg.nickname || msg.username)
+                );
+            };
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setReply(context, msgId, authorName) {
+            if (context === 'global') {
+                globalReplyTo = msgId;
+                document.getElementById('globalReplyText').innerText = `Replying to ${authorName.toUpperCase()}`;
+                document.getElementById('globalReplyIndicator').classList.remove('hidden');
+            } else {
+                workspaceReplyTo = msgId;
+                document.getElementById('workspaceReplyText').innerText = `Replying to ${authorName.toUpperCase()}`;
+                document.getElementById('workspaceReplyIndicator').classList.remove('hidden');
+            }
+        }
+
+        function cancelReply(context) {
+            if (context === 'global') {
+                globalReplyTo = null;
+                document.getElementById('globalReplyIndicator').classList.add('hidden');
+            } else {
+                workspaceReplyTo = null;
+                document.getElementById('workspaceReplyIndicator').classList.add('hidden');
+            }
+        }
+
+        function promptEdit(context, msgId, currentText) {
+            openCustomEditModal(msgId, currentText, (newText) => updateMessage(msgId, newText, context));
+        }
+
+        async function updateMessage(msgId, newText, context) {
+            if (!newText) return;
+            await supabaseClient.from('messages').update({ message: newText }).eq('id', msgId);
+            if (context === 'global') loadGlobalMessages();
+            else loadWorkspaceMessages();
+        }
+
+        function promptDelete(context, msgId) {
+            openCustomDeleteModal(() => deleteMessage(msgId, context));
+        }
+
+        async function deleteMessage(msgId, context) {
+            await supabaseClient.from('messages').delete().eq('id', msgId);
+            if (context === 'global') loadGlobalMessages();
+            else loadWorkspaceMessages();
+        }
+
+        // Right Panel Presence Management (Online / Offline Group categorization)
+        async function loadGlobalPresencePanel() {
+            const container = document.getElementById('rightPanelContainer');
+            container.innerHTML = `<div class="card-title" style="font-size:0.8rem;">ONLINE OPERATIVES</div><div id="onlineList" style="display:flex; flex-direction:column; gap:0.4rem;"></div>`;
+            
+            const { data: users } = await supabaseClient.from('users').select('username, nickname, pfp_url');
+            const onlineList = document.getElementById('onlineList');
+            if (users) {
+                users.forEach(u => {
+                    const row = document.createElement('div');
+                    row.className = 'friend-row';
+                    row.innerHTML = `<span class="status-dot online"></span> <span style="font-weight:700;">${(u.nickname || u.username).toUpperCase()}</span>`;
+                    row.onclick = () => showUserProfile(u.username);
+                    onlineList.appendChild(row);
+                });
+            }
+        }
+
+        async function loadWorkspacePresencePanel() {
+            const container = document.getElementById('rightPanelContainer');
+            container.innerHTML = '';
+            
+            if (activeWorkspace.type === 'group') {
+                const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', activeWorkspace.target.id);
+                if (!members) return;
+
+                const memberUsernames = members.map(m => m.username);
+                const { data: allUsers } = await supabaseClient.from('users').select('*').in('username', memberUsernames);
+
+                const onlineGroup = document.createElement('div');
+                onlineGroup.innerHTML = `<div class="card-title" style="font-size:0.8rem; color:#00f3ff;">ONLINE SQUAD</div>`;
+                const onlineDiv = document.createElement('div');
+                onlineDiv.style.cssText = "display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem;";
+                onlineGroup.appendChild(onlineDiv);
+
+                const offlineGroup = document.createElement('div');
+                offlineGroup.innerHTML = `<div class="card-title" style="font-size:0.8rem; color:#ff003c;">OFFLINE SQUAD</div>`;
+                const offlineDiv = document.createElement('div');
+                offlineDiv.style.cssText = "display:flex; flex-direction:column; gap:0.4rem;";
+                offlineGroup.appendChild(offlineDiv);
+
+                let onlineCount = 0;
+                let offlineCount = 0;
+
+                allUsers.forEach(u => {
+                    const isOnline = Math.random() > 0.5; // Simulated presence or connect real presence channels
+                    const row = document.createElement('div');
+                    row.className = 'friend-row';
+                    row.innerHTML = `<span class="status-dot ${isOnline ? 'online' : ''}"></span> <span style="font-weight:700;">${(u.nickname || u.username).toUpperCase()}</span>`;
+                    row.onclick = () => showUserProfile(u.username);
+
+                    if (isOnline) {
+                        onlineDiv.appendChild(row);
+                        onlineCount++;
+                    } else {
+                        offlineDiv.appendChild(row);
+                        offlineCount++;
+                    }
+                });
+
+                if (onlineCount > 0) container.appendChild(onlineGroup);
+                if (offlineCount > 0) container.appendChild(offlineGroup);
+
+            } else {
+                loadGlobalPresencePanel();
+            }
         }
 
         async function sendFriendRequest() {
             const handle = document.getElementById('friendInput').value.trim().toLowerCase();
             const msg = document.getElementById('friendMsg');
-            if (!handle || handle === currentUser.username) {
-                msg.innerText = "INVALID HANDLE!";
-                return;
-            }
+            if (!handle || handle === currentUser.username) { msg.innerText = "INVALID HANDLE!"; return; }
             await supabaseClient.from('friends').insert([{ user_a: currentUser.username, user_b: handle, status: 'accepted' }]);
             msg.innerText = `LINK ESTABLISHED WITH ${handle.toUpperCase()}`;
             document.getElementById('friendInput').value = '';
@@ -560,7 +1066,7 @@
                     container.appendChild(lbl);
                 });
             } else {
-                container.innerHTML = `<p style="font-size:0.8rem; color:#7a8b9e;">No friends available to add.</p>`;
+                container.innerHTML = `<p style="font-size:0.8rem; color:#7a8b9e;">No friends available.</p>`;
             }
         }
 
@@ -572,13 +1078,13 @@
             let groupAvatarUrl = null;
             if (file) {
                 const fileName = `group-${Date.now()}.${file.name.split('.').pop()}`;
-                const { data, error } = await supabaseClient.storage.from('group_avatars').upload(fileName, file);
+                const { data } = await supabaseClient.storage.from('group_avatars').upload(fileName, file);
                 if (data) {
                     groupAvatarUrl = supabaseClient.storage.from('group_avatars').getPublicUrl(fileName).data.publicUrl;
                 }
             }
 
-            const { data: groupData, error } = await supabaseClient.from('groups').insert([{ 
+            const { data: groupData } = await supabaseClient.from('groups').insert([{ 
                 name: groupName, 
                 created_by: currentUser.username,
                 group_avatar: groupAvatarUrl 
@@ -615,7 +1121,6 @@
             const container = document.getElementById('chatLinksList');
             container.innerHTML = '';
             
-            // Load Groups
             const { data: memberships } = await supabaseClient.from('group_members').select('group_id').eq('username', currentUser.username);
             if (memberships && memberships.length > 0) {
                 for (let m of memberships) {
@@ -633,7 +1138,6 @@
                 }
             }
 
-            // Load DMs
             const { data } = await supabaseClient.from('friends').select('*').or(`user_a.eq.${currentUser.username},user_b.eq.${currentUser.username}`);
             if (data && data.length > 0) {
                 data.forEach(f => {
@@ -670,117 +1174,15 @@
         }
 
         async function deleteAccount() {
-            if (!confirm("Are you sure you want to permanently purge your operative account?")) return;
+            if (!confirm("Permanently purge account?")) return;
             await supabaseClient.from('users').delete().eq('username', currentUser.username);
             logout();
         }
 
         function logout() {
             localStorage.removeItem('phantom_user');
-            localStorage.removeItem('phantom_remember');
             window.location.href = "index.html";
         }
-
-        // Global Chat Implementation
-        let globalChannelSubscription = null;
-        let globalSelectedFile = null;
-        let globalReplyToId = null;
-
-        async function initGlobalChat() {
-            if (globalChannelSubscription) return;
-            await loadGlobalMessages();
-
-            globalChannelSubscription = supabaseClient.channel('global-room')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: 'receiver_username=eq.GLOBAL' }, payload => {
-                    if (payload.eventType === 'INSERT') {
-                        appendGlobalMessageNode(payload.new);
-                        if (payload.new.sender_username !== currentUser.username) {
-                            playLoudBeep();
-                        }
-                    } else if (payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
-                        loadGlobalMessages();
-                    }
-                })
-                .subscribe();
-        }
-
-        async function loadGlobalMessages() {
-            const { data } = await supabaseClient.from('messages').select('*').eq('receiver_username', 'GLOBAL').order('created_at', { ascending: true });
-            const container = document.getElementById('globalMessagesContainer');
-            container.innerHTML = '';
-            if (data) {
-                data.forEach(msg => appendGlobalMessageNode(msg));
-            }
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function handleFileSelected(type) {
-            const file = document.getElementById('globalFileInp').files[0];
-            if (file) {
-                const fileName = `global-${Date.now()}.${file.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
-                if (data) {
-                    globalSelectedFile = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
-                    alert("File attached successfully.");
-                }
-            }
-        }
-
-        async function sendGlobalMessage() {
-            const input = document.getElementById('globalMsgInput');
-            const text = input.value.trim();
-            if (!text && !globalSelectedFile) return;
-
-            await supabaseClient.from('messages').insert([{
-                sender_username: currentUser.username,
-                receiver_username: 'GLOBAL',
-                content: text,
-                file_url: globalSelectedFile,
-                reply_to: globalReplyToId
-            }]);
-
-            input.value = '';
-            globalSelectedFile = null;
-            globalReplyToId = null;
-            document.getElementById('globalReplyIndicator').classList.add('hidden');
-        }
-
-        function appendGlobalMessageNode(msg) {
-            const container = document.getElementById('globalMessagesContainer');
-            const div = document.createElement('div');
-            div.style.cssText = "background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:0.6rem; position:relative; display:flex; flex-direction:column; gap:0.2rem;";
-            
-            div.innerHTML = `
-                <div style="font-size:0.75rem; color:#00f3ff; font-weight:700;">${msg.sender_username.toUpperCase()}</div>
-                <div>${msg.content || ''}</div>
-                ${msg.file_url ? `<a href="${msg.file_url}" target="_blank" style="color:#00f3ff; font-size:0.8rem;">📂 View Attachment</a>` : ''}
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Presence for right panel
-        const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
-        presenceChannel
-            .on('presence', { event: 'sync' }, () => {
-                const state = presenceChannel.presenceState();
-                const list = document.getElementById('onlineFriendsList');
-                list.innerHTML = '';
-                const keys = Object.keys(state);
-                document.getElementById('activeCount').innerText = keys.length;
-                keys.forEach(k => {
-                    const u = state[k][0];
-                    const div = document.createElement('div');
-                    div.className = 'friend-row';
-                    div.innerHTML = `<span class="status-dot online"></span> <span style="font-weight:700;">${(u.nickname || k).toUpperCase()}</span>`;
-                    list.appendChild(div);
-                });
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    await presenceChannel.track({ username: currentUser.username, nickname: currentUser.nickname });
-                }
-            });
     </script>
 </body>
 </html>
