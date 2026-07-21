@@ -304,6 +304,16 @@
                             <span id="popoverUsername">-</span> • <span class="profile-bio-tag">Member</span>
                         </div>
                     </div>
+                    <!-- STATUS SWITCHER FEATURE -->
+                    <div class="profile-section">
+                        <div class="section-title">Set Status</div>
+                        <select id="popoverStatusSelect" class="text-input" style="padding: 6px; font-size: 13px;" onchange="updateUserStatus(this.value)">
+                            <option value="Online">🟢 Online</option>
+                            <option value="Idle">🌙 Idle</option>
+                            <option value="Do Not Disturb">⛔ Do Not Disturb</option>
+                            <option value="Offline">⚪ Invisible</option>
+                        </select>
+                    </div>
                     <div class="profile-divider"></div>
                     <div class="profile-section">
                         <div class="section-title">About Me</div>
@@ -338,7 +348,7 @@
             <div class="user-footer-panel">
                 <div class="user-footer-avatar-wrap" style="cursor:pointer;" onclick="toggleProfilePopover(event)">
                     <img id="sidebarHeaderAvatar" src="https://via.placeholder.com/32" class="user-footer-avatar">
-                    <div class="user-status-dot"></div>
+                    <div class="user-status-dot" id="footerStatusDot"></div>
                 </div>
                 <div class="user-footer-info" style="cursor:pointer;" onclick="toggleProfilePopover(event)">
                     <span id="currentLoggedUserTag" class="user-footer-name">-</span>
@@ -596,6 +606,18 @@
                 return;
             }
 
+            // Explicit pre-flight check to see if user exists before attempting upload/registration
+            const { data: existingUser } = await supabaseClient
+                .from('users')
+                .select('username')
+                .eq('username', username)
+                .maybeSingle();
+
+            if (existingUser) {
+                alert("Registration Failed: That username is already registered. Please choose another username.");
+                return;
+            }
+
             let pfpUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${username}`;
             if (fileInput) {
                 const fileName = `avatar-${username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
@@ -616,7 +638,7 @@
             }]).select().maybeSingle();
 
             if (error) {
-                alert("Registration failed: Username might already be taken.");
+                alert("Registration failed: Username might already exist.");
             } else {
                 alert("Account created successfully! Please log in.");
                 switchAuthView('login');
@@ -656,8 +678,12 @@
 
         const savedUser = localStorage.getItem('chat_user');
         if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            initializeClientApp();
+            try {
+                currentUser = JSON.parse(savedUser);
+                initializeClientApp();
+            } catch(e) {
+                localStorage.removeItem('chat_user');
+            }
         }
 
         function logoutSession() {
@@ -669,14 +695,50 @@
             document.getElementById('authScreenContainer').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
             document.getElementById('currentLoggedUserTag').innerText = currentUser.nickname || currentUser.username;
+            document.getElementById('currentLoggedUserSub').innerText = currentUser.status || 'Online';
             
             if (currentUser && currentUser.pfp_url) {
                 const headerAvatar = document.getElementById('sidebarHeaderAvatar');
                 if (headerAvatar) headerAvatar.src = currentUser.pfp_url;
             }
             
+            updateStatusIndicatorUI(currentUser.status || 'Online');
             loadSidebarChannels();
             switchChannel('home', 'Friends');
+        }
+
+        // --- NEW FEATURE: REALTIME USER STATUS SWITCHER ---
+        async function updateUserStatus(newStatus) {
+            if (!currentUser) return;
+            
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ status: newStatus })
+                .eq('username', currentUser.username);
+
+            if (!error) {
+                currentUser.status = newStatus;
+                localStorage.setItem('chat_user', JSON.stringify(currentUser));
+                updateStatusIndicatorUI(newStatus);
+            }
+        }
+
+        function updateStatusIndicatorUI(statusVal) {
+            const indicator = document.getElementById('popoverStatusIndicator');
+            const footerDot = document.getElementById('footerStatusDot');
+            const statusText = document.getElementById('popoverStatusText');
+            const subText = document.getElementById('currentLoggedUserSub');
+
+            if (statusText) statusText.innerText = statusVal;
+            if (subText) subText.innerText = statusVal;
+
+            let hexColor = '#23a55a'; // Green (Online)
+            if (statusVal === 'Idle') hexColor = '#fee75c';
+            else if (statusVal === 'Do Not Disturb') hexColor = '#ed4245';
+            else if (statusVal === 'Offline') hexColor = '#80848e';
+
+            if (indicator) indicator.style.background = hexColor;
+            if (footerDot) footerDot.style.background = hexColor;
         }
 
         // --- DISCORD PROFILE POPOVER CONTROLS ---
@@ -702,7 +764,7 @@
             document.getElementById('popoverDisplayName').innerText = currentUser.nickname || currentUser.username;
             document.getElementById('popoverUsername').innerText = `@${currentUser.username}`;
             document.getElementById('popoverAboutMe').innerText = currentUser.about_me || 'Only the silence remains.';
-            document.getElementById('popoverStatusText').innerText = currentUser.status || 'Online';
+            document.getElementById('popoverStatusSelect').value = currentUser.status || 'Online';
             
             if (currentUser.banner_color) {
                 document.getElementById('popoverBanner').style.backgroundColor = currentUser.banner_color;
@@ -711,12 +773,7 @@
                 document.getElementById('popoverUserAvatar').src = currentUser.pfp_url;
             }
 
-            const indicator = document.getElementById('popoverStatusIndicator');
-            const statusVal = currentUser.status || 'Online';
-            if (statusVal === 'Idle') indicator.style.background = '#fee75c';
-            else if (statusVal === 'Do Not Disturb') indicator.style.background = '#ed4245';
-            else if (statusVal === 'Offline') indicator.style.background = '#80848e';
-            else indicator.style.background = '#23a55a';
+            updateStatusIndicatorUI(currentUser.status || 'Online');
         }
 
         window.addEventListener('click', (e) => {
@@ -826,7 +883,6 @@
                 return;
             }
 
-            // Remove user from database records
             await supabaseClient.from('messages').delete().eq('sender_username', currentUser.username);
             await supabaseClient.from('group_members').delete().eq('username', currentUser.username);
             const { error } = await supabaseClient.from('users').delete().eq('username', currentUser.username);
