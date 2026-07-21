@@ -832,7 +832,6 @@
         }
 
         // --- TYPING INDICATORS & REALTIME CHAT ENGINE ---
-        let typingTimeout = null;
         function handleTypingInput(context) {
             const channelName = context === 'global' ? 'general' : (
                 activeWorkspace.type === 'dm' ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}` : `group-${activeWorkspace.target.id}`
@@ -850,9 +849,11 @@
         let globalSub = null;
         let globalFile = null;
         let globalReplyTo = null;
+        let renderedMessageIds = new Set(); // Track rendered IDs to prevent duplication
 
         async function initGlobalChat() {
             if (globalSub) return;
+            renderedMessageIds.clear();
             await loadGlobalMessages();
             loadGlobalPresencePanel();
 
@@ -870,8 +871,10 @@
             globalSub = supabaseClient.channel('global-chat-room')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: 'channel=eq.general' }, payload => {
                     if (payload.eventType === 'INSERT') {
-                        appendMessageNode('global', payload.new);
-                        if (payload.new.username !== currentUser.username) playLoudBeep();
+                        if (!renderedMessageIds.has(payload.new.id)) {
+                            appendMessageNode('global', payload.new);
+                            if (payload.new.username !== currentUser.username) playLoudBeep();
+                        }
                     } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
                         loadGlobalMessages();
                     }
@@ -896,6 +899,7 @@
             const { data } = await supabaseClient.from('messages').select('*').eq('channel', 'general').order('created_at', { ascending: true });
             const container = document.getElementById('globalMessagesContainer');
             container.innerHTML = '';
+            renderedMessageIds.clear();
             if (data) {
                 data.forEach(m => appendMessageNode('global', m));
             }
@@ -922,24 +926,13 @@
             const text = input.value.trim();
             if (!text && !globalFile) return;
 
-            const tempMsg = {
-                id: 'temp-' + Date.now(),
-                username: currentUser.username,
-                nickname: currentUser.nickname || currentUser.username,
-                pfp_url: currentUser.pfp_url,
-                message: text,
-                pfp_url_file: globalFile,
-                channel: 'general',
-                reply_to: globalReplyTo,
-                created_at: new Date().toISOString()
-            };
-            appendMessageNode('global', tempMsg);
-
             input.value = '';
             const fileToUpload = globalFile;
             globalFile = null;
+            const currentReply = globalReplyTo;
             cancelReply('global');
 
+            // Insert directly to database; the realtime subscription handles rendering safely to avoid duplicates
             await supabaseClient.from('messages').insert([{
                 username: currentUser.username,
                 nickname: currentUser.nickname || currentUser.username,
@@ -947,7 +940,7 @@
                 message: text,
                 pfp_url_file: fileToUpload,
                 channel: 'general',
-                reply_to: globalReplyTo
+                reply_to: currentReply
             }]);
         }
 
@@ -975,6 +968,7 @@
                 supabaseClient.removeChannel(workspaceSub);
                 workspaceSub = null;
             }
+            renderedMessageIds.clear();
             await loadWorkspaceMessages();
             loadWorkspacePresencePanel();
 
@@ -996,9 +990,11 @@
             workspaceSub = supabaseClient.channel(channelName)
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel=eq.${channelName}` }, payload => {
                     if (payload.eventType === 'INSERT') {
-                        appendMessageNode('workspace', payload.new);
-                        if (payload.new.username !== currentUser.username) {
-                            playLoudBeep();
+                        if (!renderedMessageIds.has(payload.new.id)) {
+                            appendMessageNode('workspace', payload.new);
+                            if (payload.new.username !== currentUser.username) {
+                                playLoudBeep();
+                            }
                         }
                     } else if (payload.eventType === 'DELETE' || payload.eventType === 'UPDATE') {
                         loadWorkspaceMessages();
@@ -1015,6 +1011,7 @@
             const { data } = await supabaseClient.from('messages').select('*').eq('channel', channelName).order('created_at', { ascending: true });
             const container = document.getElementById('workspaceMessagesContainer');
             container.innerHTML = '';
+            renderedMessageIds.clear();
             if (data) {
                 data.forEach(m => appendMessageNode('workspace', m));
             }
@@ -1030,22 +1027,10 @@
                 ? `dm-${[currentUser.username, activeWorkspace.target].sort().join('-')}`
                 : `group-${activeWorkspace.target.id}`;
 
-            const tempMsg = {
-                id: 'temp-' + Date.now(),
-                username: currentUser.username,
-                nickname: currentUser.nickname || currentUser.username,
-                pfp_url: currentUser.pfp_url,
-                message: text,
-                pfp_url_file: workspaceFile,
-                channel: channelName,
-                reply_to: workspaceReplyTo,
-                created_at: new Date().toISOString()
-            };
-            appendMessageNode('workspace', tempMsg);
-
             input.value = '';
             const fileToUpload = workspaceFile;
             workspaceFile = null;
+            const currentReply = workspaceReplyTo;
             cancelReply('workspace');
 
             await supabaseClient.from('messages').insert([{
@@ -1055,11 +1040,14 @@
                 message: text,
                 pfp_url_file: fileToUpload,
                 channel: channelName,
-                reply_to: workspaceReplyTo
+                reply_to: currentReply
             }]);
         }
 
         async function appendMessageNode(context, msg) {
+            if (renderedMessageIds.has(msg.id)) return;
+            renderedMessageIds.add(msg.id);
+
             const container = document.getElementById(context === 'global' ? 'globalMessagesContainer' : 'workspaceMessagesContainer');
             const div = document.createElement('div');
             div.className = 'message-bubble';
@@ -1075,7 +1063,7 @@
                     <span style="font-size:0.75rem; color:${color}; font-weight:700; cursor:pointer;" onclick="showUserProfile('${msg.username}')">${(msg.nickname || msg.username).toUpperCase()}</span>
                 </div>
                 ${msg.reply_to ? `<div style="font-size:0.75rem; color:#7a8b9e; border-left:2px solid ${color}; padding-left:4px;">Replying to transmission...</div>` : ''}
-                <div style="font-size:0.95rem; color:#e0e6ed; padding-left: 2rem;">${msg.message || ''}</div>
+                <div class="msg-text-content" style="font-size:0.95rem; color:#e0e6ed; padding-left: 2rem;"></div>
                 ${msg.pfp_url_file ? `<div style="padding-left: 2rem;"><a href="${msg.pfp_url_file}" target="_blank" style="color:${color}; font-size:0.8rem;">📂 View Attachment</a></div>` : ''}
                 
                 <div class="msg-top-tools">
@@ -1086,6 +1074,9 @@
                     ` : ''}
                 </div>
             `;
+
+            // Safely assign text content to prevent XSS injection
+            div.querySelector('.msg-text-content').textContent = msg.message || '';
 
             div.oncontextmenu = (e) => {
                 showContextMenu(e, msg, isOwner, 
@@ -1186,7 +1177,8 @@
                 let offlineCount = 0;
 
                 allUsers.forEach(u => {
-                    const isOnline = Math.random() > 0.5;
+                    // Stable mock status based on username character sum to prevent random flickering
+                    const isOnline = u.username.length % 2 === 0;
                     const row = document.createElement('div');
                     row.className = 'friend-row';
                     row.innerHTML = `<span class="status-dot ${isOnline ? 'online' : ''}"></span> <span style="font-weight:700;">${(u.nickname || u.username).toUpperCase()}</span>`;
