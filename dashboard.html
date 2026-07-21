@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHANTOM // COMMAND DASHBOARD</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #05050a;
+            color: #e0e6ed;
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 243, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Top Bar */
+        .topbar {
+            height: 60px;
+            background: rgba(10, 10, 16, 0.95);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #00f3ff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
+            border: 1px solid #00f3ff;
+        }
+
+        .btn-disconnect {
+            background: rgba(255, 0, 60, 0.15);
+            border: 1px solid #ff003c;
+            color: #ff003c;
+            padding: 0.4rem 0.9rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
+        }
+
+        .btn-disconnect:hover {
+            background: #ff003c;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 0, 60, 0.6);
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            flex: 1;
+            max-width: 1300px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(12, 13, 20, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            clip-path: polygon(0 0, 98% 0, 100% 2%, 100% 100%, 2% 100%, 0 98%);
+            position: relative;
+        }
+
+        .card-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #00f3ff;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.6rem;
+        }
+
+        /* Banner Card */
+        .welcome-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(13, 14, 23, 0.9) 0%, rgba(5, 5, 10, 0.95) 100%);
+            border-color: rgba(255, 0, 60, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .welcome-title span { color: #ff003c; }
+
+        .btn-enter-terminal {
+            background: #00f3ff;
+            color: #05050a;
+            border: none;
+            padding: 0.9rem 2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 0.95rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        .btn-enter-terminal:hover {
+            background: #ff003c;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.7);
+            transform: scale(1.02);
+        }
+
+        /* Quick Launch Grid */
+        .launch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .launch-btn {
+            background: rgba(18, 20, 32, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 90% 0, 100% 15%, 100% 100%, 0 100%);
+        }
+
+        .launch-btn:hover {
+            border-color: #00f3ff;
+            background: rgba(0, 243, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .launch-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .launch-title { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: #fff; }
+
+        /* Metrics / Stats Grid */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-box {
+            background: rgba(5, 5, 10, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #00f3ff;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #7a8b9e;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* System Telemetry Stream */
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .feed-item {
+            font-size: 0.85rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 2px solid #00f3ff;
+            color: #8a99ad;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="brand">⚡ PHANTOM // COMMAND DASHBOARD</div>
+        <div class="user-status">
+            <img id="dashAvatar" class="avatar" src="" alt="avatar">
+            <span id="dashHandle" style="font-weight: 700; color:#fff;">OPERATIVE</span>
+            <button class="btn-disconnect" onclick="logout()">DISCONNECT</button>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        
+        <!-- Welcome Hero -->
+        <div class="card welcome-card">
+            <div>
+                <div class="welcome-title">WELCOME BACK, <span id="welcomeName">OPERATIVE</span></div>
+                <p style="color: #7a8b9e; font-weight: 600; margin-top: 0.4rem;">All communications and frequencies are operational.</p>
+            </div>
+            <button class="btn-enter-terminal" onclick="goToTerminal()">ENTER TERMINAL ⚔️</button>
+        </div>
+
+        <!-- Left Column: Quick Launch & Active Operations -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div class="card">
+                <div class="card-header">QUICK FREQUENCY ACCESS</div>
+                <div class="launch-grid">
+                    <div class="launch-btn" onclick="goToTerminal('general')">
+                        <span class="launch-icon">💬</span>
+                        <div class="launch-title"># GENERAL</div>
+                    </div>
+                    <div class="launch-btn" onclick="goToTerminal('gaming')">
+                        <span class="launch-icon">🎮</span>
+                        <div class="launch-title"># GAMING</div>
+                    </div>
+                    <div class="launch-btn" onclick="goToTerminal('dms')">
+                        <span class="launch-icon">📡</span>
+                        <div class="launch-title">DIRECT MESSAGES</div>
+                    </div>
+                    <div class="launch-btn" onclick="goToTerminal('friends')">
+                        <span class="launch-icon">⚡</span>
+                        <div class="launch-title">OPERATIVE LINK</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">NETWORK TELEMETRY</div>
+                <div class="feed-list" id="telemetryFeed">
+                    <div class="feed-item">[SYSTEM] Supabase realtime node online...</div>
+                    <div class="feed-item">[SECURITY] End-to-end socket channels synchronized...</div>
+                    <div class="feed-item">[STATUS] Frequency #GENERAL active with 0 pending alerts...</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: System Metrics & Profile -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div class="card">
+                <div class="card-header">SYSTEM METRICS</div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-val" id="metricPing">24ms</div>
+                        <div class="stat-label">LATENCY</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" style="color:#ff003c;" id="metricOnline">1</div>
+                        <div class="stat-label">ONLINE OPERATIVES</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">OPERATIVE DOSSIER</div>
+                <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.9rem;">
+                    <div><span style="color:#7a8b9e;">HANDLE:</span> <b id="dossierHandle" style="color:#fff;">-</b></div>
+                    <div><span style="color:#7a8b9e;">NICKNAME:</span> <b id="dossierNick" style="color:#00f3ff;">-</b></div>
+                    <div><span style="color:#7a8b9e;">CLEARANCE:</span> <b style="color:#ff003c;">LEVEL 4 - OPERATIVE</b></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Check local storage auth
+        const savedUser = localStorage.getItem('phantom_user');
+        if (!savedUser) {
+            window.location.href = "index.html";
+        }
+        const currentUser = JSON.parse(savedUser);
+
+        // Supabase client initialization
+        const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Populate User Data
+        const displayName = currentUser.nickname || currentUser.username;
+        document.getElementById('dashHandle').innerText = displayName.toUpperCase();
+        document.getElementById('welcomeName').innerText = displayName.toUpperCase();
+        document.getElementById('dashAvatar').src = currentUser.pfp_url || 'https://via.placeholder.com/36/0d0e17/ff003c?text=P';
+        
+        document.getElementById('dossierHandle').innerText = currentUser.username;
+        document.getElementById('dossierNick').innerText = currentUser.nickname || 'None';
+
+        // Redirects to home.html (Terminal)
+        function goToTerminal(target) {
+            if (target) {
+                sessionStorage.setItem('phantom_initial_target', target);
+            }
+            window.location.href = "home.html";
+        }
+
+        function logout() {
+            localStorage.removeItem('phantom_user');
+            localStorage.removeItem('phantom_remember');
+            window.location.href = "index.html";
+        }
+
+        // Live Presence Count metric
+        const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                const count = Object.keys(state).length;
+                document.getElementById('metricOnline').innerText = count;
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ username: currentUser.username, nickname: currentUser.nickname });
+                }
+            });
+    </script>
+</body>
+</html>
