@@ -1,561 +1,1494 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp-Style Attachment & Image Editor</title>
-  <style>
-    :root {
-      --wa-green: #075e54;
-      --wa-light-green: #25d366;
-      --wa-bg: #efeae2;
-      --dark-overlay: #111b21;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHANTOM // HUB - TERMINAL</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--wa-bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #05050a; border-left: 1px solid rgba(255, 0, 60, 0.1); }
+        ::-webkit-scrollbar-thumb { background: #1a1d2e; border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff003c; box-shadow: 0 0 10px #ff003c; }
 
-    .chat-card {
-      width: 100%;
-      max-width: 480px;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+        body {
+            background: #05050a;
+            color: #e0e6ed;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255, 0, 60, 0.05) 0%, transparent 60%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
 
-    .chat-header {
-      font-size: 18px;
-      font-weight: 600;
-      color: #128c7e;
-    }
+        .icon-bar {
+            width: 70px;
+            background: rgba(10, 10, 16, 0.95);
+            border-right: 1px solid rgba(255, 0, 60, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.2rem 0;
+            gap: 1.2rem;
+            z-index: 10;
+        }
 
-    /* Attachment Thumbnail Area */
-    .attachments-container {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+        .nav-icon {
+            width: 48px;
+            height: 48px;
+            background: #0d0e17;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #7a8b9e;
+            cursor: pointer;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 15% 100%, 0 85%);
+        }
 
-    .attachment-card {
-      position: relative;
-      width: 140px;
-      height: 140px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #e2e8f0;
-      background: #f1f5f9;
-    }
+        .nav-icon:hover, .nav-icon.active {
+            background: rgba(255, 0, 60, 0.15);
+            color: #ff003c;
+            border-color: #ff003c;
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.5);
+            transform: scale(1.05);
+        }
 
-    .attachment-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+        .nav-icon.settings-btn { margin-top: auto; }
 
-    /* Edit Overlay Icon */
-    .edit-icon-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(17, 27, 33, 0.7);
-      backdrop-filter: blur(4px);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.15s ease, background 0.2s;
-    }
+        .sidebar {
+            width: 260px;
+            background: rgba(12, 13, 20, 0.85);
+            border-right: 1px solid rgba(255, 0, 60, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
 
-    .edit-icon-btn:hover {
-      background: rgba(17, 27, 33, 0.9);
-      transform: scale(1.1);
-    }
+        .brand {
+            padding: 1.25rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #ff003c;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255, 0, 60, 0.2);
+            text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    .edit-icon-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #00f3ff;
+            padding: 1.2rem 1rem 0.4rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
 
-    /* File Upload & GIF Picker triggers */
-    .controls-row {
-      display: flex;
-      gap: 10px;
-    }
+        .list-container { padding: 0 0.5rem; flex: 1; overflow-y: auto; }
 
-    .action-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: #f0f2f5;
-      color: #3b4a54;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
+        .item-btn {
+            padding: 0.65rem 0.9rem;
+            color: #8a99ad;
+            cursor: pointer;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 92% 0, 100% 25%, 100% 100%, 8% 100%, 0 75%);
+        }
 
-    .action-btn:hover { background: #e4e6eb; }
+        .item-btn:hover, .item-btn.active {
+            background: rgba(0, 243, 255, 0.08);
+            color: #00f3ff;
+            border-color: rgba(0, 243, 255, 0.4);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+            padding-left: 1.2rem;
+        }
 
-    /* KLIPY GIF Search Modal */
-    .gif-modal {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-    }
+        .status-dot { width: 8px; height: 8px; background: #333; transform: rotate(45deg); }
+        .status-dot.online { background: #ff003c; box-shadow: 0 0 8px #ff003c; }
 
-    .gif-modal.open { display: flex; }
+        .user-profile {
+            padding: 0.8rem 1rem;
+            background: rgba(5, 5, 10, 0.9);
+            border-top: 1px solid rgba(255, 0, 60, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-    .gif-input {
-      width: 100%;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #cbd5e1;
-      outline: none;
-    }
+        .avatar {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
+        }
 
-    .gif-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      max-height: 180px;
-      overflow-y: auto;
-    }
+        .user-info { flex: 1; overflow: hidden; }
+        .user-name { font-weight: 700; color: #fff; font-size: 0.95rem; letter-spacing: 1px; }
+        .btn-logout { background: none; border: none; color: #ff003c; cursor: pointer; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
 
-    .gif-grid img {
-      width: 100%;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: transparent; position: relative; }
+        
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 0, 60, 0.2);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 16, 0.6);
+        }
 
-    /* ==========================================================
-       WHATSAPP-STYLE FULLSCREEN IMAGE EDITOR MODAL
-       ========================================================== */
-    .editor-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--dark-overlay);
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+        .view-panel { flex: 1; display: flex; flex-direction: column; height: calc(100vh - 60px); }
+        .hidden { display: none !important; }
 
-    .editor-overlay.active { display: flex; }
+        .messages-box { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
 
-    /* Top Bar */
-    .editor-header {
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-    }
+        .message-card {
+            position: relative;
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+            background: rgba(15, 16, 25, 0.7);
+            padding: 0.85rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(5px);
+            clip-path: polygon(0 0, 98% 0, 100% 15%, 100% 100%, 0 100%);
+            transition: border 0.3s;
+        }
 
-    .editor-tools {
-      display: flex;
-      gap: 16px;
-    }
+        .msg-avatar {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
+        }
 
-    .tool-btn {
-      background: transparent;
-      border: none;
-      color: white;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        .msg-header { display: flex; gap: 0.6rem; align-items: baseline; }
+        .msg-author { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; }
+        .msg-time { font-size: 0.7rem; color: #5a697a; font-weight: 600; }
+        .msg-body { font-size: 1rem; color: #d1dce8; margin-top: 0.2rem; word-break: break-word; font-weight: 500; }
+        
+        .msg-img-container { position: relative; display: inline-block; }
+        .msg-img { max-width: 280px; max-height: 220px; border: 1px solid #ff003c; margin-top: 0.6rem; display: block; border-radius: 4px; }
 
-    .tool-btn.active, .tool-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
+        .reply-preview-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 2px solid #00f3ff;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            color: #7a8b9e;
+            margin-bottom: 0.4rem;
+        }
 
-    .tool-btn svg {
-      width: 22px;
-      height: 22px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
+        .msg-actions {
+            display: none;
+            position: absolute;
+            right: 12px;
+            top: 8px;
+            gap: 6px;
+            background: #0d0e17;
+            padding: 4px 8px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            clip-path: polygon(0 0, 90% 0, 100% 20%, 100% 100%, 0 100%);
+            z-index: 5;
+        }
 
-    /* Editor Canvas Canvas Workspace */
-    .editor-body {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      padding: 10px;
-    }
+        .message-card:hover .msg-actions { display: flex; }
 
-    #editorCanvas {
-      max-width: 100%;
-      max-height: 80vh;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      border-radius: 8px;
-    }
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #7a8b9e;
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 2px 5px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    /* Controls Bar & Color Picker */
-    .editor-controls {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-    }
+        .icon-btn:hover { color: #00f3ff; transform: scale(1.15); }
+        .icon-btn.delete:hover { color: #ff003c; }
 
-    .color-picker {
-      display: flex;
-      gap: 10px;
-    }
+        .context-menu {
+            position: fixed;
+            z-index: 1000;
+            background: #0d0e17;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            padding: 6px 0;
+            width: 140px;
+            clip-path: polygon(0 0, 92% 0, 100% 12%, 100% 100%, 0 100%);
+        }
 
-    .color-dot {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid white;
-    }
+        .context-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #e0e6ed;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
 
-    .editor-footer {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .context-item:hover {
+            background: rgba(0, 243, 255, 0.15);
+            color: #00f3ff;
+        }
 
-    .save-btn {
-      background: var(--wa-light-green);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 24px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-  </style>
+        .context-item.delete-item:hover {
+            background: rgba(255, 0, 60, 0.15);
+            color: #ff003c;
+        }
+
+        .typing-indicator { font-size: 0.8rem; color: #00f3ff; padding: 0 1.5rem 0.5rem; min-height: 1.2rem; font-style: italic; font-weight: 600; }
+
+        .input-box { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 0, 60, 0.2); background: rgba(8, 9, 14, 0.9); position: relative; }
+        .chat-form { display: flex; gap: 0.6rem; align-items: center; }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(18, 20, 32, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.85rem 1.2rem;
+            color: #fff;
+            outline: none;
+            font-size: 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            clip-path: polygon(0 0, 98% 0, 100% 20%, 100% 100%, 2% 100%, 0 80%);
+        }
+
+        .chat-input:focus { border-color: #ff003c; box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
+
+        .file-label, .emoji-trigger {
+            background: #121420;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #00f3ff;
+            padding: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            clip-path: polygon(0 0, 80% 0, 100% 20%, 100% 100%, 20% 100%, 0 80%);
+        }
+
+        .btn-send {
+            background: #ff003c;
+            border: none;
+            color: #fff;
+            padding: 0.85rem 1.8rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            cursor: pointer;
+            clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
+        }
+
+        /* --- MEDIA PICKER & CATEGORY STYLES --- */
+        .picker-popup {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            width: 350px;
+            height: 400px;
+            background: #0d0e17;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.25);
+            display: flex;
+            flex-direction: column;
+            z-index: 500;
+            clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 0 100%);
+        }
+
+        .picker-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .picker-tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            color: #7a8b9e;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .picker-tab.active {
+            background: rgba(0, 243, 255, 0.15);
+            color: #00f3ff;
+            border-bottom: 2px solid #00f3ff;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 4px;
+            padding: 6px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+
+        .cat-pill {
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #7a8b9e;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cat-pill.active, .cat-pill:hover {
+            color: #00f3ff;
+            border-color: #00f3ff;
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .picker-search-bar {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .picker-search-bar input {
+            width: 100%;
+            background: #05050a;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #fff;
+            padding: 6px 10px;
+            font-family: 'Rajdhani', sans-serif;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .picker-content { flex: 1; overflow-y: auto; padding: 8px; }
+
+        .emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .emoji-item { font-size: 1.3rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 4px; transition: transform 0.1s; }
+        .emoji-item:hover { transform: scale(1.25); background: rgba(0, 243, 255, 0.1); }
+
+        .gif-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .gif-item { width: 100%; height: 90px; object-fit: cover; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.2s, border-color 0.2s; }
+        .gif-item:hover { transform: scale(1.03); border-color: #00f3ff; }
+
+        .reply-banner, .attachment-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 243, 255, 0.1);
+            border-left: 3px solid #00f3ff;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            color: #00f3ff;
+            margin-bottom: 8px;
+        }
+
+        .attachment-banner {
+            background: rgba(255, 0, 60, 0.1);
+            border-left-color: #ff003c;
+            color: #ff003c;
+        }
+
+        .attachment-preview-img {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border: 1px solid #ff003c;
+            border-radius: 3px;
+        }
+
+        .friends-container { padding: 2rem; max-width: 650px; }
+        .friend-card {
+            background: rgba(18, 20, 32, 0.8);
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            clip-path: polygon(0 0, 98% 0, 100% 20%, 100% 100%, 0 100%);
+        }
+
+        .btn-action {
+            background: #00f3ff;
+            color: #05050a;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            cursor: pointer;
+            clip-path: polygon(0 0, 85% 0, 100% 30%, 100% 100%, 15% 100%, 0 70%);
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+
+        .modal-box {
+            background: #0d0e17; padding: 2.2rem; width: 100%; max-width: 420px;
+            border: 1px solid #00f3ff; box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+            clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
+        }
+
+        /* ==========================================================
+           WHATSAPP-STYLE FULLSCREEN IMAGE EDITOR OVERLAY
+           ========================================================== */
+        .editor-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 5, 10, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .editor-overlay.active { display: flex; }
+
+        .editor-header {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 16, 0.8);
+            border-bottom: 1px solid rgba(255, 0, 60, 0.3);
+        }
+
+        .editor-tools { display: flex; gap: 16px; }
+
+        .tool-btn {
+            background: #0d0e17;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #00f3ff;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .tool-btn.active, .tool-btn:hover {
+            background: rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+
+        .editor-body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        #editorCanvas {
+            max-width: 90vw;
+            max-height: 70vh;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .editor-controls {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            background: rgba(10, 10, 16, 0.9);
+            border-top: 1px solid rgba(255, 0, 60, 0.3);
+        }
+
+        .color-picker { display: flex; gap: 12px; }
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: transform 0.2s;
+        }
+        .color-dot:hover { transform: scale(1.2); }
+
+        .editor-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 600px;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Main Chat Attachment Card -->
-  <div class="chat-card">
-    <div class="chat-header">Attachment Preview</div>
-
-    <!-- Image Attachment Grid -->
-    <div class="attachments-container" id="attachmentsContainer">
-      <div class="attachment-card" id="card1">
-        <img id="previewImg1" src="https://picsum.photos/400/400" alt="Attachment">
-        <button class="edit-icon-btn" onclick="openEditor('previewImg1')" title="Edit Attachment">
-          <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-        </button>
-      </div>
+    <div class="icon-bar">
+        <div class="nav-icon active" onclick="switchNav('public', this)" title="Public Channels">⚔️</div>
+        <div class="nav-icon" onclick="switchNav('dms', this)" title="Direct Messages">📡</div>
+        <div class="nav-icon" onclick="switchNav('friends', this)" title="Add Friends">⚡</div>
+        <div class="nav-icon settings-btn" onclick="openSettings()" title="Settings">⚙️</div>
     </div>
 
-    <!-- Control Buttons -->
-    <div class="controls-row">
-      <label class="action-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Upload Image
-        <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
-      </label>
-      <button class="action-btn" onclick="toggleGifModal()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h3v4H7z"/></svg>
-        KLIPY GIFs
-      </button>
-    </div>
-
-    <!-- KLIPY GIF Search Picker -->
-    <div class="gif-modal" id="gifModal">
-      <input type="text" class="gif-input" id="gifSearch" placeholder="Search KLIPY GIFs..." onkeyup="searchKlipyGifs(this.value)">
-      <div class="gif-grid" id="gifGrid"></div>
-    </div>
-  </div>
-
-  <!-- WhatsApp-style Fullscreen Image Editor Overlay -->
-  <div class="editor-overlay" id="editorOverlay">
-    <!-- Header Tools -->
-    <div class="editor-header">
-      <button class="tool-btn" onclick="closeEditor()" title="Cancel">✕</button>
-      <div class="editor-tools">
-        <!-- Rotate / Crop -->
-        <button class="tool-btn" id="cropBtn" onclick="rotateImage()" title="Rotate / Crop">
-          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
-        </button>
-        <!-- Mark (Text) -->
-        <button class="tool-btn" id="markBtn" onclick="enableTextMode()" title="Add Text / Mark">
-          <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
-        </button>
-        <!-- Draw (Brush) -->
-        <button class="tool-btn active" id="drawBtn" onclick="enableDrawMode()" title="Freehand Draw">
-          <svg viewBox="0 0 24 24"><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.375-9.375z"></path></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Canvas Editing Area -->
-    <div class="editor-body">
-      <canvas id="editorCanvas"></canvas>
-    </div>
-
-    <!-- Bottom Controls & Color Palette -->
-    <div class="editor-controls">
-      <div class="color-picker">
-        <div class="color-dot" style="background: #ef4444;" onclick="setColor('#ef4444')"></div>
-        <div class="color-dot" style="background: #3b82f6;" onclick="setColor('#3b82f6')"></div>
-        <div class="color-dot" style="background: #22c55e;" onclick="setColor('#22c55e')"></div>
-        <div class="color-dot" style="background: #eab308;" onclick="setColor('#eab308')"></div>
-        <div class="color-dot" style="background: #ffffff;" onclick="setColor('#ffffff')"></div>
-      </div>
-      <div class="editor-footer">
-        <button class="tool-btn" onclick="clearCanvas()" title="Reset">Clear All</button>
-        <button class="save-btn" onclick="saveEditedImage()">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ==========================================
-    // KLIPY GIF API INTEGRATION
-    // ==========================================
-    const KLIPY_API_KEY = "YOUR_KLIPY_API_KEY"; // Insert your KLIPY API Key here
-
-    function toggleGifModal() {
-      const modal = document.getElementById('gifModal');
-      modal.classList.toggle('open');
-      if (modal.classList.contains('open')) searchKlipyGifs('funny');
-    }
-
-    async function searchKlipyGifs(query) {
-      if (!query) return;
-      const grid = document.getElementById('gifGrid');
-      
-      try {
-        // KLIPY API v1 Endpoint
-        const res = await fetch(`https://api.klipy.com/api/v1/${KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(query)}&per_page=6`);
-        const data = await res.json();
+    <div class="sidebar">
+        <div class="brand"><span>⚡</span> PHANTOM // HUB</div>
         
-        grid.innerHTML = '';
-        if (data.data) {
-          data.data.forEach(gif => {
-            const img = document.createElement('img');
-            img.src = gif.files?.tiny_gif?.url || gif.files?.gif?.url;
-            img.onclick = () => addAttachment(img.src);
-            grid.appendChild(img);
-          });
+        <div id="sidePublicView">
+            <div class="section-title">CHANNELS</div>
+            <div class="list-container">
+                <div class="item-btn active" onclick="switchChannel('general', this)"># GENERAL</div>
+                <div class="item-btn" onclick="switchChannel('gaming', this)"># GAMING</div>
+            </div>
+        </div>
+
+        <div id="sideDmView" class="hidden">
+            <div class="section-title">DIRECT FREQUENCIES</div>
+            <div class="list-container" id="dmUsersList"></div>
+        </div>
+
+        <div class="section-title" style="margin-top:auto;">ACTIVE OPERATIVES (<span id="userCount">0</span>)</div>
+        <div class="list-container" id="onlineUsersList" style="max-height: 150px;"></div>
+
+        <div class="user-profile">
+            <img id="myAvatar" class="avatar" src="" alt="pfp">
+            <div class="user-info">
+                <div class="user-name" id="myName">OPERATIVE</div>
+                <button class="btn-logout" onclick="logout()">[ DISCONNECT ]</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="chatView" class="view-panel">
+            <div class="chat-header">
+                <span id="channelHeader"># GENERAL</span>
+            </div>
+            <div class="messages-box" id="msgBox"></div>
+            <div class="typing-indicator" id="typingBox"></div>
+
+            <div class="input-box">
+                <div id="replyBanner" class="reply-banner hidden">
+                    <span id="replyBannerText">Replying to...</span>
+                    <button onclick="cancelReply()" style="background:none; border:none; color:#ff003c; cursor:pointer; font-weight:700;">✕</button>
+                </div>
+
+                <!-- ATTACHMENT PREVIEW BANNER -->
+                <div id="attachmentBanner" class="attachment-banner hidden">
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                        <img id="attachmentImgPreview" class="attachment-preview-img" src="" alt="preview">
+                        <span id="attachmentFileName" style="font-weight:700;">ATTACHMENT_LOADED.PNG</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <button onclick="openCanvasEditorFromBanner()" style="background:none; border:none; color:#00f3ff; cursor:pointer; font-weight:700; font-size:0.8rem;">✏️ EDIT / DRAW</button>
+                        <button onclick="reselectFile()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700; font-size:0.8rem;">🔄 CHANGE</button>
+                        <button onclick="clearAttachment()" style="background:none; border:none; color:#ff003c; cursor:pointer; font-weight:700;">✕ REMOVE</button>
+                    </div>
+                </div>
+
+                <!-- CATEGORIZED EMOJI & KLIPY GIF POPUP -->
+                <div id="mediaPicker" class="picker-popup hidden">
+                    <div class="picker-tabs">
+                        <div id="tabEmojis" class="picker-tab active" onclick="switchPickerTab('emojis')">EMOJIS</div>
+                        <div id="tabGifs" class="picker-tab" onclick="switchPickerTab('gifs')">GIFS (KLIPY)</div>
+                    </div>
+                    <div id="categoryPills" class="category-pills">
+                        <span class="cat-pill active" onclick="filterEmojiCategory('all', this)">ALL</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('smileys', this)">SMILEYS</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('gestures', this)">GESTURES</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('symbols', this)">SYMBOLS</span>
+                        <span class="cat-pill" onclick="filterEmojiCategory('objects', this)">OBJECTS</span>
+                    </div>
+                    <div class="picker-search-bar">
+                        <input type="text" id="pickerSearch" placeholder="SEARCH MATRIX..." oninput="handlePickerSearch()">
+                    </div>
+                    <div class="picker-content" id="pickerContent"></div>
+                </div>
+
+                <form class="chat-form" id="chatForm">
+                    <button type="button" class="emoji-trigger" onclick="toggleMediaPicker()">😀</button>
+                    <label class="file-label" for="chatFileInput">📎</label>
+                    <input type="file" id="chatFileInput" accept="image/*" style="display:none;" onchange="handleFileSelected(this)">
+                    <input type="text" id="msgInput" class="chat-input" placeholder="Transmit message..." autocomplete="off">
+                    <button type="submit" class="btn-send">TRANSMIT</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="friendsView" class="view-panel hidden">
+            <div class="chat-header">OPERATIVE LINK / ADD FRIENDS</div>
+            <div class="friends-container">
+                <div style="display:flex; gap:0.6rem;">
+                    <input type="text" id="friendUsernameInput" class="chat-input" placeholder="Enter operative handle...">
+                    <button class="btn-action" onclick="sendFriendRequest()">LINK OPERATIVE</button>
+                </div>
+                <div id="friendMsg" style="margin-top: 1rem; font-size:0.9rem; color:#00f3ff; font-weight:700;"></div>
+                <div class="section-title" style="margin-top: 2rem; padding-left:0;">ESTABLISHED LINKS</div>
+                <div id="friendsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+        <div class="context-item" id="ctxReply">↩ Reply</div>
+        <div class="context-item" id="ctxEdit">✏️ Edit</div>
+        <div class="context-item delete-item" id="ctxDelete">🗑️ Delete</div>
+    </div>
+
+    <!-- WHATSAPP-STYLE FULLSCREEN IMAGE EDITOR OVERLAY -->
+    <div class="editor-overlay" id="editorOverlay">
+        <div class="editor-header">
+            <button class="tool-btn" onclick="closeEditor()" style="color:#ff003c; border-color:#ff003c;">✕ ABORT</button>
+            <div class="editor-tools">
+                <button class="tool-btn" id="cropBtn" onclick="rotateImage()">🔄 ROTATE</button>
+                <button class="tool-btn" id="markBtn" onclick="enableTextMode()">💬 MARK / TEXT</button>
+                <button class="tool-btn active" id="drawBtn" onclick="enableDrawMode()">✏️ DRAW</button>
+            </div>
+        </div>
+
+        <div class="editor-body">
+            <canvas id="editorCanvas"></canvas>
+        </div>
+
+        <div class="editor-controls">
+            <div class="color-picker">
+                <div class="color-dot" style="background: #ff003c;" onclick="setColor('#ff003c')"></div>
+                <div class="color-dot" style="background: #00f3ff;" onclick="setColor('#00f3ff')"></div>
+                <div class="color-dot" style="background: #22c55e;" onclick="setColor('#22c55e')"></div>
+                <div class="color-dot" style="background: #eab308;" onclick="setColor('#eab308')"></div>
+                <div class="color-dot" style="background: #ffffff;" onclick="setColor('#ffffff')"></div>
+            </div>
+            <div class="editor-footer">
+                <button class="tool-btn" onclick="clearCanvas()" style="color:#7a8b9e;">CLEAR ALL</button>
+                <button class="btn-action" onclick="saveEditedImage()">APPLY EDITS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
+            <h3 style="margin-bottom:1.2rem; color:#ff003c; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / SETTINGS</h3>
+            <div style="margin-bottom:1.2rem;">
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">NEW HANDLE / NICKNAME</label>
+                <input type="text" id="newNickname" class="chat-input" style="width:100%; margin-top:0.4rem;">
+            </div>
+            <div style="margin-bottom:1.8rem;">
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">AVATAR IMAGE DATA</label>
+                <input type="file" id="newPfpFile" accept="image/*" class="chat-input" style="width:100%; margin-top:0.4rem;">
+            </div>
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button onclick="closeSettings()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
+                <button class="btn-action" onclick="saveSettings()">SAVE OVERRIDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 style="margin-bottom:1.2rem; color:#00f3ff; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / EDIT TRANSMISSION</h3>
+            <div style="margin-bottom:1.5rem;">
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">UPDATE DATA STREAM</label>
+                <input type="text" id="editModalInput" class="chat-input" style="width:100%; margin-top:0.4rem;">
+            </div>
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button onclick="closeEditModal()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
+                <button class="btn-action" onclick="confirmEdit()">UPDATE TRANSMISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
+            <h3 style="margin-bottom:1rem; color:#ff003c; font-family:'Orbitron', sans-serif;">PURGE TRANSMISSION?</h3>
+            <p style="font-size:0.95rem; color:#8a99ad; margin-bottom:1.8rem; font-weight:600;">
+                Are you sure you want to permanently erase this signal from the database? This action cannot be undone.
+            </p>
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button onclick="closeDeleteModal()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
+                <button class="btn-send" style="padding:0.6rem 1.2rem;" onclick="confirmDelete()">PURGE DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const savedUser = localStorage.getItem('phantom_user');
+        if (!savedUser) window.location.href = "index.html";
+        let currentUser = JSON.parse(savedUser);
+
+        function updateProfileUI() {
+            document.getElementById('myName').innerText = currentUser.nickname || currentUser.username;
+            document.getElementById('myAvatar').src = currentUser.pfp_url || 'https://via.placeholder.com/42/0d0e17/ff003c?text=P';
+            document.getElementById('myAvatar').style.border = `2px solid ${getUserColor(currentUser.username)}`;
+            document.getElementById('newNickname').value = currentUser.nickname || '';
         }
-      } catch (err) {
-        // Fallback UI preview mock if API Key is not set
-        grid.innerHTML = '<p style="font-size:12px; color:#64748b; grid-column:span 3;">Enter valid KLIPY API key. (Showing sample preview)</p>';
-      }
-    }
 
-    function addAttachment(src) {
-      const container = document.getElementById('attachmentsContainer');
-      const id = 'img_' + Date.now();
-      const html = `
-        <div class="attachment-card">
-          <img id="${id}" src="${src}">
-          <button class="edit-icon-btn" onclick="openEditor('${id}')">
-            <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-          </button>
-        </div>`;
-      container.insertAdjacentHTML('beforeend', html);
-      document.getElementById('gifModal').classList.remove('open');
-    }
+        const SUPABASE_URL = "https://boxrmxujhzzojepneliq.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_iCjgpDWwHTZNqVrKPd44nw_bNx4bciG"; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function handleImageUpload(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => addAttachment(event.target.result);
-        reader.readAsDataURL(file);
-      }
-    }
+        let currentNav = 'public';
+        let currentMode = 'channel';
+        let currentTarget = 'general';
+        let replyingToMessage = null;
 
-    // ==========================================
-    // WHATSAPP CANVAS IMAGE EDITOR LOGIC
-    // ==========================================
-    let currentTargetImgId = null;
-    const canvas = document.getElementById('editorCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    let baseImage = new Image();
-    let isDrawing = false;
-    let activeTool = 'draw'; // 'draw', 'mark'
-    let currentColor = '#ef4444';
-    let rotationDegree = 0;
+        let pendingEditId = null;
+        let pendingDeleteId = null;
+        let currentSelectedFile = null;
 
-    function openEditor(imgId) {
-      currentTargetImgId = imgId;
-      const targetImg = document.getElementById(imgId);
-      
-      baseImage = new Image();
-      baseImage.crossOrigin = "anonymous";
-      baseImage.src = targetImg.src;
-      
-      baseImage.onload = () => {
-        rotationDegree = 0;
-        resetCanvasDimensions();
-        document.getElementById('editorOverlay').classList.add('active');
-        enableDrawMode();
-      };
-    }
+        const msgBox = document.getElementById('msgBox');
+        const chatForm = document.getElementById('chatForm');
+        const msgInput = document.getElementById('msgInput');
+        const chatFileInput = document.getElementById('chatFileInput');
+        const channelHeader = document.getElementById('channelHeader');
+        const typingBox = document.getElementById('typingBox');
+        const contextMenu = document.getElementById('contextMenu');
 
-    function closeEditor() {
-      document.getElementById('editorOverlay').classList.remove('active');
-    }
+        function getUserColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash) % 360}, 90%, 60%)`;
+        }
 
-    function resetCanvasDimensions() {
-      canvas.width = baseImage.width;
-      canvas.height = baseImage.height;
-      ctx.drawImage(baseImage, 0, 0);
-    }
+        updateProfileUI();
 
-    // Tools Switching
-    function enableDrawMode() {
-      activeTool = 'draw';
-      updateToolUI('drawBtn');
-    }
+        function playTacticalBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(1050, ctx.currentTime);
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } catch (e) {}
+        }
 
-    function enableTextMode() {
-      activeTool = 'mark';
-      updateToolUI('markBtn');
-      const text = prompt("Enter text to add to image:", "Sample Text");
-      if (text) {
-        ctx.font = 'bold 36px -apple-system, sans-serif';
-        ctx.fillStyle = currentColor;
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(text, canvas.width / 4, canvas.height / 2);
-      }
-    }
+        function triggerWindowsNotification(title, body) {
+            if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'https://via.placeholder.com/64/05050a/ff003c?text=HUB' });
+            }
+        }
 
-    function updateToolUI(btnId) {
-      document.querySelectorAll('.editor-tools .tool-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(btnId).classList.add('active');
-    }
+        /* --- ATTACHMENT HANDLING --- */
+        function handleFileSelected(input) {
+            const file = input.files[0];
+            if (file) {
+                currentSelectedFile = file;
+                document.getElementById('attachmentFileName').innerText = file.name;
+                document.getElementById('attachmentImgPreview').src = URL.createObjectURL(file);
+                document.getElementById('attachmentBanner').classList.remove('hidden');
+            }
+        }
 
-    function setColor(color) {
-      currentColor = color;
-    }
+        function clearAttachment() {
+            chatFileInput.value = '';
+            currentSelectedFile = null;
+            document.getElementById('attachmentBanner').classList.add('hidden');
+        }
 
-    function rotateImage() {
-      rotationDegree = (rotationDegree + 90) % 360;
-      
-      // Swap width/height for 90 or 270 degree rotation
-      if (rotationDegree % 180 !== 0) {
-        canvas.width = baseImage.height;
-        canvas.height = baseImage.width;
-      } else {
-        canvas.width = baseImage.width;
-        canvas.height = baseImage.height;
-      }
+        function reselectFile() { chatFileInput.click(); }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotationDegree * Math.PI) / 180);
-      ctx.drawImage(baseImage, -baseImage.width / 2, -baseImage.height / 2);
-      ctx.restore();
-    }
+        /* ==========================================
+           WHATSAPP-STYLE CANVAS IMAGE EDITOR LOGIC
+           ========================================== */
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        let baseImage = new Image();
+        let isDrawing = false;
+        let activeTool = 'draw';
+        let currentColor = '#ff003c';
+        let rotationDegree = 0;
 
-    function clearCanvas() {
-      rotationDegree = 0;
-      resetCanvasDimensions();
-    }
+        function openCanvasEditorFromBanner() {
+            const previewSrc = document.getElementById('attachmentImgPreview').src;
+            if (!previewSrc) return;
+            
+            baseImage = new Image();
+            baseImage.crossOrigin = "anonymous";
+            baseImage.src = previewSrc;
+            
+            baseImage.onload = () => {
+                rotationDegree = 0;
+                resetCanvasDimensions();
+                document.getElementById('editorOverlay').classList.add('active');
+                enableDrawMode();
+            };
+        }
 
-    // Canvas Drawing Logic
-    function getCanvasCoordinates(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
+        function closeEditor() {
+            document.getElementById('editorOverlay').classList.remove('active');
+        }
 
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        function resetCanvasDimensions() {
+            canvas.width = baseImage.width;
+            canvas.height = baseImage.height;
+            ctx.drawImage(baseImage, 0, 0);
+        }
 
-      return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-      };
-    }
+        function enableDrawMode() {
+            activeTool = 'draw';
+            updateToolUI('drawBtn');
+        }
 
-    function startDrawing(e) {
-      if (activeTool !== 'draw') return;
-      isDrawing = true;
-      const pos = getCanvasCoordinates(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    }
+        function enableTextMode() {
+            activeTool = 'mark';
+            updateToolUI('markBtn');
+            const text = prompt("Enter overlay markup text:", "TARGET IDENTIFIED");
+            if (text) {
+                ctx.font = 'bold 36px Orbitron, sans-serif';
+                ctx.fillStyle = currentColor;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 6;
+                ctx.fillText(text, canvas.width / 4, canvas.height / 2);
+            }
+        }
 
-    function draw(e) {
-      if (!isDrawing || activeTool !== 'draw') return;
-      const pos = getCanvasCoordinates(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = currentColor;
-      ctx.lineWidth = 6;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-    }
+        function updateToolUI(btnId) {
+            document.querySelectorAll('.editor-tools .tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(btnId).classList.add('active');
+        }
 
-    function stopDrawing() {
-      isDrawing = false;
-    }
+        function setColor(color) { currentColor = color; }
 
-    // Touch & Mouse Listeners
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
+        function rotateImage() {
+            rotationDegree = (rotationDegree + 90) % 360;
+            if (rotationDegree % 180 !== 0) {
+                canvas.width = baseImage.height;
+                canvas.height = baseImage.width;
+            } else {
+                canvas.width = baseImage.width;
+                canvas.height = baseImage.height;
+            }
 
-    canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDrawing);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((rotationDegree * Math.PI) / 180);
+            ctx.drawImage(baseImage, -baseImage.width / 2, -baseImage.height / 2);
+            ctx.restore();
+        }
 
-    // Save edited canvas back to target image attachment
-    function saveEditedImage() {
-      const editedDataURL = canvas.toDataURL('image/png');
-      if (currentTargetImgId) {
-        document.getElementById(currentTargetImgId).src = editedDataURL;
-      }
-      closeEditor();
-    }
-  </script>
+        function clearCanvas() {
+            rotationDegree = 0;
+            resetCanvasDimensions();
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            if (activeTool !== 'draw') return;
+            isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing || activeTool !== 'draw') return;
+            const pos = getCanvasCoordinates(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        function stopDrawing() { isDrawing = false; }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function saveEditedImage() {
+            canvas.toBlob((blob) => {
+                const editedFile = new File([blob], "edited_attachment.png", { type: "image/png" });
+                currentSelectedFile = editedFile;
+                document.getElementById('attachmentImgPreview').src = URL.createObjectURL(editedFile);
+                closeEditor();
+            }, 'image/png');
+        }
+
+        /* --- CATEGORIZED EMOJI DATA & KLIPY API --- */
+        let activePickerTab = 'emojis';
+        let selectedCategory = 'all';
+
+        const EMOJI_DATABASE = [
+            { e: '😀', c: 'smileys', k: 'grinning happy smile' }, { e: '😃', c: 'smileys', k: 'smiley happy' },
+            { e: '🤣', c: 'smileys', k: 'rofl lol laugh' }, { e: '😂', c: 'smileys', k: 'joy cry laugh' },
+            { e: '😎', c: 'smileys', k: 'cool glasses sunglasses' }, { e: '💀', c: 'smileys', k: 'skull dead' },
+            { e: '👍', c: 'gestures', k: 'thumbs up like' }, { e: '🔥', c: 'objects', k: 'fire lit hot' },
+            { e: '⚔️', c: 'objects', k: 'swords battle fight' }, { e: '⚡', c: 'objects', k: 'lightning bolt zap' }
+        ];
+
+        function toggleMediaPicker() {
+            const picker = document.getElementById('mediaPicker');
+            picker.classList.toggle('hidden');
+            if (!picker.classList.contains('hidden')) {
+                document.getElementById('pickerSearch').focus();
+                if (activePickerTab === 'emojis') renderEmojis();
+                else loadKlipyGifs();
+            }
+        }
+
+        function switchPickerTab(tab) {
+            activePickerTab = tab;
+            document.getElementById('tabEmojis').classList.toggle('active', tab === 'emojis');
+            document.getElementById('tabGifs').classList.toggle('active', tab === 'gifs');
+            document.getElementById('categoryPills').style.display = tab === 'emojis' ? 'flex' : 'none';
+            document.getElementById('pickerSearch').value = '';
+
+            if (tab === 'emojis') renderEmojis();
+            else loadKlipyGifs();
+        }
+
+        function filterEmojiCategory(cat, el) {
+            selectedCategory = cat;
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            renderEmojis(document.getElementById('pickerSearch').value.trim().toLowerCase());
+        }
+
+        function handlePickerSearch() {
+            const query = document.getElementById('pickerSearch').value.trim().toLowerCase();
+            if (activePickerTab === 'emojis') renderEmojis(query);
+            else loadKlipyGifs(query);
+        }
+
+        function renderEmojis(filter = '') {
+            const container = document.getElementById('pickerContent');
+            let items = EMOJI_DATABASE;
+
+            if (selectedCategory !== 'all') items = items.filter(item => item.c === selectedCategory);
+            if (filter) items = items.filter(item => item.k.includes(filter));
+
+            let html = '<div class="emoji-grid">';
+            items.forEach(item => {
+                html += `<span class="emoji-item" onclick="insertEmoji('${item.e}')">${item.e}</span>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function insertEmoji(emoji) {
+            msgInput.value += emoji;
+            msgInput.focus();
+        }
+
+        let gifSearchDebounce = null;
+        const KLIPY_API_KEY = "YOUR_KLIPY_API_KEY";
+
+        async function loadKlipyGifs(query = 'cyberpunk') {
+            clearTimeout(gifSearchDebounce);
+            gifSearchDebounce = setTimeout(async () => {
+                const container = document.getElementById('pickerContent');
+                container.innerHTML = '<div style="color:#00f3ff; text-align:center; padding:1.5rem; font-weight:700;">FETCHING KLIPY SIGNAL...</div>';
+
+                const endpoint = `https://api.klipy.com/api/v1/${KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(query)}&per_page=12`;
+
+                try {
+                    const res = await fetch(endpoint);
+                    const data = await res.json();
+                    
+                    if (data.data && data.data.length > 0) {
+                        let html = '<div class="gif-grid">';
+                        data.data.forEach(g => {
+                            const gifUrl = g.files?.gif?.url || g.files?.tiny_gif?.url;
+                            html += `<img src="${gifUrl}" class="gif-item" onclick="sendGif('${gifUrl}')" alt="gif">`;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<div style="color:#7a8b9e; text-align:center; padding:1.5rem;">NO KLIPY SIGNAL FOUND</div>';
+                    }
+                } catch (err) {
+                    container.innerHTML = '<div style="color:#ff003c; text-align:center; padding:1.5rem;">KLIPY MATRIX OFFLINE</div>';
+                }
+            }, 300);
+        }
+
+        async function sendGif(gifUrl) {
+            document.getElementById('mediaPicker').classList.add('hidden');
+            const activeReply = replyingToMessage;
+            cancelReply();
+
+            const localMsg = {
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: '',
+                reply_text: activeReply,
+                file_url: gifUrl,
+                created_at: new Date().toISOString()
+            };
+            appendMessage(localMsg);
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: '',
+                reply_text: activeReply,
+                file_url: gifUrl,
+                channel: currentMode === "channel" ? currentTarget : "dm",
+                receiver: currentMode === "dm" ? currentTarget : null
+            }]);
+        }
+
+        function switchNav(nav, el) {
+            currentNav = nav;
+            document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+
+            document.getElementById('sidePublicView').classList.add('hidden');
+            document.getElementById('sideDmView').classList.add('hidden');
+            document.getElementById('chatView').classList.add('hidden');
+            document.getElementById('friendsView').classList.add('hidden');
+
+            if (nav === 'public') {
+                document.getElementById('sidePublicView').classList.remove('hidden');
+                document.getElementById('chatView').classList.remove('hidden');
+                switchChannel('general', document.querySelector('#sidePublicView .item-btn'));
+            } else if (nav === 'dms') {
+                document.getElementById('sideDmView').classList.remove('hidden');
+                document.getElementById('chatView').classList.remove('hidden');
+                loadFriendsForDM();
+            } else if (nav === 'friends') {
+                document.getElementById('friendsView').classList.remove('hidden');
+                loadFriendsList();
+            }
+        }
+
+        async function loadMessages() {
+            msgBox.innerHTML = '';
+            let query = supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
+
+            if (currentMode === "channel") {
+                query = query.eq('channel', currentTarget).is('receiver', null);
+            } else {
+                query = query.or(`and(username.eq.${currentUser.username},receiver.eq.${currentTarget}),and(username.eq.${currentTarget},receiver.eq.${currentUser.username})`);
+            }
+
+            const { data } = await query.limit(50);
+            if (data) {
+                data.forEach(m => appendMessage(m));
+                msgBox.scrollTop = msgBox.scrollHeight;
+            }
+        }
+
+        function appendMessage(m) {
+            const userColor = getUserColor(m.username);
+            const name = m.nickname || m.username;
+            const pfp = m.pfp_url || 'https://via.placeholder.com/42/0d0e17/ff003c?text=P';
+            const time = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const div = document.createElement('div');
+            div.className = 'message-card';
+            div.id = `msg-${m.id}`;
+            div.style.borderLeft = `3px solid ${userColor}`;
+
+            let replyHTML = m.reply_text ? `<div class="reply-preview-tag">↩ Replying to: ${escapeHtml(m.reply_text)}</div>` : '';
+            let imgHTML = m.file_url ? `
+                <div class="msg-img-container">
+                    <img src="${escapeHtml(m.file_url)}" class="msg-img" alt="attachment">
+                </div>` : '';
+
+            let actionsHTML = `
+                <div class="msg-actions">
+                    <button class="icon-btn" title="Reply" onclick="initiateReply('${escapeHtml(name)}', '${escapeHtml(m.message || '')}')">↩</button>
+                    ${m.username === currentUser.username && m.id ? `
+                        <button class="icon-btn" title="Edit" onclick="editMessage('${m.id}')">✏️</button>
+                        <button class="icon-btn delete" title="Delete" onclick="deleteMessage('${m.id}')">🗑️</button>
+                    ` : ''}
+                </div>
+            `;
+
+            div.innerHTML = `
+                ${actionsHTML}
+                <img src="${escapeHtml(pfp)}" class="msg-avatar" style="border: 1px solid ${userColor};" alt="pfp">
+                <div style="flex:1;">
+                    ${replyHTML}
+                    <div class="msg-header">
+                        <span class="msg-author" style="color: ${userColor};">${escapeHtml(name)}</span>
+                        <span class="msg-time">${time}</span>
+                    </div>
+                    <div class="msg-body" id="body-${m.id}">${escapeHtml(m.message || '')}</div>
+                    ${imgHTML}
+                </div>
+            `;
+
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showContextMenu(e.clientX, e.clientY, m, name);
+            });
+
+            msgBox.appendChild(div);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function showContextMenu(x, y, message, name) {
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.classList.remove('hidden');
+
+            const ctxReply = document.getElementById('ctxReply');
+            const ctxEdit = document.getElementById('ctxEdit');
+            const ctxDelete = document.getElementById('ctxDelete');
+
+            ctxReply.onclick = () => { initiateReply(name, message.message || ''); hideContextMenu(); };
+
+            if (message.username === currentUser.username && message.id) {
+                ctxEdit.style.display = 'flex';
+                ctxDelete.style.display = 'flex';
+                ctxEdit.onclick = () => { editMessage(message.id); hideContextMenu(); };
+                ctxDelete.onclick = () => { deleteMessage(message.id); hideContextMenu(); };
+            } else {
+                ctxEdit.style.display = 'none';
+                ctxDelete.style.display = 'none';
+            }
+        }
+
+        function hideContextMenu() { contextMenu.classList.add('hidden'); }
+        document.addEventListener('click', hideContextMenu);
+
+        function initiateReply(author, text) {
+            replyingToMessage = `${author}: ${text}`;
+            document.getElementById('replyBannerText').innerText = `Replying to: ${replyingToMessage}`;
+            document.getElementById('replyBanner').classList.remove('hidden');
+            msgInput.focus();
+        }
+
+        function cancelReply() {
+            replyingToMessage = null;
+            document.getElementById('replyBanner').classList.add('hidden');
+        }
+
+        function deleteMessage(id) {
+            pendingDeleteId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            pendingDeleteId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
+            const id = pendingDeleteId;
+            closeDeleteModal();
+
+            await supabaseClient.from('messages').delete().eq('id', id);
+            document.getElementById(`msg-${id}`)?.remove();
+        }
+
+        function editMessage(id) {
+            pendingEditId = id;
+            const currentText = document.getElementById(`body-${id}`).innerText;
+            document.getElementById('editModalInput').value = currentText;
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModalInput').focus();
+        }
+
+        function closeEditModal() {
+            pendingEditId = null;
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        async function confirmEdit() {
+            if (!pendingEditId) return;
+            const newText = document.getElementById('editModalInput').value.trim();
+            const id = pendingEditId;
+
+            if (newText) {
+                await supabaseClient.from('messages').update({ message: newText }).eq('id', id);
+                const bodyEl = document.getElementById(`body-${id}`);
+                if (bodyEl) bodyEl.innerText = newText;
+            }
+            closeEditModal();
+        }
+
+        supabaseClient
+            .channel('public:messages')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+                if (payload.eventType === 'INSERT') {
+                    const newMsg = payload.new;
+                    if (newMsg.username === currentUser.username) return;
+
+                    let isRelevant = false;
+                    if (currentMode === "channel" && newMsg.channel === currentTarget && !newMsg.receiver) isRelevant = true;
+                    if (currentMode === "dm" && ((newMsg.username === currentUser.username && newMsg.receiver === currentTarget) || (newMsg.username === currentTarget && newMsg.receiver === currentUser.username))) isRelevant = true;
+                    
+                    if (isRelevant) appendMessage(newMsg);
+
+                    playTacticalBeep();
+                    triggerWindowsNotification(`[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`, newMsg.message || "Sent an attachment");
+                } else if (payload.eventType === 'DELETE') {
+                    document.getElementById(`msg-${payload.old.id}`)?.remove();
+                } else if (payload.eventType === 'UPDATE') {
+                    const bodyEl = document.getElementById(`body-${payload.new.id}`);
+                    if (bodyEl) bodyEl.innerText = payload.new.message;
+                }
+            })
+            .subscribe();
+
+        const typingChannel = supabaseClient.channel('room-typing');
+        let remoteTypingTimeout = null;
+
+        typingChannel
+            .on('broadcast', { event: 'typing' }, payload => {
+                const data = payload.payload;
+                if (data.username !== currentUser.username && data.target === currentTarget) {
+                    typingBox.innerText = `[!] ${data.nickname.toUpperCase()} IS TRANSMITTING DATA...`;
+                    clearTimeout(remoteTypingTimeout);
+                    remoteTypingTimeout = setTimeout(() => { typingBox.innerText = ''; }, 2500);
+                }
+            })
+            .subscribe();
+
+        let localTypingTimer = null;
+        msgInput.addEventListener('input', () => {
+            if (!localTypingTimer) {
+                typingChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { username: currentUser.username, nickname: currentUser.nickname || currentUser.username, target: currentTarget }
+                });
+            }
+            clearTimeout(localTypingTimer);
+            localTypingTimer = setTimeout(() => { localTypingTimer = null; }, 1500);
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = msgInput.value.trim();
+            const file = currentSelectedFile;
+            if (!text && !file) return;
+
+            const activeReply = replyingToMessage;
+            cancelReply();
+            clearAttachment();
+            document.getElementById('mediaPicker').classList.add('hidden');
+
+            msgInput.value = '';
+
+            const localMsg = {
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                reply_text: activeReply,
+                file_url: file ? URL.createObjectURL(file) : null,
+                created_at: new Date().toISOString()
+            };
+            appendMessage(localMsg);
+
+            let file_url = null;
+            if (file) {
+                const fileName = `chat-${Date.now()}.${file.name.split('.').pop() || 'png'}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) file_url = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+            }
+
+            await supabaseClient.from('messages').insert([{
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                reply_text: activeReply,
+                file_url: file_url,
+                channel: currentMode === "channel" ? currentTarget : "dm",
+                receiver: currentMode === "dm" ? currentTarget : null
+            }]);
+        });
+
+        const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                const list = document.getElementById('onlineUsersList');
+                list.innerHTML = '';
+                const keys = Object.keys(state);
+                document.getElementById('userCount').innerText = keys.length;
+                keys.forEach(k => {
+                    const u = state[k][0];
+                    const div = document.createElement('div');
+                    div.className = 'item-btn';
+                    div.innerHTML = `<span class="status-dot online"></span> <span style="color:${getUserColor(k)}">${escapeHtml(u.nickname || k)}</span>`;
+                    list.appendChild(div);
+                });
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ username: currentUser.username, nickname: currentUser.nickname });
+                }
+            });
+
+        async function sendFriendRequest() {
+            const targetUsername = document.getElementById('friendUsernameInput').value.trim().toLowerCase();
+            const msgBox = document.getElementById('friendMsg');
+            if (!targetUsername || targetUsername === currentUser.username) {
+                msgBox.innerText = "INVALID OPERATIVE HANDLE!";
+                return;
+            }
+
+            await supabaseClient.from('friends').insert([{ user_a: currentUser.username, user_b: targetUsername, status: 'accepted' }]);
+            msgBox.innerText = `LINK ESTABLISHED WITH ${targetUsername.toUpperCase()}`;
+            document.getElementById('friendUsernameInput').value = '';
+            loadFriendsList();
+        }
+
+        async function loadFriendsList() {
+            const { data } = await supabaseClient.from('friends').select('*').or(`user_a.eq.${currentUser.username},user_b.eq.${currentUser.username}`);
+            const list = document.getElementById('friendsList');
+            list.innerHTML = '';
+
+            if (data) {
+                data.forEach(f => {
+                    const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
+                    const div = document.createElement('div');
+                    div.className = 'friend-card';
+                    div.innerHTML = `<span>👤 <b style="color:${getUserColor(friendUser)}">${escapeHtml(friendUser.toUpperCase())}</b></span> <span style="color:#00f3ff; font-weight:700;">[ LINKED ]</span>`;
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        async function loadFriendsForDM() {
+            const { data } = await supabaseClient.from('friends').select('*').or(`user_a.eq.${currentUser.username},user_b.eq.${currentUser.username}`);
+            const list = document.getElementById('dmUsersList');
+            list.innerHTML = '';
+
+            if (data && data.length > 0) {
+                data.forEach((f, idx) => {
+                    const friendUser = f.user_a === currentUser.username ? f.user_b : f.user_a;
+                    const div = document.createElement('div');
+                    div.className = `item-btn ${idx === 0 ? 'active' : ''}`;
+                    div.innerHTML = `📡 <span style="color:${getUserColor(friendUser)}">${escapeHtml(friendUser.toUpperCase())}</span>`;
+                    div.onclick = () => switchDM(friendUser, div);
+                    list.appendChild(div);
+                });
+                switchDM(f.user_a === currentUser.username ? data[0].user_b : data[0].user_a, list.children[0]);
+            } else {
+                list.innerHTML = `<div style="font-size:0.8rem; color:#7a8b9e; padding:0.5rem;">NO ESTABLISHED LINKS</div>`;
+            }
+        }
+
+        function switchChannel(channelName, el) {
+            currentMode = "channel";
+            currentTarget = channelName;
+            if (el) {
+                document.querySelectorAll('.item-btn').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+            }
+            channelHeader.innerText = `# ${channelName.toUpperCase()}`;
+            loadMessages();
+        }
+
+        function switchDM(username, el) {
+            currentMode = "dm";
+            currentTarget = username;
+            if (el) {
+                document.querySelectorAll('.item-btn').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+            }
+            channelHeader.innerText = `📡 ${username.toUpperCase()}`;
+            loadMessages();
+        }
+
+        function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        async function saveSettings() {
+            const newNick = document.getElementById('newNickname').value.trim();
+            const file = document.getElementById('newPfpFile').files[0];
+            let newPfp = currentUser.pfp_url;
+
+            if (file) {
+                const fileName = `${currentUser.username}-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (data) newPfp = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+            }
+
+            currentUser.nickname = newNick || currentUser.username;
+            currentUser.pfp_url = newPfp;
+            localStorage.setItem('phantom_user', JSON.stringify(currentUser));
+
+            await supabaseClient.from('users').update({ nickname: currentUser.nickname, pfp_url: currentUser.pfp_url }).eq('username', currentUser.username);
+
+            updateProfileUI();
+            closeSettings();
+        }
+
+        function logout() {
+            localStorage.removeItem('phantom_user');
+            localStorage.removeItem('phantom_remember');
+            window.location.href = "index.html";
+        }
+
+        function escapeHtml(text) {
+            return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : '';
+        }
+
+        loadMessages();
+    </script>
 </body>
 </html>
