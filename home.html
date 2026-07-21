@@ -203,7 +203,6 @@
             margin-bottom: 0.4rem;
         }
 
-        /* Top-Right Hover Quick Action Bar */
         .msg-actions {
             display: none;
             position: absolute;
@@ -235,7 +234,6 @@
         .icon-btn:hover { color: #00f3ff; transform: scale(1.15); }
         .icon-btn.delete:hover { color: #ff003c; }
 
-        /* Custom Floating Context Menu */
         .context-menu {
             position: fixed;
             z-index: 1000;
@@ -366,7 +364,7 @@
 
         .modal-box {
             background: #0d0e17; padding: 2.2rem; width: 100%; max-width: 420px;
-            border: 1px solid #ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);
+            border: 1px solid #00f3ff; box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
             clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
         }
     </style>
@@ -464,8 +462,9 @@
         <div class="context-item delete-item" id="ctxDelete">🗑️ Delete</div>
     </div>
 
+    <!-- Custom Cyberpunk Settings Modal -->
     <div id="settingsModal" class="modal-overlay hidden">
-        <div class="modal-box">
+        <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
             <h3 style="margin-bottom:1.2rem; color:#ff003c; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / SETTINGS</h3>
             <div style="margin-bottom:1.2rem;">
                 <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">NEW HANDLE / NICKNAME</label>
@@ -478,6 +477,35 @@
             <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
                 <button onclick="closeSettings()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
                 <button class="btn-action" onclick="saveSettings()">SAVE OVERRIDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Cyberpunk Edit Modal -->
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 style="margin-bottom:1.2rem; color:#00f3ff; font-family:'Orbitron', sans-serif;">SYSTEM OVERRIDE / EDIT TRANSMISSION</h3>
+            <div style="margin-bottom:1.5rem;">
+                <label style="font-size:0.8rem; color:#00f3ff; font-weight:700;">UPDATE DATA STREAM</label>
+                <input type="text" id="editModalInput" class="chat-input" style="width:100%; margin-top:0.4rem;">
+            </div>
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button onclick="closeEditModal()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
+                <button class="btn-action" onclick="confirmEdit()">UPDATE TRANSMISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Cyberpunk Delete Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal-box" style="border-color:#ff003c; box-shadow: 0 0 25px rgba(255, 0, 60, 0.3);">
+            <h3 style="margin-bottom:1rem; color:#ff003c; font-family:'Orbitron', sans-serif;">PURGE TRANSMISSION?</h3>
+            <p style="font-size:0.95rem; color:#8a99ad; margin-bottom:1.8rem; font-weight:600;">
+                Are you sure you want to permanently erase this signal from the database? This action cannot be undone.
+            </p>
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button onclick="closeDeleteModal()" style="background:none; border:none; color:#7a8b9e; cursor:pointer; font-weight:700;">ABORT</button>
+                <button class="btn-send" style="padding:0.6rem 1.2rem;" onclick="confirmDelete()">PURGE DATA</button>
             </div>
         </div>
     </div>
@@ -502,6 +530,9 @@
         let currentMode = 'channel';
         let currentTarget = 'general';
         let replyingToMessage = null;
+
+        let pendingEditId = null;
+        let pendingDeleteId = null;
 
         const msgBox = document.getElementById('msgBox');
         const chatForm = document.getElementById('chatForm');
@@ -603,7 +634,6 @@
             let replyHTML = m.reply_text ? `<div class="reply-preview-tag">↩ Replying to: ${escapeHtml(m.reply_text)}</div>` : '';
             let imgHTML = m.file_url ? `<img src="${escapeHtml(m.file_url)}" class="msg-img" alt="attachment">` : '';
 
-            // Top-right Hover Icon Bar
             let actionsHTML = `
                 <div class="msg-actions">
                     <button class="icon-btn" title="Reply" onclick="initiateReply('${escapeHtml(name)}', '${escapeHtml(m.message || '')}')">↩</button>
@@ -628,7 +658,6 @@
                 </div>
             `;
 
-            // Custom Right-Click Context Menu Handler
             div.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 showContextMenu(e.clientX, e.clientY, m, name);
@@ -638,7 +667,6 @@
             msgBox.scrollTop = msgBox.scrollHeight;
         }
 
-        // Show context menu at cursor location
         function showContextMenu(x, y, message, name) {
             contextMenu.style.left = `${x}px`;
             contextMenu.style.top = `${y}px`;
@@ -676,20 +704,51 @@
             document.getElementById('replyBanner').classList.add('hidden');
         }
 
-        async function deleteMessage(id) {
-            if (confirm("Delete this transmission?")) {
-                await supabaseClient.from('messages').delete().eq('id', id);
-                document.getElementById(`msg-${id}`)?.remove();
-            }
+        /* --- CUSTOM DELETE MODAL LOGIC --- */
+        function deleteMessage(id) {
+            pendingDeleteId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
         }
 
-        async function editMessage(id) {
-            const currentBody = document.getElementById(`body-${id}`).innerText;
-            const newText = prompt("Edit your message:", currentBody);
-            if (newText && newText !== currentBody) {
+        function closeDeleteModal() {
+            pendingDeleteId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
+            const id = pendingDeleteId;
+            closeDeleteModal();
+
+            await supabaseClient.from('messages').delete().eq('id', id);
+            document.getElementById(`msg-${id}`)?.remove();
+        }
+
+        /* --- CUSTOM EDIT MODAL LOGIC --- */
+        function editMessage(id) {
+            pendingEditId = id;
+            const currentText = document.getElementById(`body-${id}`).innerText;
+            document.getElementById('editModalInput').value = currentText;
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModalInput').focus();
+        }
+
+        function closeEditModal() {
+            pendingEditId = null;
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        async function confirmEdit() {
+            if (!pendingEditId) return;
+            const newText = document.getElementById('editModalInput').value.trim();
+            const id = pendingEditId;
+
+            if (newText) {
                 await supabaseClient.from('messages').update({ message: newText }).eq('id', id);
-                document.getElementById(`body-${id}`).innerText = newText;
+                const bodyEl = document.getElementById(`body-${id}`);
+                if (bodyEl) bodyEl.innerText = newText;
             }
+            closeEditModal();
         }
 
         supabaseClient
