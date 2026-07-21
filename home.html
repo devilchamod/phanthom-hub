@@ -9,7 +9,29 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        /* Custom Camouflaged Cyberpunk Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #05050a;
+            border-left: 1px solid rgba(255, 0, 60, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1a1d2e;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff003c;
+            box-shadow: 0 0 10px #ff003c;
+        }
+
         body {
             background: #05050a;
             color: #e0e6ed;
@@ -404,7 +426,6 @@
         let currentNav = 'public';
         let currentMode = 'channel';
         let currentTarget = 'general';
-        let typingTimeout = null;
 
         const msgBox = document.getElementById('msgBox');
         const chatForm = document.getElementById('chatForm');
@@ -412,6 +433,40 @@
         const chatFileInput = document.getElementById('chatFileInput');
         const channelHeader = document.getElementById('channelHeader');
         const typingBox = document.getElementById('typingBox');
+
+        // Request Windows Desktop Notification Permission on Start
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+
+        // Tactical Audio Beep Synthesizer (No external file required)
+        function playTacticalBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch A5 beep
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.log("Audio play blocked by browser interaction rules");
+            }
+        }
+
+        // Windows Notification Trigger
+        function triggerWindowsNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://via.placeholder.com/64/05050a/ff003c?text=HUB'
+                });
+            }
+        }
 
         function switchNav(nav, el) {
             currentNav = nav;
@@ -457,7 +512,7 @@
         function appendMessage(m) {
             const name = m.nickname || m.username;
             const pfp = m.pfp_url || 'https://via.placeholder.com/42/0d0e17/ff003c?text=P';
-            const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const time = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const div = document.createElement('div');
             div.className = 'message-card';
@@ -478,33 +533,94 @@
             msgBox.scrollTop = msgBox.scrollHeight;
         }
 
+        // Realtime Messages & Notifications Channel
         supabaseClient
             .channel('public:messages')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                 const newMsg = payload.new;
+
+                // Ignore self messages (already rendered by Optimistic UI)
+                if (newMsg.username === currentUser.username) return;
+
                 let isRelevant = false;
                 if (currentMode === "channel" && newMsg.channel === currentTarget && !newMsg.receiver) isRelevant = true;
                 if (currentMode === "dm" && ((newMsg.username === currentUser.username && newMsg.receiver === currentTarget) || (newMsg.username === currentTarget && newMsg.receiver === currentUser.username))) isRelevant = true;
-                if (isRelevant) appendMessage(newMsg);
+                
+                if (isRelevant) {
+                    appendMessage(newMsg);
+                }
+
+                // Trigger Sound & Windows Desktop Notification for EVERY incoming message
+                playTacticalBeep();
+                triggerWindowsNotification(
+                    `[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`,
+                    newMsg.message || "Sent an attachment"
+                );
             })
             .subscribe();
 
+        // High-Speed Typing Indicator via Supabase Broadcast
+        const typingChannel = supabaseClient.channel('room-typing');
+        let remoteTypingTimeout = null;
+
+        typingChannel
+            .on('broadcast', { event: 'typing' }, payload => {
+                const data = payload.payload;
+                if (data.username !== currentUser.username && data.target === currentTarget) {
+                    typingBox.innerText = `[!] ${data.nickname.toUpperCase()} IS TRANSMITTING DATA...`;
+                    clearTimeout(remoteTypingTimeout);
+                    remoteTypingTimeout = setTimeout(() => {
+                        typingBox.innerText = '';
+                    }, 2500);
+                }
+            })
+            .subscribe();
+
+        let localTypingTimer = null;
+        msgInput.addEventListener('input', () => {
+            if (!localTypingTimer) {
+                typingChannel.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { username: currentUser.username, nickname: currentUser.nickname || currentUser.username, target: currentTarget }
+                });
+            }
+            clearTimeout(localTypingTimer);
+            localTypingTimer = setTimeout(() => { localTypingTimer = null; }, 1500);
+        });
+
+        // Zero-Lag Optimistic Form Submit Handler
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = msgInput.value.trim();
             const file = chatFileInput.files[0];
             if (!text && !file) return;
 
+            // Clear input instantly for zero delay
             msgInput.value = '';
+            const tempFile = file;
             chatFileInput.value = '';
-            let file_url = null;
 
-            if (file) {
-                const fileName = `chat-${Date.now()}.${file.name.split('.').pop()}`;
-                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+            // 1. Optimistic local render immediately
+            const localMsg = {
+                username: currentUser.username,
+                nickname: currentUser.nickname,
+                pfp_url: currentUser.pfp_url,
+                message: text,
+                file_url: tempFile ? URL.createObjectURL(tempFile) : null,
+                created_at: new Date().toISOString()
+            };
+            appendMessage(localMsg);
+
+            // 2. Upload image attachment if exists
+            let file_url = null;
+            if (tempFile) {
+                const fileName = `chat-${Date.now()}.${tempFile.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('avatars').upload(fileName, tempFile);
                 if (data) file_url = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
             }
 
+            // 3. Store to Supabase in background
             await supabaseClient.from('messages').insert([{
                 username: currentUser.username,
                 nickname: currentUser.nickname,
@@ -516,6 +632,7 @@
             }]);
         });
 
+        // Online Operatives Tracker
         const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
         presenceChannel
             .on('presence', { event: 'sync' }, () => {
