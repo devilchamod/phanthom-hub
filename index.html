@@ -137,7 +137,7 @@
         .msg-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
         .msg-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .msg-header { display: flex; align-items: baseline; gap: 10px; }
-        .msg-username { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; } /* Color dynamically injected via JS */
+        .msg-username { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
         .msg-timestamp { font-size: 11px; color: var(--text-muted); }
         .msg-text { font-size: 14.5px; color: #fff; line-height: 1.5; word-break: break-word; }
         
@@ -544,7 +544,7 @@
         const EMOJI_SET = ['✨', '🌌', '🚀', '🔥', '💀', '👀', '🪐', '👾'];
         const renderedMessageIds = new Set();
 
-        // --- NEW AUDIO NATIVE BEEP FUNCTION ---
+        // --- AUDIO NATIVE BEEP FUNCTION ---
         function playLoudBeep() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -567,7 +567,7 @@
             }
         }
 
-        // --- NEW DYNAMIC PFP COLOR FUNCTION ---
+        // --- DYNAMIC PFP COLOR FUNCTION ---
         function getUserColor(username) {
             if(!username) return '#ffffff';
             let hash = 0;
@@ -605,7 +605,7 @@
             }
         }
 
-        // --- AUTHENTICATION ---
+        // --- AUTHENTICATION (WITH PRE-FLIGHT EXISTING USER CHECK) ---
         async function executeRegister() {
             const username = document.getElementById('regUsername').value.trim().toLowerCase();
             const nickname = document.getElementById('regNickname').value.trim();
@@ -616,6 +616,7 @@
             if (!username || !password) return alert("Fill in username and password.");
             if (password !== confirmPassword) return alert("Keys do not match!");
 
+            // Pre-flight check to prevent duplicate key conflicts
             const { data: existingUser } = await supabaseClient.from('users').select('username').eq('username', username).maybeSingle();
             if (existingUser) return alert("Designation already registered.");
 
@@ -882,7 +883,6 @@
             onlineList.innerHTML = ''; offlineList.innerHTML = '';
 
             let targetUsers = [];
-            // Privacy implemented natively: If it's a group, only fetch its valid members
             if (activeChannelId.startsWith('group_')) {
                 const groupId = activeChannelId.replace('group_', '');
                 const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', groupId);
@@ -934,7 +934,6 @@
                 });
             }
 
-            // Ensures Group Privacy natively: Only loads groups where currentUser is a member in group_members table
             const { data: memberGroups } = await supabaseClient.from('group_members').select('group_id').eq('username', currentUser.username);
             if (memberGroups) {
                 for (let mg of memberGroups) {
@@ -995,7 +994,6 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel_id=eq.${activeChannelId}` }, async payload => {
                     if (payload.eventType === 'INSERT') {
                         if (!renderedMessageIds.has(payload.new.id)) {
-                            // Audio Beep Trigger for incoming msgs from OTHERS
                             if (payload.new.sender_username !== currentUser.username) {
                                 playLoudBeep();
                             }
@@ -1093,7 +1091,6 @@
             const sender = msg.users || { username: msg.sender_username, nickname: msg.sender_username, pfp_url: 'https://via.placeholder.com/44' };
             const isOwner = msg.sender_username === currentUser.username;
             
-            // Generate dynamic user highlight color based on username hash
             const nameColor = getUserColor(sender.username);
 
             let reactionsHtml = '';
@@ -1237,7 +1234,6 @@
             }]).select().maybeSingle();
 
             if (grp) {
-                // Instantly grants member rights to the creator -> Securing privacy
                 await supabaseClient.from('group_members').insert([{ group_id: grp.id, username: currentUser.username }]);
                 closeModal();
                 loadSidebarChannels();
