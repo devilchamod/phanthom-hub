@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatEngine // Mechanical Discord Client</title>
+    <title>ChatEngine // Secure Client</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Whitney:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #313338; color: #dbdee1; font-family: 'Inter', sans-serif; height: 100vh; display: flex; overflow: hidden; }
@@ -15,58 +15,49 @@
         ::-webkit-scrollbar-track { background: #2b2d31; }
         ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 4px; }
 
-        /* AUTH SCREEN */
-        #authScreen { position: fixed; inset: 0; background: #1e1f22; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .auth-card { width: 440px; background: #313338; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 20px; }
-        .auth-card h2 { color: #f2f3f5; font-size: 24px; text-align: center; }
+        /* SCREENS CONTAINER */
+        .auth-screen-container { position: fixed; inset: 0; background: #1e1f22; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .auth-card { width: 440px; background: #313338; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 16px; }
+        .auth-card h2 { color: #f2f3f5; font-size: 24px; text-align: center; margin-bottom: 8px; }
         
         /* APP LAYOUT */
         .app-container { display: flex; width: 100vw; height: 100vh; }
         
-        /* Sidebar (DMs & Navigation) */
         .channels-sidebar { width: 240px; background: #2b2d31; display: flex; flex-direction: column; border-right: 1px solid #1f2023; }
-        .sidebar-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; padding: 0 16px; font-weight: 600; color: #f2f3f5; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .sidebar-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-weight: 600; color: #f2f3f5; }
         .sidebar-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
         .sidebar-item { padding: 8px 12px; border-radius: 4px; color: #949ba4; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .sidebar-item:hover { background: #35373c; color: #dbdee1; }
         .sidebar-item.active { background: #404249; color: #fff; }
 
-        /* Main Chat Area */
         .chat-pane { flex: 1; display: flex; flex-direction: column; background: #313338; height: 100vh; }
-        .chat-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; padding: 0 16px; font-weight: 600; color: #f2f3f5; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .chat-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; padding: 0 16px; font-weight: 600; color: #f2f3f5; gap: 10px; }
         
         .messages-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
         
-        /* Message Rows */
         .message-group { display: flex; gap: 16px; position: relative; padding: 2px 4px; border-radius: 4px; }
         .message-group:hover { background: rgba(0,0,0,0.05); }
-        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .msg-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
         .msg-header { display: flex; align-items: baseline; gap: 8px; }
-        .msg-username { font-weight: 600; color: #f2f3f5; font-size: 15px; cursor: pointer; }
-        .msg-username:hover { text-decoration: underline; }
+        .msg-username { font-weight: 600; color: #f2f3f5; font-size: 15px; }
         .msg-timestamp { font-size: 12px; color: #949ba4; }
         .msg-text { font-size: 14px; color: #dbdee1; line-height: 1.375rem; word-break: break-word; }
         
-        /* Hover Toolbar */
         .msg-toolbar { position: absolute; right: 16px; top: -14px; display: none; background: #313338; border: 1px solid #222428; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .message-group:hover .msg-toolbar { display: flex; }
         .tool-btn { background: none; border: none; color: #b5bac1; padding: 6px 10px; cursor: pointer; font-size: 14px; }
         .tool-btn:hover { background: #35373c; color: #f2f3f5; }
 
-        /* Reactions */
         .reactions-wrapper { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
         .reaction-badge { background: #2b2d31; border: 1px solid transparent; border-radius: 8px; padding: 2px 6px; font-size: 12px; display: flex; gap: 4px; cursor: pointer; color: #b5bac1; align-items: center; }
         .reaction-badge:hover { border-color: #80848e; background: #35373c; }
 
-        /* Input Form */
         .chat-input-area { padding: 0 16px 24px 16px; }
         .input-wrapper { background: #383a40; border-radius: 8px; padding: 10px 16px; display: flex; flex-direction: column; gap: 4px; position: relative; }
         .chat-input { background: transparent; border: none; outline: none; color: #dbdee1; font-size: 15px; font-family: inherit; resize: none; max-height: 140px; }
-        
         .typing-indicator { height: 18px; font-size: 12px; color: #949ba4; font-style: italic; }
         
-        /* Utility */
         .input-btn { background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 16px; }
         .input-btn:hover { color: #f2f3f5; }
         .btn-discord { background: #5865f2; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 14px; width: 100%; }
@@ -79,18 +70,54 @@
         .emoji-opt:hover { background: #35373c; }
 
         .hidden { display: none !important; }
+        .link-text { color: #00a8fc; cursor: pointer; font-size: 13px; text-align: center; }
+        .link-text:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN -->
-    <div id="authScreen">
-        <div class="auth-card">
-            <h2>Welcome to ChatEngine</h2>
-            <p style="color: #949ba4; font-size: 14px; text-align: center;">Enter your username handle to launch your session.</p>
-            <input type="text" id="usernameInput" class="text-input" placeholder="Username (e.g. alex)..." onkeydown="if(event.key==='Enter') handleAuth()">
-            <button class="btn-discord" onclick="handleAuth()">Continue</button>
+    <!-- AUTHENTICATION PANELS CONTAINER -->
+    <div id="authScreenContainer" class="auth-screen-container">
+        
+        <!-- LOGIN VIEW -->
+        <div id="loginView" class="auth-card">
+            <h2>Welcome Back!</h2>
+            <p style="color: #949ba4; font-size: 14px; text-align: center;">We're so excited to see you again!</p>
+            <input type="text" id="loginUsername" class="text-input" placeholder="Username...">
+            <input type="password" id="loginPassword" class="text-input" placeholder="Password..." onkeydown="if(event.key==='Enter') executeLogin()">
+            <button class="btn-discord" onclick="executeLogin()">Log In</button>
+            <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                <span class="link-text" onclick="switchAuthView('register')">Need an account? Register</span>
+                <span class="link-text" onclick="switchAuthView('changePass')">Change Password</span>
+            </div>
         </div>
+
+        <!-- REGISTER VIEW -->
+        <div id="registerView" class="auth-card hidden">
+            <h2>Create an Account</h2>
+            <div style="text-align:center;">
+                <label style="cursor:pointer; display:inline-block;">
+                    <img id="regAvatarPreview" src="https://via.placeholder.com/80" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px dashed #5865f2;">
+                    <input type="file" id="regAvatarFile" class="hidden" onchange="previewAvatar(this, 'regAvatarPreview')">
+                    <div style="font-size:11px; color:#949ba4; margin-top:4px;">Upload Avatar</div>
+                </label>
+            </div>
+            <input type="text" id="regUsername" class="text-input" placeholder="Username...">
+            <input type="password" id="regPassword" class="text-input" placeholder="Password...">
+            <button class="btn-discord" onclick="executeRegister()">Continue</button>
+            <span class="link-text" onclick="switchAuthView('login')">Already have an account? Log In</span>
+        </div>
+
+        <!-- CHANGE PASSWORD VIEW -->
+        <div id="changePassView" class="auth-card hidden">
+            <h2>Reset Password</h2>
+            <input type="text" id="passUsername" class="text-input" placeholder="Username...">
+            <input type="password" id="passOld" class="text-input" placeholder="Current Password...">
+            <input type="password" id="passNew" class="text-input" placeholder="New Password...">
+            <button class="btn-discord" onclick="executePasswordChange()">Update Password</button>
+            <span class="link-text" onclick="switchAuthView('login')">Back to Log In</span>
+        </div>
+
     </div>
 
     <!-- MAIN APP INTERFACE -->
@@ -98,18 +125,20 @@
         
         <!-- SIDEBAR -->
         <div class="channels-sidebar">
-            <div class="sidebar-header" id="currentLoggedUserTag">Direct Messages</div>
+            <div class="sidebar-header">
+                <span id="currentLoggedUserTag" style="font-size:13px; overflow:hidden; text-overflow:ellipsis;">-</span>
+                <button onclick="logoutSession()" style="background:none; border:none; color:#f23f43; cursor:pointer; font-size:12px;">Disconnect</button>
+            </div>
             <div class="sidebar-list">
-                <div class="sidebar-item active" onclick="switchChannel('global', 'Global Chat', this)">🌐 Global Room</div>
+                <div class="sidebar-item active" onclick="switchChannel('global', 'Global Room', this)">🌐 Global Room</div>
                 <div style="font-size: 12px; font-weight: 700; color: #949ba4; margin: 12px 8px 4px 8px; letter-spacing: 0.5px;">DIRECT MESSAGES</div>
                 <div id="dmChannelsList"></div>
                 <div style="font-size: 12px; font-weight: 700; color: #949ba4; margin: 12px 8px 4px 8px; letter-spacing: 0.5px;">GROUP CHATS</div>
                 <div id="groupChannelsList"></div>
                 
                 <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid #3f4147;">
-                    <div class="sidebar-item" onclick="openAddDmModal()">➕ Direct Message User</div>
+                    <div class="sidebar-item" onclick="openAddDmModal()">➕ Direct Message</div>
                     <div class="sidebar-item" onclick="openCreateGroupModal()">👥 Create Group Chat</div>
-                    <div class="sidebar-item" onclick="logoutSession()" style="color: #f23f43;">🔌 Disconnect</div>
                 </div>
             </div>
         </div>
@@ -136,7 +165,7 @@
                     
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <button class="input-btn" onclick="document.getElementById('fileAttachmentInput').click()" title="Upload file">➕</button>
-                        <textarea id="chatMessageInput" class="chat-input" placeholder="Message #global-room" rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
+                        <textarea id="chatMessageInput" class="chat-input" placeholder="Send a message..." rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
                         <button class="input-btn" onclick="toggleEmojiPicker()" title="Add Emoji">😀</button>
                     </div>
                 </div>
@@ -166,21 +195,86 @@
         const EMOJI_SET = ['👍', '❤️', '🔥', '🚀', '💀', '👀', '🎉', '💻'];
         const renderedMessageIds = new Set();
 
-        // --- AUTHENTICATION ---
-        async function handleAuth() {
-            const username = document.getElementById('usernameInput').value.trim().toLowerCase();
-            if (!username) return;
+        // --- AUTH NAVIGATION VIEWS ---
+        function switchAuthView(viewName) {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('registerView').classList.add('hidden');
+            document.getElementById('changePassView').classList.add('hidden');
+            document.getElementById(`${viewName}View`).classList.remove('hidden');
+        }
 
-            let { data: user } = await supabaseClient.from('users').select('*').eq('username', username).single();
-            if (!user) {
-                const newProfile = { username, nickname: username, pfp_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${username}` };
-                const res = await supabaseClient.from('users').insert([newProfile]).select().single();
-                user = res.data;
+        function previewAvatar(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { document.getElementById(previewId).src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- AUTHENTICATION ACTIONS ---
+        async function executeRegister() {
+            const username = document.getElementById('regUsername').value.trim().toLowerCase();
+            const password = document.getElementById('regPassword').value.trim();
+            const fileInput = document.getElementById('regAvatarFile').files[0];
+
+            if (!username || !password) {
+                alert("Please fill in both username and password.");
+                return;
+            }
+
+            let pfpUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${username}`;
+            if (fileInput) {
+                const fileName = `avatar-${username}-${Date.now()}.${fileInput.name.split('.').pop()}`;
+                const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, fileInput);
+                if (data) {
+                    pfpUrl = supabaseClient.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+                }
+            }
+
+            const { data, error } = await supabaseClient.from('users').insert([{
+                username,
+                password_hash: password, // Simple plain string match for structural integrity; can be hashed if desired
+                nickname: username,
+                pfp_url: pfpUrl
+            }]).select().single();
+
+            if (error) {
+                alert("Registration failed: Username might already be taken.");
+            } else {
+                alert("Account created successfully! Please log in.");
+                switchAuthView('login');
+            }
+        }
+
+        async function executeLogin() {
+            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            const { data: user, error } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            if (!user || user.password_hash !== password) {
+                alert("Invalid username or password.");
+                return;
             }
 
             currentUser = user;
             localStorage.setItem('chat_user', JSON.stringify(currentUser));
             initializeClientApp();
+        }
+
+        async function executePasswordChange() {
+            const username = document.getElementById('passUsername').value.trim().toLowerCase();
+            const oldPass = document.getElementById('passOld').value.trim();
+            const newPass = document.getElementById('passNew').value.trim();
+
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', username).single();
+            if (!user || user.password_hash !== oldPass) {
+                alert("Incorrect username or current password.");
+                return;
+            }
+
+            await supabaseClient.from('users').update({ password_hash: newPass }).eq('username', username);
+            alert("Password updated successfully! Please log in.");
+            switchAuthView('login');
         }
 
         const savedUser = localStorage.getItem('chat_user');
@@ -195,7 +289,7 @@
         }
 
         function initializeClientApp() {
-            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('authScreenContainer').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
             document.getElementById('currentLoggedUserTag').innerText = `@${currentUser.username.toUpperCase()}`;
             
@@ -246,7 +340,6 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `channel_id=eq.${activeChannelId}` }, async payload => {
                     if (payload.eventType === 'INSERT') {
                         if (!renderedMessageIds.has(payload.new.id)) {
-                            // Fetch sender profile details
                             const { data: sender } = await supabaseClient.from('users').select('*').eq('username', payload.new.sender_username).single();
                             let completeMsg = payload.new;
                             completeMsg.users = sender;
@@ -433,20 +526,18 @@
             dmList.innerHTML = '';
             groupList.innerHTML = '';
 
-            // Load DMs via friends or conversations
             const { data: users } = await supabaseClient.from('users').select('*').neq('username', currentUser.username);
             if (users) {
                 users.forEach(u => {
                     const dmChannelId = ['dm', [currentUser.username, u.username].sort().join('_')].join('_');
                     const item = document.createElement('div');
                     item.className = 'sidebar-item';
-                    item.innerHTML = `💬 ${u.nickname || u.username}`;
-                    item.onclick = (e) => switchChannel(dmChannelId, `@${u.nickname || u.username}`, item);
+                    item.innerHTML = `<img src="${u.pfp_url}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;"> ${u.nickname || u.username}`;
+                    item.onclick = () => switchChannel(dmChannelId, `@${u.nickname || u.username}`, item);
                     dmList.appendChild(item);
                 });
             }
 
-            // Load Group Chats
             const { data: memberGroups } = await supabaseClient.from('group_members').select('group_id').eq('username', currentUser.username);
             if (memberGroups) {
                 for (let mg of memberGroups) {
@@ -454,15 +545,15 @@
                     if (grp) {
                         const item = document.createElement('div');
                         item.className = 'sidebar-item';
-                        item.innerHTML = `👥 ${grp.name}`;
-                        item.onclick = (e) => switchChannel(`group_${grp.id}`, grp.name, item);
+                        item.innerHTML = `<img src="${grp.group_avatar_url || 'https://via.placeholder.com/24'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;"> ${grp.name}`;
+                        item.onclick = () => switchChannel(`group_${grp.id}`, grp.name, item);
                         groupList.appendChild(item);
                     }
                 }
             }
         }
 
-        // --- MODALS (DM & GROUP CREATION) ---
+        // --- MODALS (DM & GROUP CREATION WITH GROUP AVATARS) ---
         function closeModal() {
             document.getElementById('genericModalOverlay').classList.add('hidden');
         }
@@ -494,6 +585,13 @@
             const card = document.getElementById('genericModalCard');
             card.innerHTML = `
                 <h3 style="color:#f2f3f5;">Create Group Chat</h3>
+                <div style="text-align:center;">
+                    <label style="cursor:pointer; display:inline-block;">
+                        <img id="groupAvatarPreview" src="https://via.placeholder.com/70" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px dashed #5865f2;">
+                        <input type="file" id="groupAvatarFile" class="hidden" onchange="previewAvatar(this, 'groupAvatarPreview')">
+                        <div style="font-size:11px; color:#949ba4; margin-top:4px;">Group Avatar</div>
+                    </label>
+                </div>
                 <input type="text" id="newGroupNameInput" class="text-input" placeholder="Group name...">
                 <button class="btn-discord" onclick="createGroupChat()">Initialize Group</button>
             `;
@@ -502,9 +600,24 @@
 
         async function createGroupChat() {
             const groupName = document.getElementById('newGroupNameInput').value.trim();
+            const groupFile = document.getElementById('groupAvatarFile').files[0];
             if (!groupName) return;
 
-            const { data: grp, error } = await supabaseClient.from('groups').insert([{ name: groupName, created_by: currentUser.username }]).select().single();
+            let groupAvatarUrl = null;
+            if (groupFile) {
+                const fileName = `group-${Date.now()}.${groupFile.name.split('.').pop()}`;
+                const { data } = await supabaseClient.storage.from('group_avatars').upload(fileName, groupFile);
+                if (data) {
+                    groupAvatarUrl = supabaseClient.storage.from('group_avatars').getPublicUrl(fileName).data.publicUrl;
+                }
+            }
+
+            const { data: grp } = await supabaseClient.from('groups').insert([{
+                name: groupName,
+                group_avatar_url: groupAvatarUrl,
+                created_by: currentUser.username
+            }]).select().single();
+
             if (grp) {
                 await supabaseClient.from('group_members').insert([
                     { group_id: grp.id, username: currentUser.username }
