@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatEngine // Home Dashboard</title>
+    <title>ChatEngine // Complete Dashboard with Group Settings</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -20,13 +20,12 @@
         .auth-card { width: 440px; background: #313338; padding: 32px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 16px; }
         .auth-card h2 { color: #f2f3f5; font-size: 24px; text-align: center; margin-bottom: 8px; }
         
-        /* PASSWORD FIELD WRAPPER */
         .password-container { position: relative; width: 100%; display: flex; align-items: center; }
         .password-container input { padding-right: 42px; }
         .pass-toggle-btn { position: absolute; right: 10px; background: none; border: none; color: #949ba4; cursor: pointer; font-size: 16px; user-select: none; transition: color 0.2s; }
         .pass-toggle-btn:hover { color: #dbdee1; }
 
-        /* APP LAYOUT - DISCORD HOME STYLE */
+        /* APP LAYOUT - DISCORD STYLE */
         .app-container { display: flex; width: 100vw; height: 100vh; }
         
         /* SERVER RAIL (Far Left) */
@@ -83,15 +82,17 @@
         .friend-icon-bubble { width: 36px; height: 36px; border-radius: 50%; background: #2b2d31; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #dbdee1; font-size: 16px; }
         .friend-icon-bubble:hover { background: #111214; }
 
-        /* RIGHT ACTIVE NOW PANEL */
+        /* RIGHT ACTIVE NOW PANEL (FOR HOME) */
         .active-now-sidebar { width: 360px; background: #313338; border-left: 1px solid #2b2d31; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-        .active-card { background: #2b2d31; border: 1px solid #3f4147; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .active-card-header { display: flex; align-items: center; gap: 10px; }
-        .active-card-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 
-        /* STANDARD CHAT PANE */
+        /* CHAT CONTAINER WITH RIGHT MEMBER LIST PANEL */
+        .chat-main-layout { flex: 1; display: flex; height: 100vh; overflow: hidden; }
         .chat-pane { flex: 1; display: flex; flex-direction: column; background: #313338; height: 100vh; }
-        .chat-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; padding: 0 16px; font-weight: 600; color: #f2f3f5; gap: 10px; }
+        .chat-header { height: 48px; border-bottom: 2px solid #1f2023; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-weight: 600; color: #f2f3f5; }
+        
+        .group-settings-btn { background: none; border: none; color: #b5bac1; font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+        .group-settings-btn:hover { background: #35373c; color: #f2f3f5; }
+
         .messages-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
         
         .message-group { display: flex; gap: 16px; position: relative; padding: 2px 4px; border-radius: 4px; }
@@ -121,6 +122,8 @@
         .input-btn:hover { color: #f2f3f5; }
         .btn-discord { background: #5865f2; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 14px; width: 100%; }
         .btn-discord:hover { background: #4752c4; }
+        .btn-discord-danger { background: #ed4245; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 14px; }
+        .btn-discord-danger:hover { background: #c9383b; }
         .text-input { background: #1e1f22; border: 1px solid #1e1f22; border-radius: 4px; padding: 10px; color: #dbdee1; outline: none; width: 100%; font-size: 14px; }
         .text-input:focus { border-color: #5865f2; }
         
@@ -128,41 +131,63 @@
         .emoji-opt { padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 18px; }
         .emoji-opt:hover { background: #35373c; }
 
+        /* RIGHT MEMBER LIST SIDEBAR */
+        .right-member-sidebar { width: 240px; background: #2b2d31; border-left: 1px solid #1f2023; padding: 16px 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+        .member-category-header { font-size: 12px; font-weight: 700; color: #949ba4; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 8px; margin-bottom: 4px; }
+        .member-list-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+        .member-list-item:hover { background: #35373c; }
+        .member-avatar-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+        .member-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .member-status-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #2b2d31; }
+        .member-status-dot.online { background: #23a55a; }
+        .member-info { display: flex; flex-direction: column; overflow: hidden; margin-left: 10px; flex: 1; }
+        .member-username { font-size: 14px; font-weight: 500; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-subtext { font-size: 11px; color: #949ba4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         /* DISCORD PROFILE POPOVER PANEL */
         .discord-profile-popover {
-            position: absolute;
-            bottom: 60px;
-            left: 78px;
-            width: 324px;
-            background: #111214;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            color: #dbdee1;
-            z-index: 3000;
-            border: 1px solid #1f2023;
+            position: absolute; bottom: 60px; left: 78px; width: 324px;
+            background: #111214; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            overflow: hidden; font-family: 'Inter', sans-serif; color: #dbdee1; z-index: 3000; border: 1px solid #1f2023;
         }
         .profile-banner { height: 90px; background: #5865f2; background-size: cover; background-position: center; }
         .profile-body { background: #232428; padding: 0 16px 16px 16px; position: relative; margin-top: -38px; border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .profile-avatar-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
         .avatar-wrapper { position: relative; width: 80px; height: 80px; border-radius: 50%; background: #232428; padding: 4px; }
         .popover-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .status-indicator { position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #232428; }
-        .status-indicator.online { background: #23a55a; }
-        .popover-status-bubble { background: #111214; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; color: #f2f3f5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-indicator { position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #232428; background: #23a55a; }
+        .popover-status-bubble { background: #111214; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; color: #f2f3f5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .profile-identity { margin-bottom: 12px; }
         .profile-display-name { font-size: 20px; font-weight: 700; color: #f2f3f5; line-height: 24px; }
         .profile-usernames { font-size: 13px; color: #949ba4; margin-top: 2px; }
         .profile-divider { height: 1px; background: #3f4147; margin: 12px 0; }
         .profile-section { margin-bottom: 12px; }
         .section-title { font-size: 12px; font-weight: 700; color: #949ba4; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
-        .profile-bio-content { font-size: 14px; color: #dbdee1; line-height: 1.375rem; word-break: break-word; }
         .profile-menu-list { background: #111214; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; padding: 6px; gap: 2px; }
-        .profile-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 4px; font-size: 14px; font-weight: 500; color: #b5bac1; cursor: pointer; transition: background 0.15s, color 0.15s; }
+        .profile-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 4px; font-size: 14px; font-weight: 500; color: #b5bac1; cursor: pointer; }
         .profile-menu-item:hover { background: #5865f2; color: #ffffff; }
         .menu-icon { font-size: 16px; width: 20px; }
         .menu-label { flex: 1; margin-left: 8px; }
+
+        /* DISCORD SETTINGS MODAL (FULL SCREEN STYLE) */
+        .discord-settings-modal {
+            position: fixed; inset: 0; background: #313338; z-index: 5000; display: flex; font-family: 'Inter', sans-serif; color: #dbdee1;
+        }
+        .settings-sidebar-col { width: 232px; background: #2b2d31; display: flex; flex-direction: column; align-items: flex-end; padding: 60px 6px 60px 0; border-right: 1px solid #1f2023; }
+        .settings-nav-inner { width: 190px; display: flex; flex-direction: column; gap: 2px; }
+        .settings-nav-header { font-size: 12px; font-weight: 700; color: #949ba4; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 10px; margin-top: 8px; }
+        .settings-nav-item { padding: 8px 10px; border-radius: 4px; font-size: 14px; font-weight: 500; color: #b5bac1; cursor: pointer; }
+        .settings-nav-item:hover { background: #35373c; color: #dbdee1; }
+        .settings-nav-item.active { background: #404249; color: #f2f3f5; }
+        .settings-nav-item.danger { color: #ed4245; }
+        .settings-nav-item.danger:hover { background: #ed4245; color: #fff; }
+
+        .settings-content-col { flex: 1; background: #313338; padding: 60px 40px; display: flex; justify-content: flex-start; position: relative; overflow-y: auto; }
+        .settings-content-inner { width: 100%; max-width: 660px; display: flex; flex-direction: column; gap: 24px; }
+        .settings-pane-title { font-size: 20px; font-weight: 700; color: #f2f3f5; margin-bottom: 8px; }
+        .settings-close-col { width: 120px; display: flex; flex-direction: column; align-items: center; padding-top: 60px; }
+        .settings-esc-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #b5bac1; background: none; color: #b5bac1; display: flex; justify-content: center; align-items: center; font-size: 14px; cursor: pointer; font-weight: 600; }
+        .settings-esc-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: #fff; }
 
         .hidden { display: none !important; }
         .link-text { color: #00a8fc; cursor: pointer; font-size: 13px; text-align: center; }
@@ -173,7 +198,6 @@
 
     <!-- AUTHENTICATION PANELS CONTAINER -->
     <div id="authScreenContainer" class="auth-screen-container">
-        
         <!-- LOGIN VIEW -->
         <div id="loginView" class="auth-card">
             <h2>Welcome Back!</h2>
@@ -202,17 +226,14 @@
             </div>
             <input type="text" id="regUsername" class="text-input" placeholder="Username...">
             <input type="text" id="regNickname" class="text-input" placeholder="Nickname (display name)...">
-            
             <div class="password-container">
                 <input type="password" id="regPassword" class="text-input" placeholder="Password...">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regPassword', this)">👁️</button>
             </div>
-            
             <div class="password-container">
                 <input type="password" id="regConfirmPassword" class="text-input" placeholder="Confirm Password...">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('regConfirmPassword', this)">👁️</button>
             </div>
-
             <button class="btn-discord" onclick="executeRegister()">Continue</button>
             <span class="link-text" onclick="switchAuthView('login')">Already have an account? Log In</span>
         </div>
@@ -221,26 +242,21 @@
         <div id="changePassView" class="auth-card hidden">
             <h2>Reset Password</h2>
             <input type="text" id="passUsername" class="text-input" placeholder="Username...">
-            
             <div class="password-container">
                 <input type="password" id="passOld" class="text-input" placeholder="Current Password...">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passOld', this)">👁️</button>
             </div>
-            
             <div class="password-container">
                 <input type="password" id="passNew" class="text-input" placeholder="New Password...">
                 <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility('passNew', this)">👁️</button>
             </div>
-
             <button class="btn-discord" onclick="executePasswordChange()">Update Password</button>
             <span class="link-text" onclick="switchAuthView('login')">Back to Log In</span>
         </div>
-
     </div>
 
     <!-- MAIN APP INTERFACE -->
     <div id="appContainer" class="app-container hidden">
-        
         <!-- FAR LEFT SERVER RAIL -->
         <div class="server-rail">
             <div class="server-icon active" title="Direct Messages / Home" onclick="switchChannel('home', 'Friends')">💬</div>
@@ -252,7 +268,6 @@
 
         <!-- SIDEBAR -->
         <div class="channels-sidebar">
-            
             <!-- PROFILE POPOVER PANEL -->
             <div id="userProfilePopover" class="discord-profile-popover hidden">
                 <div class="profile-banner"></div>
@@ -260,27 +275,23 @@
                     <div class="profile-avatar-row">
                         <div class="avatar-wrapper">
                             <img id="popoverUserAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="popover-avatar">
-                            <div class="status-indicator online"></div>
+                            <div class="status-indicator"></div>
                         </div>
                         <div id="popoverCustomStatusBadge" class="popover-status-bubble">
                             <span id="popoverStatusText">Online</span>
                         </div>
                     </div>
-
                     <div class="profile-identity">
                         <h2 id="popoverDisplayName" class="profile-display-name">-</h2>
                         <div class="profile-usernames">
                             <span id="popoverUsername">-</span> • <span class="profile-bio-tag">Member</span>
                         </div>
                     </div>
-
                     <div class="profile-divider"></div>
-
                     <div class="profile-section">
                         <div class="section-title">About Me</div>
-                        <p id="popoverBioText" class="profile-bio-content">Only the silence remains.</p>
+                        <p class="profile-bio-content" style="font-size:14px; color:#dbdee1;">Only the silence remains.</p>
                     </div>
-
                     <div class="profile-menu-list">
                         <div class="profile-menu-item" onclick="logoutSession()">
                             <span class="menu-icon" style="color:#f23f43;">🚪</span>
@@ -318,9 +329,8 @@
             </div>
         </div>
 
-        <!-- DYNAMIC MAIN PANE: HOME/FRIENDS VIEW OR CHAT VIEW -->
+        <!-- DYNAMIC MAIN PANE: HOME OR CHAT -->
         <div id="dynamicMainContent" class="home-main-pane">
-            
             <!-- HOME / FRIENDS VIEW DASHBOARD -->
             <div id="homeFriendsView" class="home-main-pane">
                 <div class="home-top-nav">
@@ -340,8 +350,6 @@
                         <div class="friends-section-title" id="friendsCountTitle">Online — 0</div>
                         <div id="friendsDynamicList"></div>
                     </div>
-                    
-                    <!-- RIGHT ACTIVE NOW PANEL -->
                     <div class="active-now-sidebar">
                         <div style="font-size: 20px; font-weight: 700; color: #f2f3f5;">Active Now</div>
                         <div id="activeNowContainer">
@@ -351,41 +359,93 @@
                 </div>
             </div>
 
-            <!-- CHAT PANE (Hidden by default until a DM/Group/Global chat is selected) -->
-            <div id="activeChatView" class="chat-pane hidden">
-                <div class="chat-header">
-                    <span id="activeChannelTitle">Global Room</span>
-                </div>
-
-                <div class="messages-container" id="messagesScrollArea"></div>
-
-                <div class="chat-input-area">
-                    <div id="replyPreviewBox" class="hidden" style="background: #2b2d31; padding: 6px 12px; border-radius: 4px 4px 0 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #b5bac1;">
-                        <span id="replyPreviewText">Replying to...</span>
-                        <button onclick="clearReplyState()" style="background:none; border:none; color:#f23f43; cursor:pointer;">✕</button>
+            <!-- CHAT VIEW WITH RIGHT MEMBER LIST SIDEBAR -->
+            <div id="activeChatView" class="chat-main-layout hidden">
+                <div class="chat-pane">
+                    <div class="chat-header">
+                        <span id="activeChannelTitle">Global Room</span>
+                        <button id="groupSettingsNavBtn" class="group-settings-btn hidden" title="Group Settings" onclick="openGroupSettingsModal()">⚙️</button>
                     </div>
-                    
-                    <div class="input-wrapper">
-                        <div id="typingIndicatorBar" class="typing-indicator hidden"></div>
-                        <div id="emojiPickerPopup" class="emoji-picker-popup hidden"></div>
-                        
-                        <input type="file" id="fileAttachmentInput" class="hidden" onchange="uploadFileAttachment()">
-                        
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button class="input-btn" onclick="document.getElementById('fileAttachmentInput').click()" title="Upload file">➕</button>
-                            <textarea id="chatMessageInput" class="chat-input" placeholder="Send a message..." rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
-                            <button class="input-btn" onclick="toggleEmojiPicker()" title="Add Emoji">😀</button>
+
+                    <div class="messages-container" id="messagesScrollArea"></div>
+
+                    <div class="chat-input-area">
+                        <div id="replyPreviewBox" class="hidden" style="background: #2b2d31; padding: 6px 12px; border-radius: 4px 4px 0 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; color: #b5bac1;">
+                            <span id="replyPreviewText">Replying to...</span>
+                            <button onclick="clearReplyState()" style="background:none; border:none; color:#f23f43; cursor:pointer;">✕</button>
+                        </div>
+                        <div class="input-wrapper">
+                            <div id="typingIndicatorBar" class="typing-indicator hidden"></div>
+                            <div id="emojiPickerPopup" class="emoji-picker-popup hidden"></div>
+                            <input type="file" id="fileAttachmentInput" class="hidden" onchange="uploadFileAttachment()">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="input-btn" onclick="document.getElementById('fileAttachmentInput').click()" title="Upload file">➕</button>
+                                <textarea id="chatMessageInput" class="chat-input" placeholder="Send a message..." rows="1" oninput="handleTypingInput()" onkeydown="handleMessageKeydown(event)"></textarea>
+                                <button class="input-btn" onclick="toggleEmojiPicker()" title="Add Emoji">😀</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <!-- RIGHT MEMBER SIDEBAR -->
+                <div class="right-member-sidebar" id="rightMemberSidebarContainer">
+                    <div class="member-category-header" id="onlineMembersHeader">Online — 0</div>
+                    <div id="onlineMembersList"></div>
+                    <div class="member-category-header" id="offlineMembersHeader" style="margin-top: 16px;">Offline — 0</div>
+                    <div id="offlineMembersList"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL POPUPS -->
+    <!-- MODAL POPUPS CONTAINER -->
     <div id="genericModalOverlay" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this) closeModal()">
         <div id="genericModalCard" style="background:#313338; width:400px; padding:24px; border-radius:8px; display:flex; flex-direction:column; gap:16px;"></div>
+    </div>
+
+    <!-- DISCORD-STYLE GROUP SETTINGS MODAL -->
+    <div id="discordSettingsModal" class="discord-settings-modal hidden">
+        <div class="settings-sidebar-col">
+            <div class="settings-nav-inner">
+                <div id="settingsNavProfileTab" class="settings-nav-item active" onclick="switchSettingsTab('profile')">Group Profile</div>
+                <div id="settingsNavMembersTab" class="settings-nav-item" onclick="switchSettingsTab('members')">Members</div>
+                <div class="settings-nav-header">Management</div>
+                <div class="settings-nav-item danger" onclick="confirmDeleteGroup()">Delete Group</div>
+            </div>
+        </div>
+        <div class="settings-content-col">
+            <div class="settings-content-inner">
+                <!-- PROFILE TAB PANE -->
+                <div id="settingsPaneProfile" style="display:flex; flex-direction:column; gap:20px;">
+                    <div class="settings-pane-title">Group Profile</div>
+                    <div>
+                        <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:8px;">Group Name</label>
+                        <input type="text" id="editGroupNameInput" class="text-input">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; display:block; margin-bottom:8px;">Description / About</label>
+                        <textarea id="editGroupDescInput" class="text-input" rows="3" placeholder="What is this group about?"></textarea>
+                    </div>
+                    <div>
+                        <button class="btn-discord" onclick="saveGroupProfileEdits()">Save Changes</button>
+                    </div>
+                </div>
+
+                <!-- MEMBERS TAB PANE -->
+                <div id="settingsPaneMembers" class="hidden" style="display:flex; flex-direction:column; gap:20px;">
+                    <div class="settings-pane-title">Manage Members</div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="inviteMemberUsernameInput" class="text-input" placeholder="Username to add...">
+                        <button class="btn-discord" style="width:120px;" onclick="addGroupMember()">Add</button>
+                    </div>
+                    <div style="font-size:12px; font-weight:700; color:#949ba4; text-transform:uppercase; margin-top:8px;">Current Group Members</div>
+                    <div id="settingsMemberListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-close-col">
+            <button class="settings-esc-btn" onclick="closeGroupSettingsModal()">✕<div style="font-size:10px; margin-top:2px;">ESC</div></button>
+        </div>
     </div>
 
     <!-- CORE ENGINE SCRIPT -->
@@ -513,7 +573,7 @@
         }
 
         function logoutSession() {
-            localStorage.removeItem('chat_user');
+            localStorage.setItem('chat_user', '');
             location.reload();
         }
 
@@ -571,19 +631,73 @@
 
             const homeView = document.getElementById('homeFriendsView');
             const chatView = document.getElementById('activeChatView');
+            const groupSettingsBtn = document.getElementById('groupSettingsNavBtn');
 
             if (channelId === 'home') {
                 homeView.classList.remove('hidden');
                 chatView.classList.add('hidden');
+                groupSettingsBtn.classList.add('hidden');
                 loadFriendsDashboardList();
             } else {
                 homeView.classList.add('hidden');
                 chatView.classList.remove('hidden');
                 document.getElementById('activeChannelTitle').innerText = channelName;
+
+                // Show settings gear button only if it's a group channel
+                if (channelId.startsWith('group_')) {
+                    groupSettingsBtn.classList.remove('hidden');
+                } else {
+                    groupSettingsBtn.classList.add('hidden');
+                }
+
                 loadChannelMessages();
+                loadRightSidebarMembers();
                 setupRealtimeSocket();
                 setupTypingChannel();
             }
+        }
+
+        // --- POPULATE RIGHT MEMBER SIDEBAR ---
+        async function loadRightSidebarMembers() {
+            const onlineList = document.getElementById('onlineMembersList');
+            const offlineList = document.getElementById('offlineMembersList');
+            onlineList.innerHTML = '';
+            offlineList.innerHTML = '';
+
+            let targetUsers = [];
+            if (activeChannelId.startsWith('group_')) {
+                const groupId = activeChannelId.replace('group_', '');
+                const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', groupId);
+                if (members) {
+                    const usernames = members.map(m => m.username);
+                    const { data: users } = await supabaseClient.from('users').select('*').in('username', usernames);
+                    targetUsers = users || [];
+                }
+            } else {
+                const { data: users } = await supabaseClient.from('users').select('*');
+                targetUsers = users || [];
+            }
+
+            document.getElementById('onlineMembersHeader').innerText = `Online — ${targetUsers.length}`;
+            document.getElementById('offlineMembersHeader').innerText = `Offline — 0`;
+
+            targetUsers.forEach(u => {
+                const item = document.createElement('div');
+                item.className = 'member-list-item';
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                        <div class="member-avatar-wrap">
+                            <img src="${u.pfp_url}" class="member-avatar">
+                            <div class="member-status-dot online"></div>
+                        </div>
+                        <div class="member-info">
+                            <span class="member-username">${u.nickname || u.username}</span>
+                            <span class="member-subtext">Active on ChatEngine</span>
+                        </div>
+                    </div>
+                `;
+                onlineList.appendChild(item);
+            });
         }
 
         // --- FRIENDS DASHBOARD POPULATOR ---
@@ -824,7 +938,7 @@
             popup.classList.toggle('hidden');
         }
 
-        // --- SIDEBAR DATA LOADERS (DMS & GROUPS) ---
+        // --- SIDEBAR DATA LOADERS ---
         async function loadSidebarChannels() {
             const dmList = document.getElementById('dmChannelsList');
             const groupList = document.getElementById('groupChannelsList');
@@ -930,6 +1044,138 @@
                 closeModal();
                 loadSidebarChannels();
                 switchChannel(`group_${grp.id}`, grp.name);
+            }
+        }
+
+        // --- DISCORD-STYLE GROUP SETTINGS PANEL LOGIC ---
+        async function openGroupSettingsModal() {
+            if (!activeChannelId.startsWith('group_')) return;
+            const groupId = activeChannelId.replace('group_', '');
+
+            const { data: grp } = await supabaseClient.from('groups').select('*').eq('id', groupId).single();
+            if (grp) {
+                document.getElementById('editGroupNameInput').value = grp.name || '';
+                document.getElementById('editGroupDescInput').value = grp.description || '';
+            }
+
+            switchSettingsTab('profile');
+            document.getElementById('discordSettingsModal').classList.remove('hidden');
+            loadSettingsMemberList(groupId);
+        }
+
+        function closeGroupSettingsModal() {
+            document.getElementById('discordSettingsModal').classList.add('hidden');
+        }
+
+        function switchSettingsTab(tabName) {
+            document.getElementById('settingsNavProfileTab').classList.remove('active');
+            document.getElementById('settingsNavMembersTab').classList.remove('active');
+            document.getElementById('settingsPaneProfile').classList.add('hidden');
+            document.getElementById('settingsPaneMembers').classList.add('hidden');
+
+            if (tabName === 'profile') {
+                document.getElementById('settingsNavProfileTab').classList.add('active');
+                document.getElementById('settingsPaneProfile').classList.remove('hidden');
+            } else if (tabName === 'members') {
+                document.getElementById('settingsNavMembersTab').classList.add('active');
+                document.getElementById('settingsPaneMembers').classList.remove('hidden');
+            }
+        }
+
+        async function saveGroupProfileEdits() {
+            const groupId = activeChannelId.replace('group_', '');
+            const newName = document.getElementById('editGroupNameInput').value.trim();
+            const newDesc = document.getElementById('editGroupDescInput').value.trim();
+
+            if (!newName) {
+                alert("Group name cannot be empty.");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('groups').update({
+                name: newName,
+                description: newDesc
+            }).eq('id', groupId);
+
+            if (error) {
+                alert("Failed to update group profile.");
+            } else {
+                alert("Group profile updated successfully!");
+                document.getElementById('activeChannelTitle').innerText = newName;
+                loadSidebarChannels();
+                closeGroupSettingsModal();
+            }
+        }
+
+        async function loadSettingsMemberList(groupId) {
+            const container = document.getElementById('settingsMemberListContainer');
+            container.innerHTML = '';
+
+            const { data: members } = await supabaseClient.from('group_members').select('username').eq('group_id', groupId);
+            if (members) {
+                const usernames = members.map(m => m.username);
+                const { data: users } = await supabaseClient.from('users').select('*').in('username', usernames);
+
+                if (users) {
+                    users.forEach(u => {
+                        const row = document.createElement('div');
+                        row.className = 'friend-row';
+                        row.innerHTML = `
+                            <div class="friend-info-left">
+                                <img src="${u.pfp_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                                <span class="friend-name">${u.nickname || u.username}</span>
+                            </div>
+                            ${u.username !== currentUser.username ? `<button class="btn-discord-danger" style="padding:4px 10px; font-size:12px;" onclick="removeGroupMember('${groupId}', '${u.username}')">Kick</button>` : '<span style="font-size:12px; color:#949ba4;">Owner/Self</span>'}
+                        `;
+                        container.appendChild(row);
+                    });
+                }
+            }
+        }
+
+        async function addGroupMember() {
+            const groupId = activeChannelId.replace('group_', '');
+            const usernameInput = document.getElementById('inviteMemberUsernameInput').value.trim().toLowerCase();
+            if (!usernameInput) return;
+
+            const { data: user } = await supabaseClient.from('users').select('*').eq('username', usernameInput).single();
+            if (!user) {
+                alert("User not found!");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('group_members').insert([
+                { group_id: groupId, username: usernameInput }
+            ]);
+
+            if (error) {
+                alert("User is already a member of this group.");
+            } else {
+                document.getElementById('inviteMemberUsernameInput').value = '';
+                loadSettingsMemberList(groupId);
+                loadRightSidebarMembers();
+                alert("Member added successfully!");
+            }
+        }
+
+        async function removeGroupMember(groupId, username) {
+            if (confirm(`Remove @${username} from this group?`)) {
+                await supabaseClient.from('group_members').delete().eq('group_id', groupId).eq('username', username);
+                loadSettingsMemberList(groupId);
+                loadRightSidebarMembers();
+            }
+        }
+
+        async function confirmDeleteGroup() {
+            if (confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
+                const groupId = activeChannelId.replace('group_', '');
+                await supabaseClient.from('group_members').delete().eq('group_id', groupId);
+                await supabaseClient.from('groups').delete().eq('id', groupId);
+                
+                closeGroupSettingsModal();
+                loadSidebarChannels();
+                switchChannel('home', 'Friends');
+                alert("Group successfully deleted.");
             }
         }
 
