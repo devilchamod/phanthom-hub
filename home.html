@@ -168,7 +168,6 @@
 
         .messages-box { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.2rem; }
 
-        /* Dynamic Border Highlight per User */
         .message-card {
             position: relative;
             display: flex;
@@ -204,24 +203,74 @@
             margin-bottom: 0.4rem;
         }
 
+        /* Top-Right Hover Quick Action Bar */
         .msg-actions {
             display: none;
             position: absolute;
             right: 12px;
-            top: 10px;
-            gap: 8px;
+            top: 8px;
+            gap: 6px;
             background: #0d0e17;
             padding: 4px 8px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            clip-path: polygon(0 0, 90% 0, 100% 20%, 100% 100%, 0 100%);
+            z-index: 5;
         }
 
         .message-card:hover .msg-actions { display: flex; }
-        .act-btn { background: none; border: none; color: #00f3ff; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
-        .act-btn:hover { text-shadow: 0 0 5px #00f3ff; }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #7a8b9e;
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 2px 5px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover { color: #00f3ff; transform: scale(1.15); }
+        .icon-btn.delete:hover { color: #ff003c; }
+
+        /* Custom Floating Context Menu */
+        .context-menu {
+            position: fixed;
+            z-index: 1000;
+            background: #0d0e17;
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            padding: 6px 0;
+            width: 140px;
+            clip-path: polygon(0 0, 92% 0, 100% 12%, 100% 100%, 0 100%);
+        }
+
+        .context-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #e0e6ed;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .context-item:hover {
+            background: rgba(0, 243, 255, 0.15);
+            color: #00f3ff;
+        }
+
+        .context-item.delete-item:hover {
+            background: rgba(255, 0, 60, 0.15);
+            color: #ff003c;
+        }
 
         .typing-indicator { font-size: 0.8rem; color: #00f3ff; padding: 0 1.5rem 0.5rem; min-height: 1.2rem; font-style: italic; font-weight: 600; }
 
-        /* Input Bar & Controls */
         .input-box { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 0, 60, 0.2); background: rgba(8, 9, 14, 0.9); }
         .chat-form { display: flex; gap: 0.6rem; align-items: center; }
         
@@ -368,13 +417,11 @@
             <div class="typing-indicator" id="typingBox"></div>
 
             <div class="input-box">
-                <!-- Reply Banner -->
                 <div id="replyBanner" class="reply-banner hidden">
                     <span id="replyBannerText">Replying to...</span>
                     <button onclick="cancelReply()" style="background:none; border:none; color:#ff003c; cursor:pointer; font-weight:700;">✕</button>
                 </div>
 
-                <!-- Cyberpunk Quick Emoji Bar -->
                 <div id="emojiPicker" class="emoji-picker-bar hidden">
                     <span class="emoji-item" onclick="addEmoji('🔥')">🔥</span>
                     <span class="emoji-item" onclick="addEmoji('⚔️')">⚔️</span>
@@ -408,6 +455,13 @@
                 <div id="friendsList"></div>
             </div>
         </div>
+    </div>
+
+    <!-- Right-Click Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+        <div class="context-item" id="ctxReply">↩ Reply</div>
+        <div class="context-item" id="ctxEdit">✏️ Edit</div>
+        <div class="context-item delete-item" id="ctxDelete">🗑️ Delete</div>
     </div>
 
     <div id="settingsModal" class="modal-overlay hidden">
@@ -455,32 +509,28 @@
         const chatFileInput = document.getElementById('chatFileInput');
         const channelHeader = document.getElementById('channelHeader');
         const typingBox = document.getElementById('typingBox');
+        const contextMenu = document.getElementById('contextMenu');
 
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
         }
 
-        // Unique Color Generator Based on User Key
         function getUserColor(str) {
             let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const h = Math.abs(hash) % 360;
-            return `hsl(${h}, 90%, 60%)`; // Dynamic Neon Colors
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash) % 360}, 90%, 60%)`;
         }
 
         updateProfileUI();
 
-        // Louder Tactical Beep Audio Synthesizer
         function playTacticalBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.type = "triangle"; // Sharper frequency
+                osc.type = "triangle";
                 osc.frequency.setValueAtTime(1050, ctx.currentTime);
-                gain.gain.setValueAtTime(0.35, ctx.currentTime); // Louder volume
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
@@ -489,24 +539,14 @@
             } catch (e) {}
         }
 
-        // Windows Notification ONLY Triggered When AWAY
         function triggerWindowsNotification(title, body) {
             if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-                new Notification(title, {
-                    body: body,
-                    icon: 'https://via.placeholder.com/64/05050a/ff003c?text=HUB'
-                });
+                new Notification(title, { body: body, icon: 'https://via.placeholder.com/64/05050a/ff003c?text=HUB' });
             }
         }
 
-        function toggleEmojiBar() {
-            document.getElementById('emojiPicker').classList.toggle('hidden');
-        }
-
-        function addEmoji(emoji) {
-            msgInput.value += emoji;
-            msgInput.focus();
-        }
+        function toggleEmojiBar() { document.getElementById('emojiPicker').classList.toggle('hidden'); }
+        function addEmoji(emoji) { msgInput.value += emoji; msgInput.focus(); }
 
         function switchNav(nav, el) {
             currentNav = nav;
@@ -563,12 +603,13 @@
             let replyHTML = m.reply_text ? `<div class="reply-preview-tag">↩ Replying to: ${escapeHtml(m.reply_text)}</div>` : '';
             let imgHTML = m.file_url ? `<img src="${escapeHtml(m.file_url)}" class="msg-img" alt="attachment">` : '';
 
+            // Top-right Hover Icon Bar
             let actionsHTML = `
                 <div class="msg-actions">
-                    <button class="act-btn" onclick="initiateReply('${escapeHtml(name)}', '${escapeHtml(m.message || '')}')">Reply</button>
+                    <button class="icon-btn" title="Reply" onclick="initiateReply('${escapeHtml(name)}', '${escapeHtml(m.message || '')}')">↩</button>
                     ${m.username === currentUser.username && m.id ? `
-                        <button class="act-btn" onclick="editMessage('${m.id}')">Edit</button>
-                        <button class="act-btn" style="color:#ff003c;" onclick="deleteMessage('${m.id}')">Delete</button>
+                        <button class="icon-btn" title="Edit" onclick="editMessage('${m.id}')">✏️</button>
+                        <button class="icon-btn delete" title="Delete" onclick="deleteMessage('${m.id}')">🗑️</button>
                     ` : ''}
                 </div>
             `;
@@ -586,9 +627,42 @@
                     ${imgHTML}
                 </div>
             `;
+
+            // Custom Right-Click Context Menu Handler
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showContextMenu(e.clientX, e.clientY, m, name);
+            });
+
             msgBox.appendChild(div);
             msgBox.scrollTop = msgBox.scrollHeight;
         }
+
+        // Show context menu at cursor location
+        function showContextMenu(x, y, message, name) {
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.classList.remove('hidden');
+
+            const ctxReply = document.getElementById('ctxReply');
+            const ctxEdit = document.getElementById('ctxEdit');
+            const ctxDelete = document.getElementById('ctxDelete');
+
+            ctxReply.onclick = () => { initiateReply(name, message.message || ''); hideContextMenu(); };
+
+            if (message.username === currentUser.username && message.id) {
+                ctxEdit.style.display = 'flex';
+                ctxDelete.style.display = 'flex';
+                ctxEdit.onclick = () => { editMessage(message.id); hideContextMenu(); };
+                ctxDelete.onclick = () => { deleteMessage(message.id); hideContextMenu(); };
+            } else {
+                ctxEdit.style.display = 'none';
+                ctxDelete.style.display = 'none';
+            }
+        }
+
+        function hideContextMenu() { contextMenu.classList.add('hidden'); }
+        document.addEventListener('click', hideContextMenu);
 
         function initiateReply(author, text) {
             replyingToMessage = `${author}: ${text}`;
@@ -618,7 +692,6 @@
             }
         }
 
-        // Realtime Messages & Updates
         supabaseClient
             .channel('public:messages')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
@@ -632,14 +705,8 @@
                     
                     if (isRelevant) appendMessage(newMsg);
 
-                    // ALWAYS Beep sound on every incoming message
                     playTacticalBeep();
-
-                    // Windows Desktop Notification ONLY when away/minimized
-                    triggerWindowsNotification(
-                        `[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`,
-                        newMsg.message || "Sent an attachment"
-                    );
+                    triggerWindowsNotification(`[PHANTOM HUB] ${newMsg.nickname || newMsg.username}`, newMsg.message || "Sent an attachment");
                 } else if (payload.eventType === 'DELETE') {
                     document.getElementById(`msg-${payload.old.id}`)?.remove();
                 } else if (payload.eventType === 'UPDATE') {
@@ -649,7 +716,6 @@
             })
             .subscribe();
 
-        // Typing Indicator Channel
         const typingChannel = supabaseClient.channel('room-typing');
         let remoteTypingTimeout = null;
 
@@ -721,7 +787,6 @@
             }]);
         });
 
-        // Online Presence Tracker
         const presenceChannel = supabaseClient.channel('room-presence', { config: { presence: { key: currentUser.username } } });
         presenceChannel
             .on('presence', { event: 'sync' }, () => {
